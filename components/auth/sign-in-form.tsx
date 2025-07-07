@@ -92,7 +92,7 @@ export function SignInForm() {
     <div className="w-full max-w-md space-y-8">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
-          <Zap className="h-8 w-8 text-blue-600" />
+          <img src="/logo.png" alt="Connect Pro Logo" className="h-8 w-8" />
           <span className="text-2xl font-bold text-gray-900 dark:text-white">Connect Pro</span>
         </div>
         <div className="flex items-center space-x-2">

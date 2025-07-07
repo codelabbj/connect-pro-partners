@@ -59,7 +59,7 @@ export function Sidebar() {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white dark:bg-gray-800 h-full min-h-0">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-2">
-              <Zap className="h-8 w-8 text-blue-600" />
+              <img src="/logo.png" alt="Connect Pro Logo" className="h-8 w-8" />
               <span className="text-xl font-bold">Connect Pro</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
@@ -347,7 +347,7 @@ export function Sidebar() {
           {/* Make sidebar scrollable if content overflows */}
           <div className="flex h-16 items-center px-4">
             <div className="flex items-center space-x-2">
-              <Zap className="h-8 w-8 text-blue-600" />
+              <img src="/logo.png" alt="Connect Pro Logo" className="h-8 w-8" />
               <span className="text-xl font-bold">Connect Pro</span>
             </div>
           </div>

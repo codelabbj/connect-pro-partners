@@ -27,6 +27,7 @@ const translations = {
     "auth.welcome": "Welcome back",
     "auth.subtitle": "Enter your credentials to access your account",
     "auth.loggingIn": "Logging in...",
+     "auth.loginFailed": "Login failed.",
 
     // Navigation
     "nav.dashboard": "Dashboard",
@@ -397,6 +398,7 @@ const translations = {
     "auth.welcome": "Bon retour",
     "auth.subtitle": "Entrez vos identifiants pour accéder à votre compte",
     "auth.loggingIn": "Connexion...",
+    "auth.loginFailed": "Échec de la connexion.",
 
     // Navigation
     "nav.dashboard": "Tableau de bord",
@@ -503,6 +505,7 @@ const translations = {
     "users.enterPhone": "Entrez le numéro de téléphone",
     "users.sending": "Envoi...",
     "users.verifying": "Vérification...",
+
     // Activation/Deactivation
     "users.activate": "Activer",
     "users.deactivate": "Désactiver",

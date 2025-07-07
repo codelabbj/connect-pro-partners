@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     path: '/',
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60, // 7 days
-    // secure: true, // Uncomment for production/HTTPS
+    secure: process.env.NODE_ENV === 'production', // Set secure only in production
   })
   return response
 } 

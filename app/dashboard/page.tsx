@@ -8,6 +8,9 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useRouter } from "next/navigation"
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useToast } from "@/hooks/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Switch } from "@/components/ui/switch"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -28,28 +31,117 @@ const mockFeed = [
   { time: "15 min ago", message: "Task #124 scheduled." },
 ]
 
+// Helper to extract error messages from API responses
+function extractErrorMessages(errorObj: any): string {
+  if (!errorObj || typeof errorObj !== "object") return String(errorObj)
+  if (errorObj.detail) return errorObj.detail
+  if (errorObj.message) return errorObj.message
+  // If it's a field error object, join all array values for all fields
+  return Object.values(errorObj)
+    .map((v) => Array.isArray(v) ? v.join(" ") : String(v))
+    .join(" ")
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [authError, setAuthError] = useState("")
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showOnlyActiveUsers, setShowOnlyActiveUsers] = useState(false)
   const apiFetch = useApi();
   const { t } = useLanguage();
   const router = useRouter();
+  const { toast } = useToast();
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError("");
+    setAuthError("");
+    setShowAuthModal(false);
+    try {
+      const data = await apiFetch(`${baseUrl}api/auth/admin/notifications/stats/`);
+      setStats(data);
+      toast({
+        title: t("dashboard.success"),
+        description: t("dashboard.statsLoadedSuccessfully"),
+      });
+    } catch (err: any) {
+      let backendError = extractErrorMessages(err) || t("dashboard.failedToLoadStats");
+      // Detect authentication error (401 or token error)
+      if (
+        err?.code === 'token_not_valid' ||
+        err?.status === 401 ||
+        (typeof backendError === 'string' && backendError.toLowerCase().includes('token'))
+      ) {
+        setAuthError(backendError);
+        setShowAuthModal(true);
+        setLoading(false);
+        return;
+      }
+      setError(backendError);
+      toast({
+        title: t("dashboard.failedToLoadStats"),
+        description: backendError,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setLoading(true)
-    apiFetch(`${baseUrl}api/auth/admin/notifications/stats/`)
-      .then(data => setStats(data))
-      .catch((err) => {
-        setError(t("dashboard.failedToLoadStats"))
-        if (typeof window !== 'undefined') {
-          router.push("/")
-        }
-      })
-      .finally(() => setLoading(false))
-  }, [])
+    fetchStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+        <span className="text-lg font-semibold text-red-600 dark:text-red-400">{error}</span>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={fetchStats}
+        >
+          {t("dashboard.retry")}
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    // Should not happen, but just in case
+    return null;
+  }
 
   return (
+    <>
+      {/* Auth Error Modal */}
+      <Dialog open={showAuthModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("dashboard.authError")}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center text-red-600">{authError}</div>
+          <DialogFooter>
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+              onClick={() => { setShowAuthModal(false); router.push("/"); }}
+            >
+              {t("common.ok")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Main Dashboard Content */}
     <div className="space-y-10 px-4 py-8 max-w-7xl mx-auto">
       {/* Dashboard Header */}
       <div className="mb-6">
@@ -57,37 +149,71 @@ export default function DashboardPage() {
         <p className="text-muted-foreground text-lg">{t("dashboard.liveOverview")}</p>
       </div>
 
-      {/* Key Metrics Row */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-          <div className="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900 rounded-lg py-6 shadow">
-            <span className="text-lg text-blue-800 dark:text-blue-200 font-semibold">{t("dashboard.activeUsers")}</span>
-            <span className="text-4xl font-bold text-blue-700 dark:text-blue-100">{stats.user_stats.active_users}</span>
+        {/* All Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* User Stats Filter */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 flex items-center gap-4 mb-2">
+            <Switch
+              id="active-users-toggle"
+              checked={showOnlyActiveUsers}
+              onCheckedChange={setShowOnlyActiveUsers}
+            />
+            <label htmlFor="active-users-toggle" className="text-sm font-medium">
+              {t("dashboard.showOnlyActiveUsers")}
+            </label>
           </div>
-          <div className="flex flex-col items-center justify-center bg-green-50 dark:bg-green-900 rounded-lg py-6 shadow">
-            <span className="text-lg text-green-800 dark:text-green-200 font-semibold">{t("dashboard.activeTasks")}</span>
-            <span className="text-4xl font-bold text-green-700 dark:text-green-100">{stats.task_stats.active}</span>
+          {/* Task Stats */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
+            <h2 className="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-200">{t("dashboard.taskStats")}</h2>
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between"><span>{t("dashboard.activeTasks")}</span><span className="font-bold text-blue-600">{stats.task_stats.active}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.scheduledTasks")}</span><span className="font-bold text-blue-400">{stats.task_stats.scheduled}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.reservedTasks")}</span><span className="font-bold text-blue-300">{stats.task_stats.reserved}</span></div>
+            </div>
           </div>
-          <div className="flex flex-col items-center justify-center bg-yellow-50 dark:bg-yellow-900 rounded-lg py-6 shadow">
-            <span className="text-lg text-yellow-800 dark:text-yellow-200 font-semibold">{t("dashboard.pendingCodes")}</span>
-            <span className="text-4xl font-bold text-yellow-700 dark:text-yellow-100">{stats.code_stats.pending_email_verification + stats.code_stats.pending_password_reset + stats.code_stats.pending_phone_verification}</span>
+          {/* User Stats */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
+            <h2 className="text-xl font-semibold mb-2 text-green-700 dark:text-green-200">{t("dashboard.userStats")}</h2>
+            <div className="flex flex-col gap-2 w-full">
+              {showOnlyActiveUsers ? (
+                <div className="flex justify-between"><span>{t("dashboard.activeUsers")}</span><span className="font-bold text-green-500">{stats.user_stats.active_users}</span></div>
+              ) : (
+                <>
+                  <div className="flex justify-between"><span>{t("dashboard.totalUsers")}</span><span className="font-bold text-green-600">{stats.user_stats.total_users}</span></div>
+                  <div className="flex justify-between"><span>{t("dashboard.activeUsers")}</span><span className="font-bold text-green-500">{stats.user_stats.active_users}</span></div>
+                  <div className="flex justify-between"><span>{t("dashboard.pendingUsers")}</span><span className="font-bold text-yellow-500">{stats.user_stats.pending_users}</span></div>
+                  <div className="flex justify-between"><span>{t("dashboard.verifiedUsers")}</span><span className="font-bold text-green-400">{stats.user_stats.verified_users}</span></div>
+                  <div className="flex justify-between"><span>{t("dashboard.usersRegisteredToday")}</span><span className="font-bold text-blue-500">{stats.user_stats.users_registered_today}</span></div>
+                  <div className="flex justify-between"><span>{t("dashboard.usersRegisteredWeek")}</span><span className="font-bold text-blue-400">{stats.user_stats.users_registered_week}</span></div>
+                </>
+              )}
+            </div>
+          </div>
+          {/* Code Stats */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
+            <h2 className="text-xl font-semibold mb-2 text-yellow-700 dark:text-yellow-200">{t("dashboard.codeStats")}</h2>
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between"><span>{t("dashboard.pendingPasswordReset")}</span><span className="font-bold text-yellow-600">{stats.code_stats.pending_password_reset}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.pendingEmailVerification")}</span><span className="font-bold text-yellow-500">{stats.code_stats.pending_email_verification}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.pendingPhoneVerification")}</span><span className="font-bold text-yellow-400">{stats.code_stats.pending_phone_verification}</span></div>
+            </div>
+          </div>
+          {/* Notification Info */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center col-span-1 md:col-span-2 lg:col-span-1">
+            <h2 className="text-xl font-semibold mb-2 text-purple-700 dark:text-purple-200">{t("dashboard.notificationInfo")}</h2>
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between"><span>{t("dashboard.emailService")}</span><span className="font-bold">{stats.notification_info.email_service}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.smsService")}</span><span className="font-bold">{stats.notification_info.sms_service}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.asyncEnabled")}</span><span className={`font-bold ${stats.notification_info.async_enabled ? 'text-green-600' : 'text-red-600'}`}>{stats.notification_info.async_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</span></div>
+              <div className="flex justify-between"><span>{t("dashboard.loggingEnabled")}</span><span className={`font-bold ${stats.notification_info.logging_enabled ? 'text-green-600' : 'text-red-600'}`}>{stats.notification_info.logging_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</span></div>
+            </div>
+          </div>
+          {/* Timestamp */}
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center col-span-1 md:col-span-2 lg:col-span-1">
+            <h2 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-200">{t("dashboard.timestamp")}</h2>
+            <div className="w-full text-center font-mono text-sm text-gray-500 dark:text-gray-400">{stats.timestamp}</div>
           </div>
         </div>
-      )}
-
-      {/* Status Bar */}
-      {stats && (
-        <div className="flex flex-wrap gap-4 mb-4">
-          <Badge variant={stats.notification_info.async_enabled ? "default" : "destructive"}>
-            {t("dashboard.async")}: {stats.notification_info.async_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}
-          </Badge>
-          <Badge variant={stats.notification_info.logging_enabled ? "default" : "destructive"}>
-            {t("dashboard.logging")}: {stats.notification_info.logging_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}
-          </Badge>
-          <Badge variant="outline">{t("dashboard.email")}: {stats.notification_info.email_service}</Badge>
-          <Badge variant="outline">{t("dashboard.sms")}: {stats.notification_info.sms_service}</Badge>
-        </div>
-      )}
 
       {/* Trends Chart & Live Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -128,5 +254,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

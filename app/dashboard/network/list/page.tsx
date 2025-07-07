@@ -9,6 +9,7 @@ import Link from "next/link"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -22,6 +23,7 @@ export default function NetworkListPage() {
   const [countries, setCountries] = useState<any[]>([])
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchNetworks = async () => {
@@ -30,12 +32,21 @@ export default function NetworkListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
         setNetworks(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("network.success"),
+          description: t("network.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
           ? JSON.stringify(err, null, 2)
           : err.message || t("network.failedToLoad")
         setError(errorMessage)
         setNetworks([])
+        toast({
+          title: t("network.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('Networks fetch error:', err)
       } finally {
         setLoading(false)
@@ -51,9 +62,18 @@ export default function NetworkListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/countries/`)
         setCountries(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("network.countriesLoaded"),
+          description: t("network.countriesLoadedSuccessfully"),
+        })
       } catch (err: any) {
         console.error('Countries fetch error:', err)
         setCountries([])
+        toast({
+          title: t("network.countriesFailedToLoad"),
+          description: err.message || t("network.failedToLoadCountries"),
+          variant: "destructive",
+        })
       }
     }
     
@@ -78,6 +98,14 @@ export default function NetworkListPage() {
       return matchesSearch && matchesStatus && matchesCountry
     })
   }, [networks, searchTerm, statusFilter, countryFilter, countries])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("network.loading")}</span>
+      </div>
+    )
+  }
 
   return (
     <Card>
@@ -107,26 +135,33 @@ export default function NetworkListPage() {
               <SelectItem value="inactive">{t("network.inactive")}</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={countryFilter} onValueChange={setCountryFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder={t("network.country")} />
+          <Select
+            value={countryFilter}
+            onValueChange={setCountryFilter}
+            disabled={loading || countries.length === 0}
+          >
+            <SelectTrigger className="w-full sm:w-48" aria-label={t("network.country")}> 
+              <SelectValue placeholder={loading ? t("common.loading") : t("network.country")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t("common.all")}</SelectItem>
-              {countries.map((country: any) => (
-                <SelectItem key={country.uid} value={country.uid}>
-                  {country.nom}
-                </SelectItem>
-              ))}
+              {loading ? (
+                <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>
+              ) : countries.length === 0 ? (
+                <SelectItem value="no-countries" disabled>{t("network.noCountries") || "No countries available"}</SelectItem>
+              ) : (
+                [<SelectItem value="all" key="all">{t("common.all")}</SelectItem>,
+                  ...countries.map((country: any) => (
+                    <SelectItem key={country.uid} value={country.uid}>
+                      {country.nom}
+                    </SelectItem>
+                  ))
+                ]
+              )}
             </SelectContent>
           </Select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">{t("network.loading")}</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">

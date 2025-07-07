@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
+import { useToast } from "@/hooks/use-toast"
 
 export default function RegisterUserForm() {
   const [form, setForm] = useState({
@@ -22,6 +23,7 @@ export default function RegisterUserForm() {
 
   const { t } = useLanguage();
   const apiFetch = useApi();
+  const { toast } = useToast();
 
   // Get base URL and token from env
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
@@ -47,6 +49,11 @@ export default function RegisterUserForm() {
     setSuccess("")
     if (form.password !== form.password_confirm) {
       setError(t("register.passwordsNoMatch"))
+      toast({
+        title: t("register.failed"),
+        description: t("register.passwordsNoMatch"),
+        variant: "destructive",
+      })
       return
     }
     setLoading(true)
@@ -63,9 +70,19 @@ export default function RegisterUserForm() {
         body: JSON.stringify(form),
       })
       if (data && data.detail) {
-        setError(extractErrorMessages(data))
+        const backendError = extractErrorMessages(data)
+        setError(backendError)
+        toast({
+          title: t("register.failed"),
+          description: backendError,
+          variant: "destructive",
+        })
       } else {
         setSuccess(t("register.success"))
+        toast({
+          title: t("register.success"),
+          description: t("register.userRegisteredSuccessfully"),
+        })
         setForm({
           first_name: "",
           last_name: "",
@@ -75,11 +92,25 @@ export default function RegisterUserForm() {
           password_confirm: "",
         })
       }
-    } catch (err) {
-      setError(t("register.networkError"))
+    } catch (err: any) {
+      const backendError = err?.message || t("register.networkError")
+      setError(backendError)
+      toast({
+        title: t("register.networkError"),
+        description: backendError,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("register.registering")}</span>
+      </div>
+    )
   }
 
   return (

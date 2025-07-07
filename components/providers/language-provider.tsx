@@ -26,6 +26,7 @@ const translations = {
     "auth.forgotPassword": "Forgot password?",
     "auth.welcome": "Welcome back",
     "auth.subtitle": "Enter your credentials to access your account",
+    "auth.loggingIn": "Logging in...",
 
     // Navigation
     "nav.dashboard": "Dashboard",
@@ -73,6 +74,26 @@ const translations = {
     "dashboard.totalTransactions": "Total Transactions",
     "dashboard.recentActivity": "Recent User Activity",
     "dashboard.userGrowth": "User Growth",
+    "dashboard.taskStats": "Task Stats",
+    "dashboard.scheduledTasks": "Scheduled Tasks",
+    "dashboard.reservedTasks": "Reserved Tasks",
+    "dashboard.userStats": "User Stats",
+    "dashboard.pendingUsers": "Pending Users",
+    "dashboard.verifiedUsers": "Verified Users",
+    "dashboard.usersRegisteredToday": "Users Registered Today",
+    "dashboard.usersRegisteredWeek": "Users Registered This Week",
+    "dashboard.codeStats": "Code Stats",
+    "dashboard.pendingPasswordReset": "Pending Password Reset",
+    "dashboard.pendingEmailVerification": "Pending Email Verification",
+    "dashboard.pendingPhoneVerification": "Pending Phone Verification",
+    "dashboard.notificationInfo": "Notification Info",
+    "dashboard.emailService": "Email Service",
+    "dashboard.smsService": "SMS Service",
+    "dashboard.asyncEnabled": "Async Enabled",
+    "dashboard.loggingEnabled": "Logging Enabled",
+    "dashboard.timestamp": "Timestamp",
+    "dashboard.authError": "Authentication Error",
+    "dashboard.showOnlyActiveUsers": "Show only active users",
 
     // Users
     "users.title": "Users",
@@ -112,6 +133,26 @@ const translations = {
     "users.enterPhone": "Enter phone number",
     "users.sending": "Sending...",
     "users.verifying": "Verifying...",
+    // Activation/Deactivation
+    "users.activate": "Activate",
+    "users.deactivate": "Deactivate",
+    "users.activating": "Activating...",
+    "users.deactivating": "Deactivating...",
+    "users.activated": "User activated",
+    "users.deactivated": "User deactivated",
+    "users.activationFailed": "Failed to activate user",
+    "users.deactivationFailed": "Failed to deactivate user",
+    "users.userActivatedSuccessfully": "User activated successfully",
+    "users.userDeactivatedSuccessfully": "User deactivated successfully",
+    // Verification toggle
+    "users.unverifyEmail": "Unverify Email",
+    "users.unverifyPhone": "Unverify Phone",
+    "users.emailUnverifiedSuccessfully": "User email unverified successfully",
+    "users.phoneUnverifiedSuccessfully": "User phone unverified successfully",
+    "users.confirmVerifyEmail": "Are you sure you want to verify this user's email?",
+    "users.confirmUnverifyEmail": "Are you sure you want to unverify this user's email?",
+    "users.confirmVerifyPhone": "Are you sure you want to verify this user's phone?",
+    "users.confirmUnverifyPhone": "Are you sure you want to unverify this user's phone?",
 
     // Transactions
     "transactions.title": "Transactions",
@@ -174,6 +215,7 @@ const translations = {
     "common.active": "Active",
     "common.inactive": "Inactive",
     "common.all": "All",
+    "common.ok": "OK",
 
     // Registration Form
     "register.title": "Register New User",
@@ -354,6 +396,7 @@ const translations = {
     "auth.forgotPassword": "Mot de passe oublié?",
     "auth.welcome": "Bon retour",
     "auth.subtitle": "Entrez vos identifiants pour accéder à votre compte",
+    "auth.loggingIn": "Connexion...",
 
     // Navigation
     "nav.dashboard": "Tableau de bord",
@@ -401,6 +444,26 @@ const translations = {
     "dashboard.totalTransactions": "Total Transactions",
     "dashboard.recentActivity": "Activité Récente des Utilisateurs",
     "dashboard.userGrowth": "Croissance des Utilisateurs",
+    "dashboard.taskStats": "Statistiques des tâches",
+    "dashboard.scheduledTasks": "Tâches planifiées",
+    "dashboard.reservedTasks": "Tâches réservées",
+    "dashboard.userStats": "Statistiques des utilisateurs",
+    "dashboard.pendingUsers": "Utilisateurs en attente",
+    "dashboard.verifiedUsers": "Utilisateurs vérifiés",
+    "dashboard.usersRegisteredToday": "Utilisateurs inscrits aujourd'hui",
+    "dashboard.usersRegisteredWeek": "Utilisateurs inscrits cette semaine",
+    "dashboard.codeStats": "Statistiques des codes",
+    "dashboard.pendingPasswordReset": "Réinitialisation du mot de passe en attente",
+    "dashboard.pendingEmailVerification": "Vérification de l'email en attente",
+    "dashboard.pendingPhoneVerification": "Vérification du téléphone en attente",
+    "dashboard.notificationInfo": "Infos de notification",
+    "dashboard.emailService": "Service Email",
+    "dashboard.smsService": "Service SMS",
+    "dashboard.asyncEnabled": "Async activé",
+    "dashboard.loggingEnabled": "Journalisation activée",
+    "dashboard.timestamp": "Horodatage",
+    "dashboard.authError": "Erreur d'authentification",
+    "dashboard.showOnlyActiveUsers": "Afficher uniquement les utilisateurs actifs",
 
     // Users
     "users.title": "Utilisateurs",
@@ -440,6 +503,26 @@ const translations = {
     "users.enterPhone": "Entrez le numéro de téléphone",
     "users.sending": "Envoi...",
     "users.verifying": "Vérification...",
+    // Activation/Deactivation
+    "users.activate": "Activer",
+    "users.deactivate": "Désactiver",
+    "users.activating": "Activation en cours...",
+    "users.deactivating": "Désactivation en cours...",
+    "users.activated": "Utilisateur activé",
+    "users.deactivated": "Utilisateur désactivé",
+    "users.activationFailed": "Échec de l'activation de l'utilisateur",
+    "users.deactivationFailed": "Échec de la désactivation de l'utilisateur",
+    "users.userActivatedSuccessfully": "Utilisateur activé avec succès",
+    "users.userDeactivatedSuccessfully": "Utilisateur désactivé avec succès",
+    // Verification toggle
+    "users.unverifyEmail": "Annuler la vérification de l'email",
+    "users.unverifyPhone": "Annuler la vérification du téléphone",
+    "users.emailUnverifiedSuccessfully": "Email de l'utilisateur non vérifié avec succès",
+    "users.phoneUnverifiedSuccessfully": "Téléphone de l'utilisateur non vérifié avec succès",
+    "users.confirmVerifyEmail": "Êtes-vous sûr de vouloir vérifier l'email de cet utilisateur ?",
+    "users.confirmUnverifyEmail": "Êtes-vous sûr de vouloir annuler la vérification de l'email de cet utilisateur ?",
+    "users.confirmVerifyPhone": "Êtes-vous sûr de vouloir vérifier le téléphone de cet utilisateur ?",
+    "users.confirmUnverifyPhone": "Êtes-vous sûr de vouloir annuler la vérification du téléphone de cet utilisateur ?",
 
     // Transactions
     "transactions.title": "Transactions",
@@ -502,6 +585,7 @@ const translations = {
     "common.active": "Actif",
     "common.inactive": "Inactif",
     "common.all": "Tous",
+    "common.ok": "OK",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",

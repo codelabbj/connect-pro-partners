@@ -79,14 +79,14 @@ export default function TransactionsPage() {
           page: currentPage.toString(),
           page_size: itemsPerPage.toString(),
         })
-        // Optionally add filters if API supports them
-        // if (searchTerm) params.append("search", searchTerm)
-        // if (statusFilter !== "all") params.append("status", statusFilter)
-        // if (typeFilter !== "all") params.append("type", typeFilter)
         const endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`
         const data = await apiFetch(endpoint)
         setTransactions(data.results || [])
         setTotalCount(data.count || 0)
+        toast({
+          title: t("transactions.success"),
+          description: t("transactions.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
           ? JSON.stringify(err, null, 2)
@@ -94,6 +94,11 @@ export default function TransactionsPage() {
         setError(errorMessage)
         setTransactions([])
         setTotalCount(0)
+        toast({
+          title: t("transactions.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('Transactions fetch error:', err)
       } finally {
         setLoading(false)
@@ -202,16 +207,33 @@ export default function TransactionsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-      toast({ title: t("transactions.transactionUpdated"), description: t("transactions.transactionUpdatedSuccess") })
+      toast({
+        title: t("transactions.editSuccess"),
+        description: t("transactions.transactionUpdatedSuccessfully"),
+      })
       setEditModalOpen(false)
-      // Refresh transactions
-      setTransactions((prev) => prev.map((t) => (t.uid === data.uid ? { ...t, ...data } : t)))
+      setEditTransaction(null)
+      setEditForm({
+        status: "",
+        external_transaction_id: "",
+        balance_before: "",
+        balance_after: "",
+        fees: "",
+        confirmation_message: "",
+        raw_sms: "",
+        completed_at: "",
+        error_message: "",
+      })
+      // Refetch transactions
+      setCurrentPage(1)
     } catch (err: any) {
-      const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-        ? JSON.stringify(err, null, 2)
-        : t("transactions.failedToUpdate")
-      setEditError(errorMessage)
-      console.error('Transaction update error:', err)
+      const backendError = err?.message || t("transactions.failedToEdit")
+      setEditError(backendError)
+      toast({
+        title: t("transactions.failedToEdit"),
+        description: backendError,
+        variant: "destructive",
+      })
     } finally {
       setEditLoading(false)
     }
@@ -219,19 +241,37 @@ export default function TransactionsPage() {
   // Delete transaction
   const handleDelete = async () => {
     if (!deleteUid) return
+    setLoading(true)
+    setError("")
     try {
       const endpoint = `${baseUrl}api/payments/transactions/${deleteUid}/`
       await apiFetch(endpoint, { method: "DELETE" })
-      toast({ title: t("transactions.transactionDeleted"), description: t("transactions.transactionDeletedSuccess") })
-      setTransactions((prev) => prev.filter((t) => t.uid !== deleteUid))
+      toast({
+        title: t("transactions.deleteSuccess"),
+        description: t("transactions.transactionDeletedSuccessfully"),
+      })
       setDeleteUid(null)
+      // Refetch transactions
+      setCurrentPage(1)
     } catch (err: any) {
-      const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-        ? JSON.stringify(err, null, 2)
-        : t("transactions.failedToDelete")
-      toast({ title: t("transactions.deleteFailed"), description: errorMessage, variant: "destructive" })
-      console.error('Transaction delete error:', err)
+      const backendError = err?.message || t("transactions.failedToDelete")
+      setError(backendError)
+      toast({
+        title: t("transactions.failedToDelete"),
+        description: backendError,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("transactions.loading")}</span>
+      </div>
+    )
   }
 
   return (

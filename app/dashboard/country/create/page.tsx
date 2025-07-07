@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -18,6 +19,7 @@ export default function CountryCreatePage() {
   const router = useRouter()
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -29,12 +31,29 @@ export default function CountryCreatePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nom, code, is_active: isActive })
       })
+      toast({
+        title: t("country.created"),
+        description: t("country.createdSuccessfully"),
+      })
       router.push("/dashboard/country/list")
     } catch (err: any) {
       setError(err.message || t("country.failedToCreate"))
+      toast({
+        title: t("country.failedToCreate"),
+        description: err.message || t("country.failedToCreate"),
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("country.loading")}</span>
+      </div>
+    )
   }
 
   return (

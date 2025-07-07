@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useApi } from "@/lib/useApi"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -16,6 +17,7 @@ export default function NetworkConfigEditPage() {
   const params = useParams()
   const { id } = params
   const apiFetch = useApi()
+  const { toast } = useToast();
   
   const [networks, setNetworks] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -48,9 +50,18 @@ export default function NetworkConfigEditPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
         setNetworks(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: "Networks Loaded",
+          description: "Networks loaded successfully.",
+        })
       } catch (err: any) {
         setError("Failed to load networks")
         setNetworks([])
+        toast({
+          title: "Failed to Load Networks",
+          description: err.message || "Failed to load networks.",
+          variant: "destructive",
+        })
       }
     }
     
@@ -94,8 +105,17 @@ export default function NetworkConfigEditPage() {
           setMaxRetries(data.custom_settings.max_retries || 3)
           setAutoConfirm(data.custom_settings.auto_confirm || false)
         }
+        toast({
+          title: "Config Loaded",
+          description: "Network configuration loaded successfully.",
+        })
       } catch (err: any) {
         setError(err.message || "Failed to load network configuration")
+        toast({
+          title: "Failed to Load Config",
+          description: err.message || "Failed to load network configuration.",
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
@@ -136,13 +156,29 @@ export default function NetworkConfigEditPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
-      
+      toast({
+        title: "Config Updated",
+        description: "Network configuration updated successfully.",
+      })
       router.push("/dashboard/network-config/list")
     } catch (err: any) {
       setError(err.message || "Failed to update network configuration")
+      toast({
+        title: "Failed to Update Config",
+        description: err.message || "Failed to update network configuration.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">Loading...</span>
+      </div>
+    )
   }
 
   return (

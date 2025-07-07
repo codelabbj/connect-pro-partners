@@ -13,8 +13,9 @@ import { useToast } from "@/hooks/use-toast"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useApi } from "@/lib/useApi"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -42,14 +43,13 @@ export default function UsersPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState("")
   
-  // Verification modal states
-  const [verificationModalOpen, setVerificationModalOpen] = useState(false)
-  const [verificationType, setVerificationType] = useState<"email" | "phone" | null>(null)
-  const [verificationStep, setVerificationStep] = useState<"input" | "code" | null>(null)
-  const [verificationIdentifier, setVerificationIdentifier] = useState("")
-  const [verificationCode, setVerificationCode] = useState("")
-  const [verificationLoading, setVerificationLoading] = useState(false)
-  const [verificationError, setVerificationError] = useState("")
+  // Add state for loading email/phone verification
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+
+  // Add state for confirmation modals
+  const [confirmEmailToggle, setConfirmEmailToggle] = useState<null | boolean>(null);
+  const [confirmPhoneToggle, setConfirmPhoneToggle] = useState<null | boolean>(null);
 
   // Helper to extract error messages from API responses
   function extractErrorMessages(errorObj: any): string {
@@ -77,16 +77,25 @@ export default function UsersPage() {
         const endpoint =
           viewType === "pending"
             ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
-            : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/?${params.toString()}`
+            : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/`
         const data = await apiFetch(endpoint)
         setUsers(data.users || [])
         setTotalCount(data.pagination?.total_count || 0)
         setTotalPages(data.pagination?.total_pages || 1)
+        toast({
+          title: t("users.success"),
+          description: t("users.loadedSuccessfully"),
+        })
       } catch (err: any) {
         setError(extractErrorMessages(err));
         setUsers([])
         setTotalCount(0)
         setTotalPages(1)
+        toast({
+          title: t("users.failedToLoad"),
+          description: extractErrorMessages(err),
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
@@ -114,12 +123,12 @@ export default function UsersPage() {
     setActivatingUid(user.uid)
     try {
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${user.uid}/activate/`, {
-        method: "POST",
+        method: "PATCH",
       })
-      toast({ title: "User Activated", description: data.message || "User activated successfully." })
+      toast({ title: t("users.activated"), description: data.message || t("users.userActivatedSuccessfully") })
       setUsers((prev) => prev.map((u) => (u.uid === user.uid ? { ...u, ...data.user } : u)))
     } catch (err: any) {
-      toast({ title: "Activation failed", description: extractErrorMessages(err) || "Could not activate user.", variant: "destructive" })
+      toast({ title: t("users.activationFailed"), description: extractErrorMessages(err) || t("users.couldNotActivateUser"), variant: "destructive" })
     } finally {
       setActivatingUid(null)
     }
@@ -133,10 +142,10 @@ export default function UsersPage() {
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${user.uid}/deactivate/`, {
         method: "PATCH",
       })
-      toast({ title: "User Deactivated", description: data.message || "User deactivated successfully." })
+      toast({ title: t("users.deactivated"), description: data.message || t("users.userDeactivatedSuccessfully") })
       setUsers((prev) => prev.map((u) => (u.uid === user.uid ? { ...u, ...data.user } : u)))
     } catch (err: any) {
-      toast({ title: "Deactivation failed", description: extractErrorMessages(err) || "Could not deactivate user.", variant: "destructive" })
+      toast({ title: t("users.deactivationFailed"), description: extractErrorMessages(err) || t("users.couldNotDeactivateUser"), variant: "destructive" })
     } finally {
       setDeactivatingUid(null)
     }
@@ -157,17 +166,20 @@ export default function UsersPage() {
   // Bulk action handler
   const handleBulkAction = async (action: "activate" | "deactivate" | "delete") => {
     if (selectedUids.length === 0) return
+    setLoading(true)
     try {
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/bulk-action/`, {
         method: "POST",
         body: JSON.stringify({ action, user_ids: selectedUids }),
       })
-      toast({ title: "Bulk action success", description: data.message || "Bulk action completed." })
+      toast({ title: t("users.bulkActionSuccess"), description: data.message || t("users.bulkActionCompleted") })
       setUsers((prev) => prev.map((u) => selectedUids.includes(u.uid) ? { ...u, ...data.user } : u))
       setSelectedUids([])
       setCurrentPage(1)
     } catch (err: any) {
-      toast({ title: "Bulk action failed", description: extractErrorMessages(err) || "Could not perform bulk action.", variant: "destructive" })
+      toast({ title: t("users.bulkActionFailed"), description: extractErrorMessages(err) || t("users.couldNotPerformBulkAction"), variant: "destructive" })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -180,8 +192,10 @@ export default function UsersPage() {
     try {
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${uid}/`)
       setDetailUser(data)
+      toast({ title: t("users.detailLoaded"), description: t("users.userDetailLoadedSuccessfully") })
     } catch (err: any) {
       setDetailError(extractErrorMessages(err))
+      toast({ title: t("users.detailFailed"), description: extractErrorMessages(err), variant: "destructive" })
     } finally {
       setDetailLoading(false)
     }
@@ -193,100 +207,80 @@ export default function UsersPage() {
     setDetailError("")
   }
 
-  // Verification handlers
-  const handleVerifyEmail = () => {
-    setVerificationType("email");
-    setVerificationStep("input");
-    setVerificationModalOpen(true);
-    setVerificationIdentifier(detailUser?.email || "");
-    setVerificationError("");
-  };
-
-  const handleVerifyPhone = () => {
-    setVerificationType("phone");
-    setVerificationStep("input");
-    setVerificationModalOpen(true);
-    setVerificationIdentifier(detailUser?.phone || "");
-    setVerificationError("");
-  };
-
-  const handleSendVerificationCode = async () => {
-    if (!verificationIdentifier) return;
-    
-    setVerificationLoading(true);
-    setVerificationError("");
-    
+  // Add handler for verifying email
+  const handleVerifyEmail = async () => {
+    if (!detailUser?.uid) return;
+    setVerifyingEmail(true);
     try {
-      const payload = { identifier: verificationIdentifier };
-      await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/verify/resend/`, {
-        method: "POST",
+      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${detailUser.uid}/update/`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ email_verified: true }),
       });
-      
-      setVerificationStep("code");
-      toast({ title: "Code Sent", description: `Verification code sent to ${verificationType === "email" ? "email" : "phone"}.` });
+      setDetailUser((prev: any) => prev ? { ...prev, email_verified: true } : prev);
+      toast({ title: t("users.emailVerified"), description: t("users.emailVerifiedSuccessfully") });
     } catch (err: any) {
-      setVerificationError(extractErrorMessages(err));
+      toast({ title: t("users.verificationFailed"), description: extractErrorMessages(err), variant: "destructive" });
     } finally {
-      setVerificationLoading(false);
+      setVerifyingEmail(false);
     }
   };
 
-  const handleVerifyCode = async () => {
-    if (!verificationCode) return;
-    
-    setVerificationLoading(true);
-    setVerificationError("");
-    
+  // Add handler for verifying phone
+  const handleVerifyPhone = async () => {
+    if (!detailUser?.uid) return;
+    setVerifyingPhone(true);
     try {
-      const endpoint = verificationType === "email" 
-        ? `${baseUrl.replace(/\/$/, "")}/api/auth/verify/email/`
-        : `${baseUrl.replace(/\/$/, "")}/api/auth/verify/phone/`;
-      
-      const payload = verificationType === "email"
-        ? { email: verificationIdentifier, code: verificationCode }
-        : { phone: verificationIdentifier, code: verificationCode };
-      
-      const response = await apiFetch(endpoint, {
-        method: "POST",
+      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${detailUser.uid}/update/`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ phone_verified: true }),
       });
-      
-      // Update user verification status
-      if (verificationType === "email" && response.email_verified) {
-        setDetailUser((prev: any) => prev ? { ...prev, email_verified: true } : prev);
-        toast({ title: "Email Verified", description: response.message || "Email verified successfully." });
-      } else if (verificationType === "phone" && response.phone_verified) {
-        setDetailUser((prev: any) => prev ? { ...prev, phone_verified: true } : prev);
-        toast({ title: "Phone Verified", description: response.message || "Phone verified successfully." });
-      }
-      
-      // Close verification modal
-      setVerificationModalOpen(false);
-      setVerificationStep(null);
-      setVerificationType(null);
-      setVerificationIdentifier("");
-      setVerificationCode("");
+      setDetailUser((prev: any) => prev ? { ...prev, phone_verified: true } : prev);
+      toast({ title: t("users.phoneVerified"), description: t("users.phoneVerifiedSuccessfully") });
     } catch (err: any) {
-      setVerificationError(extractErrorMessages(err));
+      toast({ title: t("users.verificationFailed"), description: extractErrorMessages(err), variant: "destructive" });
     } finally {
-      setVerificationLoading(false);
+      setVerifyingPhone(false);
     }
   };
 
-  const handleResendCode = async () => {
-    await handleSendVerificationCode();
+  // Update handleVerifyEmail to handle both verify and unverify
+  const handleToggleEmailVerified = async (verify: boolean) => {
+    if (!detailUser?.uid) return;
+    setVerifyingEmail(true);
+    try {
+      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${detailUser.uid}/update/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email_verified: verify }),
+      });
+      setDetailUser((prev: any) => prev ? { ...prev, email_verified: verify } : prev);
+      toast({ title: t("users.emailVerified"), description: verify ? t("users.emailVerifiedSuccessfully") : t("users.emailUnverifiedSuccessfully") });
+    } catch (err: any) {
+      toast({ title: t("users.verificationFailed"), description: extractErrorMessages(err), variant: "destructive" });
+    } finally {
+      setVerifyingEmail(false);
+    }
   };
 
-  const handleCloseVerificationModal = () => {
-    setVerificationModalOpen(false);
-    setVerificationStep(null);
-    setVerificationType(null);
-    setVerificationIdentifier("");
-    setVerificationCode("");
-    setVerificationError("");
+  // Update handleVerifyPhone to handle both verify and unverify
+  const handleTogglePhoneVerified = async (verify: boolean) => {
+    if (!detailUser?.uid) return;
+    setVerifyingPhone(true);
+    try {
+      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${detailUser.uid}/update/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone_verified: verify }),
+      });
+      setDetailUser((prev: any) => prev ? { ...prev, phone_verified: verify } : prev);
+      toast({ title: t("users.phoneVerified"), description: verify ? t("users.phoneVerifiedSuccessfully") : t("users.phoneUnverifiedSuccessfully") });
+    } catch (err: any) {
+      toast({ title: t("users.verificationFailed"), description: extractErrorMessages(err), variant: "destructive" });
+    } finally {
+      setVerifyingPhone(false);
+    }
   };
 
   return (
@@ -375,7 +369,31 @@ export default function UsersPage() {
                       <TableCell className="font-medium">{user.display_name || `${user.first_name || ""} ${user.last_name || ""}`}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone}</TableCell>
-                      <TableCell>{user.is_active ? t("users.active") : t("users.inactive")}</TableCell>
+                      <TableCell>
+                        {user.is_active ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={deactivatingUid === user.uid}
+                            onClick={() => handleDeactivate(user)}
+                          >
+                            {deactivatingUid === user.uid ? (
+                              <span className="flex items-center"><svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>{t("users.deactivating")}</span>
+                            ) : t("users.deactivate")}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={activatingUid === user.uid}
+                            onClick={() => handleActivate(user)}
+                          >
+                            {activatingUid === user.uid ? (
+                              <span className="flex items-center"><svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>{t("users.activating")}</span>
+                            ) : t("users.activate")}
+                          </Button>
+                        )}
+                      </TableCell>
                       <TableCell>{user.last_login_at ? user.last_login_at.split("T")[0] : "-"}</TableCell>
                       <TableCell>{user.created_at ? user.created_at.split("T")[0] : "-"}</TableCell>
                       <TableCell>
@@ -439,12 +457,22 @@ export default function UsersPage() {
                 <div><b>{t("users.email")}:</b> {detailUser.email}</div>
                 <div><b>{t("users.phone")}:</b> {detailUser.phone}</div>
                 <div><b>{t("users.status")}:</b> {detailUser.is_active ? t("users.active") : t("users.inactive")}</div>
-                <div><b>{t("users.emailVerified")}:</b> {detailUser.email_verified ? t("common.yes") : (
-                  <Button size="sm" onClick={handleVerifyEmail} disabled={detailLoading} className="ml-2">{t("users.verifyEmail")}</Button>
-                )}</div>
-                <div><b>{t("users.phoneVerified")}:</b> {detailUser.phone_verified ? t("common.yes") : (
-                  <Button size="sm" onClick={handleVerifyPhone} disabled={detailLoading} className="ml-2">{t("users.verifyPhone")}</Button>
-                )}</div>
+                <div><b>{t("users.emailVerified")}:</b> {detailUser.email_verified ? t("common.yes") : t("common.no")}
+  <Switch
+    checked={detailUser.email_verified}
+    disabled={detailLoading || verifyingEmail}
+    onCheckedChange={() => setConfirmEmailToggle(!detailUser.email_verified)}
+    className="ml-2"
+  />
+</div>
+<div><b>{t("users.phoneVerified")}:</b> {detailUser.phone_verified ? t("common.yes") : t("common.no")}
+  <Switch
+    checked={detailUser.phone_verified}
+    disabled={detailLoading || verifyingPhone}
+    onCheckedChange={() => setConfirmPhoneToggle(!detailUser.phone_verified)}
+    className="ml-2"
+  />
+</div>
                 <div><b>{t("users.contactMethod")}:</b> {detailUser.contact_method}</div>
                 <div><b>{t("users.createdAt")}:</b> {detailUser.created_at ? detailUser.created_at.split("T")[0] : "-"}</div>
                 <div><b>{t("users.lastLogin")}:</b> {detailUser.last_login_at ? detailUser.last_login_at.split("T")[0] : "-"}</div>
@@ -456,105 +484,71 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Verification Modal */}
-      <Dialog open={verificationModalOpen} onOpenChange={(open) => { if (!open) handleCloseVerificationModal() }}>
+      {/* Email Verification Confirmation Modal */}
+      <Dialog open={confirmEmailToggle !== null} onOpenChange={(open) => { if (!open) setConfirmEmailToggle(null) }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {verificationType === "email" ? t("users.verifyEmail") : t("users.verifyPhone")}
-            </DialogTitle>
-            <DialogDescription>
-              {verificationStep === "input" 
-                ? t("users.enterIdentifierToSendCode", { type: verificationType === "email" ? t("users.email") : t("users.phone") })
-                : t("users.enterCodeSentTo", { identifier: verificationIdentifier })
-              }
-            </DialogDescription>
+            <DialogTitle>{confirmEmailToggle ? t("users.verifyEmail") : t("users.unverifyEmail")}</DialogTitle>
           </DialogHeader>
-          
-          {verificationError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-              <div className="text-sm text-red-700">
-                {verificationError.startsWith('{') ? (
-                  <pre className="whitespace-pre-wrap bg-red-100 p-2 rounded border text-xs">
-                    {verificationError}
-                  </pre>
-                ) : (
-                  verificationError
-                )}
-              </div>
-            </div>
-          )}
+          <div className="py-4 text-center">
+            {confirmEmailToggle
+              ? t("users.confirmVerifyEmail")
+              : t("users.confirmUnverifyEmail")}
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full"
+              onClick={async () => {
+                await handleToggleEmailVerified(!!confirmEmailToggle);
+                setConfirmEmailToggle(null);
+              }}
+              disabled={verifyingEmail}
+            >
+              {verifyingEmail ? t("users.verifying") : t("common.ok")}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={() => setConfirmEmailToggle(null)}
+              disabled={verifyingEmail}
+            >
+              {t("common.cancel")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          {verificationStep === "input" ? (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="identifier">
-                  {verificationType === "email" ? t("users.email") : t("users.phone")}
-                </Label>
-                <Input
-                  id="identifier"
-                  type={verificationType === "email" ? "email" : "tel"}
-                  value={verificationIdentifier}
-                  onChange={(e) => setVerificationIdentifier(e.target.value)}
-                  placeholder={verificationType === "email" ? t("users.enterEmail") : t("users.enterPhone")}
-                  disabled={verificationLoading}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleSendVerificationCode} 
-                  disabled={verificationLoading || !verificationIdentifier}
-                  className="flex-1"
-                >
-                  {verificationLoading ? t("users.sending") : t("users.sendCode")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleCloseVerificationModal}
-                  disabled={verificationLoading}
-                >
-                  {t("common.cancel")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="code">{t("users.verificationCode")}</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder={t("users.enterVerificationCode")}
-                  disabled={verificationLoading}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleVerifyCode} 
-                  disabled={verificationLoading || !verificationCode}
-                  className="flex-1"
-                >
-                  {verificationLoading ? t("users.verifying") : t("users.verifyCode")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleResendCode}
-                  disabled={verificationLoading}
-                >
-                  {t("users.resendCode")}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleCloseVerificationModal}
-                  disabled={verificationLoading}
-                >
-                  {t("common.cancel")}
-                </Button>
-              </div>
-            </div>
-          )}
+      {/* Phone Verification Confirmation Modal */}
+      <Dialog open={confirmPhoneToggle !== null} onOpenChange={(open) => { if (!open) setConfirmPhoneToggle(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirmPhoneToggle ? t("users.verifyPhone") : t("users.unverifyPhone")}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            {confirmPhoneToggle
+              ? t("users.confirmVerifyPhone")
+              : t("users.confirmUnverifyPhone")}
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full"
+              onClick={async () => {
+                await handleTogglePhoneVerified(!!confirmPhoneToggle);
+                setConfirmPhoneToggle(null);
+              }}
+              disabled={verifyingPhone}
+            >
+              {verifyingPhone ? t("users.verifying") : t("common.ok")}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={() => setConfirmPhoneToggle(null)}
+              disabled={verifyingPhone}
+            >
+              {t("common.cancel")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

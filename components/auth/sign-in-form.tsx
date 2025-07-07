@@ -14,15 +14,16 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Zap, Eye, EyeOff } from "lucide-react"
 import { useApi } from "@/lib/useApi"
+import { useToast } from "@/hooks/use-toast"
 
 // Helper to extract error messages from API responses
 function extractErrorMessages(errorObj: any): string {
   if (!errorObj || typeof errorObj !== "object") return String(errorObj)
   if (errorObj.detail) return errorObj.detail
   if (errorObj.message) return errorObj.message
-  // If it's a field error object, join all messages
+  // If it's a field error object, join all array values for all fields
   return Object.values(errorObj)
-    .flat()
+    .map((v) => Array.isArray(v) ? v.join(" ") : String(v))
     .join(" ")
 }
 
@@ -31,44 +32,59 @@ export function SignInForm() {
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
   const { t } = useLanguage()
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
   const [showPassword, setShowPassword] = useState(false)
   const apiFetch = useApi();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setLoading(true)
     try {
-      // Use apiFetch instead of fetch
       const data = await apiFetch(`${baseUrl}api/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
       })
-      if (!data || data.detail) {
-        setError(extractErrorMessages(data) || "Login failed.")
+      if (!data || !data.access || !data.refresh || !data.user) {
+        const backendError = extractErrorMessages(data) || t("auth.loginFailed")
+        setError(backendError)
+        toast({
+          title: t("auth.loginFailed"),
+          description: backendError,
+          variant: "destructive",
+        })
+        setLoading(false)
         return
       }
-      // Store tokens and user info in localStorage for client use
       localStorage.setItem("accessToken", data.access)
       localStorage.setItem("refreshToken", data.refresh)
       localStorage.setItem("user", JSON.stringify(data.user))
-      console.log('Login response access token:', data.access);
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true")
-        // Set cookie for 1 day
         document.cookie = `accessToken=${data.access}; path=/; max-age=86400; secure; samesite=strict`;
       } else {
         localStorage.removeItem("rememberMe")
-        // Set session cookie
         document.cookie = `accessToken=${data.access}; path=/; secure; samesite=strict`;
       }
-      console.log('Cookie after login:', document.cookie);
+      toast({
+        title: t("auth.loginSuccess"),
+        description: t("auth.loggedInSuccessfully"),
+      })
       router.push("/dashboard")
-    } catch (err) {
-      setError("Network error.")
+    } catch (err: any) {
+      const backendError = err?.message || t("auth.networkError")
+      setError(backendError)
+      toast({
+        title: t("auth.networkError"),
+        description: backendError,
+        variant: "destructive",
+      })
+      setLoading(false)
     }
   }
 
@@ -140,8 +156,8 @@ export function SignInForm() {
                 {t("auth.forgotPassword")}
               </Button>
             </div>
-            <Button type="submit" className="w-full">
-              {t("auth.signIn")}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? t("auth.loggingIn") : t("auth.signIn")}
             </Button>
             {error && <div className="text-red-500 text-sm mt-2 text-center">{error}</div>}
           </form>

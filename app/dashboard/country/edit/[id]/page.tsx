@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -20,6 +21,7 @@ export default function CountryEditPage() {
   const [error, setError] = useState("")
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!id) return
@@ -32,8 +34,17 @@ export default function CountryEditPage() {
         setNom(data.nom || "")
         setCode(data.code || "")
         setIsActive(data.is_active)
+        toast({
+          title: t("country.loaded"),
+          description: t("country.loadedSuccessfully"),
+        })
       } catch (err: any) {
         setError(err.message || t("country.failedToLoad"))
+        toast({
+          title: t("country.failedToLoad"),
+          description: err.message || t("country.failedToLoad"),
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
@@ -52,12 +63,29 @@ export default function CountryEditPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nom, code, is_active: isActive })
       })
+      toast({
+        title: t("country.updated"),
+        description: t("country.updatedSuccessfully"),
+      })
       router.push("/dashboard/country/list")
     } catch (err: any) {
       setError(err.message || t("country.failedToUpdate"))
+      toast({
+        title: t("country.failedToUpdate"),
+        description: err.message || t("country.failedToUpdate"),
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("country.loading")}</span>
+      </div>
+    )
   }
 
   return (
@@ -66,8 +94,7 @@ export default function CountryEditPage() {
         <CardTitle>{t("country.edit")}</CardTitle>
       </CardHeader>
       <CardContent>
-        {loading ? <div>{t("country.loading")}</div> : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label>{t("country.name")}</label>
               <Input value={nom} onChange={e => setNom(e.target.value)} required />
@@ -86,7 +113,6 @@ export default function CountryEditPage() {
             {error && <div className="text-red-500">{error}</div>}
             <Button type="submit" disabled={loading}>{loading ? t("country.saving") : t("common.save")}</Button>
           </form>
-        )}
       </CardContent>
     </Card>
   )

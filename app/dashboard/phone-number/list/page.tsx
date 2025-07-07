@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -19,6 +20,7 @@ export default function PhoneNumberListPage() {
   const [networks, setNetworks] = useState<any[]>([])
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchPhoneNumbers = async () => {
@@ -27,12 +29,21 @@ export default function PhoneNumberListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/numeros/`)
         setNumbers(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("phoneNumbers.success"),
+          description: t("phoneNumbers.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
           ? JSON.stringify(err, null, 2)
           : err.message || t("phoneNumbers.failedToLoad")
         setError(errorMessage)
         setNumbers([])
+        toast({
+          title: t("phoneNumbers.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('Phone numbers fetch error:', err)
       } finally {
         setLoading(false)
@@ -48,9 +59,18 @@ export default function PhoneNumberListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
         setNetworks(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("phoneNumbers.networksLoaded"),
+          description: t("phoneNumbers.networksLoadedSuccessfully"),
+        })
       } catch (err: any) {
         console.error('Networks fetch error:', err)
         setNetworks([])
+        toast({
+          title: t("phoneNumbers.networksFailedToLoad"),
+          description: err.message || t("phoneNumbers.failedToLoadNetworks"),
+          variant: "destructive",
+        })
       }
     }
     
@@ -71,6 +91,14 @@ export default function PhoneNumberListPage() {
       return matchesSearch && matchesNetwork
     })
   }, [numbers, searchTerm, networkFilter, networks])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("phoneNumbers.loading")}</span>
+      </div>
+    )
+  }
 
   return (
     <Card>
@@ -104,11 +132,7 @@ export default function PhoneNumberListPage() {
           </Select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">{t("common.loading")}</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">

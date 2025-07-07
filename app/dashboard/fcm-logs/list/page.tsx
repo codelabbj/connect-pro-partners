@@ -9,6 +9,7 @@ import { Copy } from "lucide-react"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -21,6 +22,7 @@ export default function FcmLogsListPage() {
   const [deviceFilter, setDeviceFilter] = useState("all")
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchFcmLogs = async () => {
@@ -29,12 +31,21 @@ export default function FcmLogsListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/fcm-logs/`)
         setLogs(Array.isArray(data.results) ? data.results : [])
+        toast({
+          title: t("fcmLogs.success"),
+          description: t("fcmLogs.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
           ? JSON.stringify(err, null, 2)
           : err.message || t("fcmLogs.failedToLoad")
         setError(errorMessage)
         setLogs([])
+        toast({
+          title: t("fcmLogs.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('FCM logs fetch error:', err)
       } finally {
         setLoading(false)
@@ -63,6 +74,14 @@ export default function FcmLogsListPage() {
     navigator.clipboard.writeText(body)
     setCopied(uid)
     setTimeout(() => setCopied(null), 1500)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("fcmLogs.loading")}</span>
+      </div>
+    )
   }
 
   return (
@@ -97,11 +116,7 @@ export default function FcmLogsListPage() {
           </Select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">{t("common.loading")}</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">

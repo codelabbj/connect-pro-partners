@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -23,14 +25,24 @@ export default function NetworkEditPage() {
   const [error, setError] = useState("")
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/countries/`)
         setCountries(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("network.countriesLoaded"),
+          description: t("network.countriesLoadedSuccessfully"),
+        })
       } catch (err: any) {
         setCountries([])
+        toast({
+          title: t("network.countriesFailedToLoad"),
+          description: err.message || t("network.failedToLoadCountries"),
+          variant: "destructive",
+        })
       }
     }
     
@@ -50,8 +62,17 @@ export default function NetworkEditPage() {
         setCountry(data.country || "")
         setUssdBaseCode(data.ussd_base_code || "")
         setIsActive(data.is_active)
+        toast({
+          title: t("network.loaded"),
+          description: t("network.loadedSuccessfully"),
+        })
       } catch (err: any) {
         setError(err.message || t("network.failedToLoad"))
+        toast({
+          title: t("network.failedToLoad"),
+          description: err.message || t("network.failedToLoad"),
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
@@ -70,12 +91,29 @@ export default function NetworkEditPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nom, code, country, ussd_base_code: ussdBaseCode, is_active: isActive })
       })
+      toast({
+        title: t("network.updated"),
+        description: t("network.updatedSuccessfully"),
+      })
       router.push("/dashboard/network/list")
     } catch (err: any) {
       setError(err.message || t("network.failedToUpdate"))
+      toast({
+        title: t("network.failedToUpdate"),
+        description: err.message || t("network.failedToUpdate"),
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("network.loading")}</span>
+      </div>
+    )
   }
 
   return (
@@ -84,8 +122,7 @@ export default function NetworkEditPage() {
         <CardTitle>{t("network.edit")}</CardTitle>
       </CardHeader>
       <CardContent>
-        {loading ? <div>{t("network.loading")}</div> : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label>{t("network.name")}</label>
               <Input value={nom} onChange={e => setNom(e.target.value)} required />
@@ -96,12 +133,28 @@ export default function NetworkEditPage() {
             </div>
             <div>
               <label>{t("network.country")}</label>
-              <select value={country} onChange={e => setCountry(e.target.value)} required>
-                <option value="">{t("network.selectCountry")}</option>
-                {countries.map((c: any) => (
-                  <option key={c.uid} value={c.uid}>{c.nom}</option>
-                ))}
-              </select>
+              <Select
+                value={country}
+                onValueChange={setCountry}
+                disabled={countries.length === 0}
+              >
+                <SelectTrigger className="w-full" aria-label={t("network.country")}> 
+                  <SelectValue placeholder={t("network.selectCountry")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.length === 0 ? (
+                    <SelectItem value="no-countries" disabled>
+                      {t("network.noCountries") || "No countries available"}
+                    </SelectItem>
+                  ) : (
+                    countries.map((c: any) => (
+                      <SelectItem key={c.uid} value={c.uid}>
+                        {c.nom}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label>{t("network.ussdBaseCode")}</label>
@@ -117,7 +170,6 @@ export default function NetworkEditPage() {
             {error && <div className="text-red-500">{error}</div>}
             <Button type="submit" disabled={loading}>{loading ? t("network.saving") : t("network.save")}</Button>
           </form>
-        )}
       </CardContent>
     </Card>
   )

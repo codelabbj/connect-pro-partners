@@ -10,6 +10,7 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import Link from "next/link"
 import { Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -23,40 +24,33 @@ export default function NetworkConfigListPage() {
   const [networks, setNetworks] = useState<any[]>([])
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchNetworkConfigs = async () => {
       setLoading(true)
       setError("")
       try {
-        const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          // Show the raw API response if available, otherwise show a formatted error
-          const errorMessage = Object.keys(errorData).length > 0 
-            ? JSON.stringify(errorData, null, 2)
-            : `HTTP ${response.status}: ${response.statusText}`
-          throw new Error(errorMessage)
-        }
-        
-        const data = await response.json()
+        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/`)
         setConfigs(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("networkConfig.success"),
+          description: t("networkConfig.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = err.message || t("networkConfig.failedToLoad")
         setError(errorMessage)
         setConfigs([])
+        toast({
+          title: t("networkConfig.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('Network config fetch error:', err)
       } finally {
         setLoading(false)
       }
     }
-    
     fetchNetworkConfigs()
   }, [t])
 
@@ -64,32 +58,22 @@ export default function NetworkConfigListPage() {
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
-        const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          // Log the raw API response for debugging
-          const errorMessage = Object.keys(errorData).length > 0 
-            ? JSON.stringify(errorData, null, 2)
-            : `HTTP ${response.status}: ${response.statusText}`
-          console.error('Networks fetch error:', errorMessage)
-          setNetworks([])
-          return
-        }
-        
-        const data = await response.json()
+        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
         setNetworks(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("networkConfig.networksLoaded"),
+          description: t("networkConfig.networksLoadedSuccessfully"),
+        })
       } catch (err: any) {
         console.error('Networks fetch error:', err)
         setNetworks([])
+        toast({
+          title: t("networkConfig.networksFailedToLoad"),
+          description: err.message || t("networkConfig.failedToLoadNetworks"),
+          variant: "destructive",
+        })
       }
     }
-    
     fetchNetworks()
   }, [])
 
@@ -131,6 +115,14 @@ export default function NetworkConfigListPage() {
   const formatErrorKeywords = (keywords: string[]) => {
     if (!keywords || !Array.isArray(keywords)) return '-'
     return keywords.join(', ')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("networkConfig.loading")}</span>
+      </div>
+    )
   }
 
   return (
@@ -178,11 +170,7 @@ export default function NetworkConfigListPage() {
           </Select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">{t("common.loading")}</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Search } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -18,6 +19,7 @@ export default function DevicesListPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -26,12 +28,21 @@ export default function DevicesListPage() {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync`)
         setDevices(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("devices.success"),
+          description: t("devices.loadedSuccessfully"),
+        })
       } catch (err: any) {
         const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
           ? JSON.stringify(err, null, 2)
           : err.message || t("devices.failedToLoad")
         setError(errorMessage)
         setDevices([])
+        toast({
+          title: t("devices.failedToLoad"),
+          description: errorMessage,
+          variant: "destructive",
+        })
         console.error('Devices fetch error:', err)
       } finally {
         setLoading(false)
@@ -56,6 +67,14 @@ export default function DevicesListPage() {
       return matchesSearch && matchesStatus
     })
   }, [devices, searchTerm, statusFilter])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("devices.loading")}</span>
+      </div>
+    )
+  }
 
   return (
     <Card>
@@ -86,11 +105,7 @@ export default function DevicesListPage() {
           </Select>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-gray-500">{t("common.loading")}</div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">

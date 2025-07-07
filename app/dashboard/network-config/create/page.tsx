@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -42,15 +43,25 @@ export default function NetworkConfigCreatePage() {
   const [autoConfirm, setAutoConfirm] = useState(false)
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchNetworks = async () => {
       try {
         const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
         setNetworks(Array.isArray(data) ? data : data.results || [])
+        toast({
+          title: t("networkConfig.networksLoaded"),
+          description: t("networkConfig.networksLoadedSuccessfully"),
+        })
       } catch (err: any) {
         setError(t("networkConfig.failedToLoadNetworks"))
         setNetworks([])
+        toast({
+          title: t("networkConfig.networksFailedToLoad"),
+          description: err.message || t("networkConfig.failedToLoadNetworks"),
+          variant: "destructive",
+        })
       }
     }
     
@@ -90,12 +101,29 @@ export default function NetworkConfigCreatePage() {
         body: JSON.stringify(payload)
       })
       
+      toast({
+        title: t("networkConfig.success"),
+        description: t("networkConfig.createdSuccessfully"),
+      })
       router.push("/dashboard/network-config/list")
     } catch (err: any) {
       setError(err.message || t("networkConfig.failedToCreate"))
+      toast({
+        title: t("networkConfig.failedToCreate"),
+        description: err.message || t("networkConfig.failedToCreate"),
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("networkConfig.loading")}</span>
+      </div>
+    )
   }
 
   return (

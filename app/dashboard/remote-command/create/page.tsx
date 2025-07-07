@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
+import { useToast } from "@/hooks/use-toast"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -18,6 +19,7 @@ export default function RemoteCommandCreatePage() {
   const [success, setSuccess] = useState("")
   const apiFetch = useApi()
   const { t } = useLanguage()
+  const { toast } = useToast();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -29,6 +31,11 @@ export default function RemoteCommandCreatePage() {
       paramsObj = JSON.parse(parameters)
     } catch {
       setError(t("remoteCommand.parametersMustBeValidJson"))
+      toast({
+        title: t("remoteCommand.failed"),
+        description: t("remoteCommand.parametersMustBeValidJson"),
+        variant: "destructive",
+      })
       setLoading(false)
       return
     }
@@ -39,11 +46,29 @@ export default function RemoteCommandCreatePage() {
         body: JSON.stringify({ command, device_id: deviceId, parameters: paramsObj, priority })
       })
       setSuccess(data.status || t("remoteCommand.commandSentSuccessfully"))
+      toast({
+        title: t("remoteCommand.success"),
+        description: data.status || t("remoteCommand.commandSentSuccessfully"),
+      })
     } catch (err: any) {
-      setError(err.message || t("remoteCommand.failedToCreate"))
+      const backendError = err.message || t("remoteCommand.failedToCreate")
+      setError(backendError)
+      toast({
+        title: t("remoteCommand.failed"),
+        description: backendError,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <span className="text-lg font-semibold">{t("remoteCommand.sending")}</span>
+      </div>
+    )
   }
 
   return (

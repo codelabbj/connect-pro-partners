@@ -59,8 +59,8 @@ export function Sidebar() {
         <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white dark:bg-gray-800 h-full min-h-0">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Connect Pro Logo" className="h-8 w-8" />
-              <span className="text-xl font-bold">Connect Pro</span>
+              <img src="/logo.png" alt="Connect Pro Logo" className="h-20 w-20" />
+              {/* <span className="text-xl font-bold">Connect Pro</span> */}
             </div>
             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
               <X className="h-6 w-6" />

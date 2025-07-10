@@ -217,6 +217,7 @@ const translations = {
     "common.inactive": "Inactive",
     "common.all": "All",
     "common.ok": "OK",
+    "common.save": "Save",
 
     // Registration Form
     "register.title": "Register New User",
@@ -380,6 +381,7 @@ const translations = {
     "remoteCommand.sendCommand": "Send Command",
     "remoteCommand.parametersMustBeValidJson": "Parameters must be valid JSON",
     "remoteCommand.commandSentSuccessfully": "Command sent successfully",
+    "remoteCommand.selectDeviceId": "Select a device",
 
     // Common additional
     "common.no": "No",
@@ -589,6 +591,7 @@ const translations = {
     "common.inactive": "Inactif",
     "common.all": "Tous",
     "common.ok": "OK",
+    "common.save": "Enregistrer",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",
@@ -752,6 +755,7 @@ const translations = {
     "remoteCommand.sendCommand": "Envoyer la commande",
     "remoteCommand.parametersMustBeValidJson": "Les paramètres doivent être un JSON valide",
     "remoteCommand.commandSentSuccessfully": "Commande envoyée avec succès",
+    "remoteCommand.selectDeviceId": "Sélectionnez un appareil",
 
     // Common additional
     "common.no": "Non",

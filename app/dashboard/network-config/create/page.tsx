@@ -136,20 +136,25 @@ export default function NetworkConfigCreatePage() {
           {/* Network Selection */}
           <div className="space-y-2">
             <Label htmlFor="network">{t("networkConfig.network")}</Label>
-            <select
-              id="network"
-              value={network}
-              onChange={(e) => setNetwork(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              required
-            >
-              <option value="">{t("networkConfig.selectNetwork")}</option>
-              {networks.map((net: any) => (
-                <option key={net.uid} value={net.uid}>
-                  {net.nom}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                id="network"
+                value={network}
+                onChange={(e) => setNetwork(e.target.value)}
+                className="w-full h-10 px-3 py-2 pr-10 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                required
+              >
+                <option value="">{t("networkConfig.selectNetwork")}</option>
+                {networks.map((net: any) => (
+                  <option key={net.uid} value={net.uid}>
+                    {net.nom}
+                  </option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
 
           {/* Status */}

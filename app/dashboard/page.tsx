@@ -11,6 +11,8 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } f
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ClipboardList, Users, KeyRound, Bell, Clock } from "lucide-react";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -163,56 +165,83 @@ export default function DashboardPage() {
             </label>
           </div>
           {/* Task Stats */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
-            <h2 className="text-xl font-semibold mb-2 text-blue-700 dark:text-blue-200">{t("dashboard.taskStats")}</h2>
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex justify-between"><span>{t("dashboard.activeTasks")}</span><span className="font-bold text-blue-600">{stats.task_stats.active}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.scheduledTasks")}</span><span className="font-bold text-blue-400">{stats.task_stats.scheduled}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.reservedTasks")}</span><span className="font-bold text-blue-300">{stats.task_stats.reserved}</span></div>
-            </div>
-          </div>
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-blue-100 dark:border-blue-900">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
+                <ClipboardList className="text-blue-600 dark:text-blue-300 w-6 h-6" />
+              </div>
+              <CardTitle className="text-blue-700 dark:text-blue-200 text-lg">{t("dashboard.taskStats")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between items-center"><span>{t("dashboard.activeTasks")}</span><Badge className="bg-blue-600 text-white">{stats.task_stats.active}</Badge></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.scheduledTasks")}</span><Badge className="bg-blue-400 text-white">{stats.task_stats.scheduled}</Badge></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.reservedTasks")}</span><Badge className="bg-blue-300 text-white">{stats.task_stats.reserved}</Badge></div>
+            </CardContent>
+          </Card>
           {/* User Stats */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
-            <h2 className="text-xl font-semibold mb-2 text-green-700 dark:text-green-200">{t("dashboard.userStats")}</h2>
-            <div className="flex flex-col gap-2 w-full">
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-green-100 dark:border-green-900">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
+                <Users className="text-green-600 dark:text-green-300 w-6 h-6" />
+              </div>
+              <CardTitle className="text-green-700 dark:text-green-200 text-lg">{t("dashboard.userStats")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 w-full">
               {showOnlyActiveUsers ? (
-                <div className="flex justify-between"><span>{t("dashboard.activeUsers")}</span><span className="font-bold text-green-500">{stats.user_stats.active_users}</span></div>
+                <div className="flex justify-between items-center"><span>{t("dashboard.activeUsers")}</span><Badge className="bg-green-500 text-white">{stats.user_stats.active_users}</Badge></div>
               ) : (
                 <>
-                  <div className="flex justify-between"><span>{t("dashboard.totalUsers")}</span><span className="font-bold text-green-600">{stats.user_stats.total_users}</span></div>
-                  <div className="flex justify-between"><span>{t("dashboard.activeUsers")}</span><span className="font-bold text-green-500">{stats.user_stats.active_users}</span></div>
-                  <div className="flex justify-between"><span>{t("dashboard.pendingUsers")}</span><span className="font-bold text-yellow-500">{stats.user_stats.pending_users}</span></div>
-                  <div className="flex justify-between"><span>{t("dashboard.verifiedUsers")}</span><span className="font-bold text-green-400">{stats.user_stats.verified_users}</span></div>
-                  <div className="flex justify-between"><span>{t("dashboard.usersRegisteredToday")}</span><span className="font-bold text-blue-500">{stats.user_stats.users_registered_today}</span></div>
-                  <div className="flex justify-between"><span>{t("dashboard.usersRegisteredWeek")}</span><span className="font-bold text-blue-400">{stats.user_stats.users_registered_week}</span></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.totalUsers")}</span><Badge className="bg-green-600 text-white">{stats.user_stats.total_users}</Badge></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.activeUsers")}</span><Badge className="bg-green-500 text-white">{stats.user_stats.active_users}</Badge></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.pendingUsers")}</span><Badge className="bg-yellow-500 text-white">{stats.user_stats.pending_users}</Badge></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.verifiedUsers")}</span><Badge className="bg-green-400 text-white">{stats.user_stats.verified_users}</Badge></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.usersRegisteredToday")}</span><Badge className="bg-blue-500 text-white">{stats.user_stats.users_registered_today}</Badge></div>
+                  <div className="flex justify-between items-center"><span>{t("dashboard.usersRegisteredWeek")}</span><Badge className="bg-blue-400 text-white">{stats.user_stats.users_registered_week}</Badge></div>
                 </>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
           {/* Code Stats */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center">
-            <h2 className="text-xl font-semibold mb-2 text-yellow-700 dark:text-yellow-200">{t("dashboard.codeStats")}</h2>
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex justify-between"><span>{t("dashboard.pendingPasswordReset")}</span><span className="font-bold text-yellow-600">{stats.code_stats.pending_password_reset}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.pendingEmailVerification")}</span><span className="font-bold text-yellow-500">{stats.code_stats.pending_email_verification}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.pendingPhoneVerification")}</span><span className="font-bold text-yellow-400">{stats.code_stats.pending_phone_verification}</span></div>
-            </div>
-          </div>
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-yellow-100 dark:border-yellow-900">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-yellow-100 dark:bg-yellow-900 p-2 rounded-full">
+                <KeyRound className="text-yellow-600 dark:text-yellow-300 w-6 h-6" />
+              </div>
+              <CardTitle className="text-yellow-700 dark:text-yellow-200 text-lg">{t("dashboard.codeStats")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between items-center"><span>{t("dashboard.pendingPasswordReset")}</span><Badge className="bg-yellow-600 text-white">{stats.code_stats.pending_password_reset}</Badge></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.pendingEmailVerification")}</span><Badge className="bg-yellow-500 text-white">{stats.code_stats.pending_email_verification}</Badge></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.pendingPhoneVerification")}</span><Badge className="bg-yellow-400 text-white">{stats.code_stats.pending_phone_verification}</Badge></div>
+            </CardContent>
+          </Card>
           {/* Notification Info */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center col-span-1 md:col-span-2 lg:col-span-1">
-            <h2 className="text-xl font-semibold mb-2 text-purple-700 dark:text-purple-200">{t("dashboard.notificationInfo")}</h2>
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex justify-between"><span>{t("dashboard.emailService")}</span><span className="font-bold">{stats.notification_info.email_service}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.smsService")}</span><span className="font-bold">{stats.notification_info.sms_service}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.asyncEnabled")}</span><span className={`font-bold ${stats.notification_info.async_enabled ? 'text-green-600' : 'text-red-600'}`}>{stats.notification_info.async_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</span></div>
-              <div className="flex justify-between"><span>{t("dashboard.loggingEnabled")}</span><span className={`font-bold ${stats.notification_info.logging_enabled ? 'text-green-600' : 'text-red-600'}`}>{stats.notification_info.logging_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</span></div>
-            </div>
-          </div>
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-purple-100 dark:border-purple-900 col-span-1 md:col-span-2 lg:col-span-1">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-full">
+                <Bell className="text-purple-700 dark:text-purple-200 w-6 h-6" />
+              </div>
+              <CardTitle className="text-purple-700 dark:text-purple-200 text-lg">{t("dashboard.notificationInfo")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 w-full">
+              <div className="flex justify-between items-center"><span>{t("dashboard.emailService")}</span><span className="font-bold">{stats.notification_info.email_service}</span></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.smsService")}</span><span className="font-bold">{stats.notification_info.sms_service}</span></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.asyncEnabled")}</span><Badge className={stats.notification_info.async_enabled ? "bg-green-600 text-white" : "bg-red-600 text-white"}>{stats.notification_info.async_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</Badge></div>
+              <div className="flex justify-between items-center"><span>{t("dashboard.loggingEnabled")}</span><Badge className={stats.notification_info.logging_enabled ? "bg-green-600 text-white" : "bg-red-600 text-white"}>{stats.notification_info.logging_enabled ? t("dashboard.enabled") : t("dashboard.disabled")}</Badge></div>
+            </CardContent>
+          </Card>
           {/* Timestamp */}
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col items-center col-span-1 md:col-span-2 lg:col-span-1">
-            <h2 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-200">{t("dashboard.timestamp")}</h2>
-            <div className="w-full text-center font-mono text-sm text-gray-500 dark:text-gray-400">{stats.timestamp}</div>
-          </div>
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-gray-100 dark:border-gray-900 col-span-1 md:col-span-2 lg:col-span-1">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-full">
+                <Clock className="text-gray-700 dark:text-gray-200 w-6 h-6" />
+              </div>
+              <CardTitle className="text-gray-700 dark:text-gray-200 text-lg">{t("dashboard.timestamp")}</CardTitle>
+            </CardHeader>
+            <CardContent className="w-full text-center font-mono text-sm text-gray-500 dark:text-gray-400">
+              {stats.timestamp}
+            </CardContent>
+          </Card>
         </div>
 
       {/* Trends Chart & Live Feed */}

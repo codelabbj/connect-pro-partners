@@ -64,44 +64,56 @@ export default function UsersPage() {
   // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
-      setLoading(true)
-      setError("")
+      setLoading(true);
+      setError("");
       try {
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          page_size: itemsPerPage.toString(),
-          search: searchTerm,
-          is_verified: "",
-          ordering: "-created_at",
-        })
-        const endpoint =
-          viewType === "pending"
-            ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
-            : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/`
-        const data = await apiFetch(endpoint)
-        setUsers(data.users || [])
-        setTotalCount(data.pagination?.total_count || 0)
-        setTotalPages(data.pagination?.total_pages || 1)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: currentPage.toString(),
+            page_size: itemsPerPage.toString(),
+            
+            search: searchTerm,
+          });
+          endpoint =
+            viewType === "pending"
+              ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
+              : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: currentPage.toString(),
+            page_size: itemsPerPage.toString(),
+          });
+          endpoint =
+            viewType === "pending"
+              ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
+              : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/?${params.toString()}`;
+        }
+        console.log("User API endpoint:", endpoint);
+        const data = await apiFetch(endpoint);
+        setUsers(data.users || []);
+        setTotalCount(data.pagination?.total_count || 0);
+        setTotalPages(data.pagination?.total_pages || 1);
         toast({
           title: t("users.success"),
           description: t("users.loadedSuccessfully"),
-        })
+        });
       } catch (err: any) {
         setError(extractErrorMessages(err));
-        setUsers([])
-        setTotalCount(0)
-        setTotalPages(1)
+        setUsers([]);
+        setTotalCount(0);
+        setTotalPages(1);
         toast({
           title: t("users.failedToLoad"),
           description: extractErrorMessages(err),
           variant: "destructive",
-        })
+        });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchUsers()
-  }, [searchTerm, currentPage, itemsPerPage, baseUrl, viewType])
+    };
+    fetchUsers();
+  }, [searchTerm, currentPage, itemsPerPage, baseUrl, viewType]);
 
   const filteredUsers = users // Filtering is now handled by the API
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -342,7 +354,6 @@ export default function UsersPage() {
                     <TableHead>
                       <Checkbox
                         checked={allSelected}
-                        indeterminate={someSelected && !allSelected}
                         onCheckedChange={handleSelectAll}
                         aria-label="Select all"
                       />
@@ -411,7 +422,7 @@ export default function UsersPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              {t("users.showingResults", { start: startIndex + 1, end: Math.min(startIndex + itemsPerPage, totalCount), total: totalCount })}
+              {`${t("users.showingResults")}: ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, totalCount)} / ${totalCount}`}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -424,7 +435,7 @@ export default function UsersPage() {
                 {t("common.previous")}
               </Button>
               <div className="text-sm">
-                {t("users.pageOf", { current: currentPage, total: totalPages })}
+                {`${t("users.pageOf")}: ${currentPage}/${totalPages}`}
               </div>
               <Button
                 variant="outline"

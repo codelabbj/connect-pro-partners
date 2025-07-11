@@ -26,7 +26,22 @@ export default function DevicesListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setDevices(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("devices.success"),
@@ -48,30 +63,21 @@ export default function DevicesListPage() {
         setLoading(false)
       }
     }
-    
     fetchDevices()
-  }, [])
+  }, [searchTerm])
 
-  // Filter devices based on search term and status
+  // Remove client-side search filtering for devices
   const filteredDevices = useMemo(() => {
     return devices.filter((device) => {
-      const matchesSearch = searchTerm === "" || 
-        device.device_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        device.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        device.device_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = statusFilter === "all" || 
-        (statusFilter === "active" && device.is_active) ||
-        (statusFilter === "inactive" && !device.is_active)
-      
-      return matchesSearch && matchesStatus
+      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && device.is_active) || (statusFilter === "inactive" && !device.is_active)
+      return matchesStatus
     })
-  }, [devices, searchTerm, statusFilter])
+  }, [devices, statusFilter])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("devices.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

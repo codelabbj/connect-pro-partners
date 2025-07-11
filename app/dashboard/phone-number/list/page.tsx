@@ -27,7 +27,22 @@ export default function PhoneNumberListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/numeros/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/numeros/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/numeros/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setNumbers(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("phoneNumbers.success"),
@@ -49,9 +64,8 @@ export default function PhoneNumberListPage() {
         setLoading(false)
       }
     }
-    
     fetchPhoneNumbers()
-  }, [])
+  }, [searchTerm])
 
   // Fetch networks for filter
   useEffect(() => {
@@ -77,25 +91,18 @@ export default function PhoneNumberListPage() {
     fetchNetworks()
   }, [])
 
-  // Filter phone numbers based on search term and network
+  // Remove client-side search filtering for numbers
   const filteredNumbers = useMemo(() => {
     return numbers.filter((number) => {
-      const matchesSearch = searchTerm === "" || 
-        number.phone_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        number.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesNetwork = networkFilter === "all" || 
-        number.network === networkFilter ||
-        number.network === networks.find(n => n.uid === networkFilter)?.nom
-      
-      return matchesSearch && matchesNetwork
+      const matchesNetwork = networkFilter === "all" || number.network === networkFilter || number.network === networks.find(n => n.uid === networkFilter)?.nom
+      return matchesNetwork
     })
-  }, [numbers, searchTerm, networkFilter, networks])
+  }, [numbers, networkFilter, networks])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("phoneNumbers.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

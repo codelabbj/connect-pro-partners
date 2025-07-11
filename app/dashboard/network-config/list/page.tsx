@@ -31,7 +31,22 @@ export default function NetworkConfigListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setConfigs(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("networkConfig.success"),
@@ -52,7 +67,7 @@ export default function NetworkConfigListPage() {
       }
     }
     fetchNetworkConfigs()
-  }, [t])
+  }, [searchTerm, t])
 
   // Fetch networks for filter
   useEffect(() => {
@@ -120,7 +135,7 @@ export default function NetworkConfigListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("networkConfig.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

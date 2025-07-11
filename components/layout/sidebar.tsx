@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/providers/language-provider"
 import { BarChart3, Users, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal } from "lucide-react"
+import { clearTokens } from "@/lib/api"
 
 const navigation = [
   { name: "nav.dashboard", href: "/dashboard", icon: BarChart3 },
@@ -47,8 +48,12 @@ export function Sidebar() {
   const isNetworkConfigCreateActive = pathname === "/dashboard/network-config/create"
 
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated")
-    router.push("/")
+    clearTokens();
+    if (typeof document !== 'undefined') {
+      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+    }
+    localStorage.removeItem("isAuthenticated");
+    router.push("/");
   }
 
   return (

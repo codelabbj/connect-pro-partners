@@ -29,7 +29,22 @@ export default function SmsLogsListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setLogs(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("smsLogs.success"),
@@ -51,23 +66,16 @@ export default function SmsLogsListPage() {
         setLoading(false)
       }
     }
-    
     fetchSmsLogs()
-  }, [])
+  }, [searchTerm])
 
-  // Filter SMS logs based on search term and type
+  // Remove client-side search filtering for logs
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      const matchesSearch = searchTerm === "" || 
-        log.sender?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.content?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesType = typeFilter === "all" || 
-        log.sms_type === typeFilter
-      
-      return matchesSearch && matchesType
+      const matchesType = typeFilter === "all" || log.sms_type === typeFilter
+      return matchesType
     })
-  }, [logs, searchTerm, typeFilter])
+  }, [logs, typeFilter])
 
   const handleCopy = (content: string, uid: string) => {
     navigator.clipboard.writeText(content)
@@ -78,7 +86,7 @@ export default function SmsLogsListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("smsLogs.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

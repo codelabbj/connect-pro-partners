@@ -75,11 +75,29 @@ export default function TransactionsPage() {
       setLoading(true)
       setError("")
       try {
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          page_size: itemsPerPage.toString(),
-        })
-        const endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`
+        let endpoint = "";
+        if (searchTerm.trim() !== "" || statusFilter !== "all" || typeFilter !== "all") {
+          const params = new URLSearchParams({
+            page: currentPage.toString(),
+            page_size: itemsPerPage.toString(),
+          });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (statusFilter !== "all") {
+            params.append("status", statusFilter);
+          }
+          if (typeFilter !== "all") {
+            params.append("trans_type", typeFilter);
+          }
+          endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: currentPage.toString(),
+            page_size: itemsPerPage.toString(),
+          });
+          endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
+        }
         const data = await apiFetch(endpoint)
         setTransactions(data.results || [])
         setTotalCount(data.count || 0)
@@ -105,16 +123,14 @@ export default function TransactionsPage() {
       }
     }
     fetchTransactions()
-  }, [currentPage, itemsPerPage, baseUrl])
+  }, [currentPage, itemsPerPage, baseUrl, searchTerm, statusFilter, typeFilter])
 
-  // Client-side filter and sort (API does not support search/filter/sort yet)
+  // Remove client-side search filtering for transactions
   const filteredAndSortedTransactions = useMemo(() => {
     let filtered = transactions.filter((transaction) => {
-      const user = transaction.display_recipient_name || transaction.recipient_phone || "-"
-      const matchesSearch = user.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = statusFilter === "all" || transaction.status === statusFilter
       const matchesType = typeFilter === "all" || transaction.type === typeFilter
-      return matchesSearch && matchesStatus && matchesType
+      return matchesStatus && matchesType
     })
     if (sortField) {
       filtered = [...filtered].sort((a, b) => {
@@ -135,7 +151,7 @@ export default function TransactionsPage() {
       })
     }
     return filtered
-  }, [transactions, searchTerm, statusFilter, typeFilter, sortField, sortDirection])
+  }, [transactions, statusFilter, typeFilter, sortField, sortDirection])
 
   const totalPages = Math.ceil(totalCount / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -269,7 +285,7 @@ export default function TransactionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("transactions.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }
@@ -286,11 +302,10 @@ export default function TransactionsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder={t("transactions.searchByUser")}
+                placeholder={t("transactions.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
-                disabled={loading}
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -394,7 +409,7 @@ export default function TransactionsPage() {
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              {t("transactions.showingResults", { start: startIndex + 1, end: Math.min(startIndex + itemsPerPage, totalCount), total: totalCount })}
+              {`${t("transactions.showingResults")}: ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, totalCount)} / ${totalCount}`}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -407,7 +422,7 @@ export default function TransactionsPage() {
                 {t("common.previous")}
               </Button>
               <div className="text-sm">
-                {t("transactions.pageOf", { current: currentPage, total: totalPages })}
+                {`${t("transactions.pageOf")}: ${currentPage}/${totalPages}`}
               </div>
               <Button
                 variant="outline"

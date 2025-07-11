@@ -30,7 +30,22 @@ export default function NetworkListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/networks/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/networks/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/networks/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setNetworks(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("network.success"),
@@ -54,7 +69,7 @@ export default function NetworkListPage() {
     }
     
     fetchNetworks()
-  }, [])
+  }, [searchTerm])
 
   // Fetch countries for filter
   useEffect(() => {
@@ -80,29 +95,19 @@ export default function NetworkListPage() {
     fetchCountries()
   }, [])
 
-  // Filter networks based on search term, status, and country
+  // Remove client-side search filtering for networks
   const filteredNetworks = useMemo(() => {
     return networks.filter((network) => {
-      const matchesSearch = searchTerm === "" || 
-        network.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        network.code?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = statusFilter === "all" || 
-        (statusFilter === "active" && network.is_active) ||
-        (statusFilter === "inactive" && !network.is_active)
-      
-      const matchesCountry = countryFilter === "all" || 
-        network.country === countryFilter ||
-        network.country_name === countries.find(c => c.uid === countryFilter)?.nom
-      
-      return matchesSearch && matchesStatus && matchesCountry
+      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && network.is_active) || (statusFilter === "inactive" && !network.is_active)
+      const matchesCountry = countryFilter === "all" || network.country === countryFilter || network.country_name === countries.find(c => c.uid === countryFilter)?.nom
+      return matchesStatus && matchesCountry
     })
-  }, [networks, searchTerm, statusFilter, countryFilter, countries])
+  }, [networks, statusFilter, countryFilter, countries])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("network.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

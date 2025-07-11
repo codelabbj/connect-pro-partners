@@ -29,7 +29,22 @@ export default function FcmLogsListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/fcm-logs/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/fcm-logs/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/fcm-logs/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setLogs(Array.isArray(data.results) ? data.results : [])
         toast({
           title: t("fcmLogs.success"),
@@ -51,24 +66,14 @@ export default function FcmLogsListPage() {
         setLoading(false)
       }
     }
-    
     fetchFcmLogs()
-  }, [])
+  }, [searchTerm])
 
-  // Filter FCM logs based on search term and device
-  const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
-      const matchesSearch = searchTerm === "" || 
-        log.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.body?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.device_id?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesDevice = deviceFilter === "all" || 
-        log.device_id === deviceFilter
-      
-      return matchesSearch && matchesDevice
-    })
-  }, [logs, searchTerm, deviceFilter])
+  // Remove client-side search filtering
+  const filteredLogs = logs.filter((log) => {
+    const matchesDevice = deviceFilter === "all" || log.device_id === deviceFilter
+    return matchesDevice
+  })
 
   const handleCopy = (body: string, uid: string) => {
     navigator.clipboard.writeText(body)
@@ -79,7 +84,7 @@ export default function FcmLogsListPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("fcmLogs.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

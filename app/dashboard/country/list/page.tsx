@@ -28,7 +28,22 @@ export default function CountryListPage() {
       setLoading(true)
       setError("")
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/countries/`)
+        let endpoint = "";
+        if (searchTerm.trim() !== "") {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+            search: searchTerm,
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/countries/?${params.toString()}`;
+        } else {
+          const params = new URLSearchParams({
+            page: "1",
+            page_size: "100",
+          });
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/countries/?${params.toString()}`;
+        }
+        const data = await apiFetch(endpoint)
         setCountries(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("country.success"),
@@ -50,29 +65,21 @@ export default function CountryListPage() {
         setLoading(false)
       }
     }
-    
     fetchCountries()
-  }, [])
+  }, [searchTerm])
 
-  // Filter countries based on search term and status
+  // Remove client-side search filtering for countries
   const filteredCountries = useMemo(() => {
     return countries.filter((country) => {
-      const matchesSearch = searchTerm === "" || 
-        country.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        country.code?.toLowerCase().includes(searchTerm.toLowerCase())
-      
-      const matchesStatus = statusFilter === "all" || 
-        (statusFilter === "active" && country.is_active) ||
-        (statusFilter === "inactive" && !country.is_active)
-      
-      return matchesSearch && matchesStatus
+      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && country.is_active) || (statusFilter === "inactive" && !country.is_active)
+      return matchesStatus
     })
-  }, [countries, searchTerm, statusFilter])
+  }, [countries, statusFilter])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <span className="text-lg font-semibold">{t("country.loading")}</span>
+        <span className="text-lg font-semibold">{t("common.loading")}</span>
       </div>
     )
   }

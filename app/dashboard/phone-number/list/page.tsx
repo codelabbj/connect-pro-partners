@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search } from "lucide-react"
+import { Search, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -18,6 +20,8 @@ export default function PhoneNumberListPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [networkFilter, setNetworkFilter] = useState("all")
   const [networks, setNetworks] = useState<any[]>([])
+  const [sortField, setSortField] = useState<"phone_number" | "network" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -28,7 +32,7 @@ export default function PhoneNumberListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "" || networkFilter !== "all") {
+        if (searchTerm.trim() !== "" || networkFilter !== "all" || sortField) {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
@@ -38,6 +42,9 @@ export default function PhoneNumberListPage() {
           }
           if (networkFilter !== "all") {
             params.append("network", networkFilter);
+          }
+          if (sortField) {
+            params.append("order_by", `${sortField}:${sortDirection}`);
           }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/numeros/?${params.toString()}`;
         } else {
@@ -54,9 +61,7 @@ export default function PhoneNumberListPage() {
           description: t("phoneNumbers.loadedSuccessfully"),
         })
       } catch (err: any) {
-        const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-          ? JSON.stringify(err, null, 2)
-          : err.message || t("phoneNumbers.failedToLoad")
+        const errorMessage = extractErrorMessages(err) || t("phoneNumbers.failedToLoad")
         setError(errorMessage)
         setNumbers([])
         toast({
@@ -70,7 +75,7 @@ export default function PhoneNumberListPage() {
       }
     }
     fetchPhoneNumbers()
-  }, [searchTerm, networkFilter])
+  }, [searchTerm, networkFilter, sortField, sortDirection])
 
   // Fetch networks for filter
   useEffect(() => {
@@ -83,11 +88,12 @@ export default function PhoneNumberListPage() {
           description: t("phoneNumbers.networksLoadedSuccessfully"),
         })
       } catch (err: any) {
+        const errorMessage = extractErrorMessages(err) || t("phoneNumbers.failedToLoadNetworks")
         console.error('Networks fetch error:', err)
         setNetworks([])
         toast({
           title: t("phoneNumbers.networksFailedToLoad"),
-          description: err.message || t("phoneNumbers.failedToLoadNetworks"),
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -98,6 +104,15 @@ export default function PhoneNumberListPage() {
 
   // Remove client-side filtering since it's now handled by the API
   const filteredNumbers = numbers
+
+  const handleSort = (field: "phone_number" | "network") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
 
   if (loading) {
     return (
@@ -140,35 +155,31 @@ export default function PhoneNumberListPage() {
         </div>
 
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {t("phoneNumbers.errorLoading")}
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {error.startsWith('{') ? (
-                    <pre className="whitespace-pre-wrap bg-red-100 p-2 rounded border text-xs">
-                      {error}
-                    </pre>
-                  ) : (
-                    error
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => {
+              setError("")
+              // This will trigger the useEffect to refetch
+            }}
+            variant="inline"
+            className="mb-6"
+          />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("phoneNumbers.phoneNumber")}</TableHead>
-                <TableHead>{t("phoneNumbers.network")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("phone_number")} className="h-auto p-0 font-semibold">
+                    {t("phoneNumbers.phoneNumber")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("network")} className="h-auto p-0 font-semibold">
+                    {t("phoneNumbers.network")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("phoneNumbers.fullName")}</TableHead>
               </TableRow>
             </TableHeader>

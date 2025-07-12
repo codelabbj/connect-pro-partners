@@ -15,17 +15,9 @@ import { useLanguage } from "@/components/providers/language-provider"
 import { Zap, Eye, EyeOff } from "lucide-react"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
-// Helper to extract error messages from API responses
-function extractErrorMessages(errorObj: any): string {
-  if (!errorObj || typeof errorObj !== "object") return String(errorObj)
-  if (errorObj.detail) return errorObj.detail
-  if (errorObj.message) return errorObj.message
-  // If it's a field error object, join all array values for all fields
-  return Object.values(errorObj)
-    .map((v) => Array.isArray(v) ? v.join(" ") : String(v))
-    .join(" ")
-}
+
 
 export function SignInForm() {
   const [identifier, setIdentifier] = useState("")
@@ -77,7 +69,7 @@ export function SignInForm() {
       })
       router.push("/dashboard")
     } catch (err: any) {
-      const backendError = err?.message || t("auth.networkError")
+      const backendError = extractErrorMessages(err) || t("auth.networkError")
       setError(backendError)
       toast({
         title: t("auth.networkError"),
@@ -159,7 +151,14 @@ export function SignInForm() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t("auth.loggingIn") : t("auth.signIn")}
             </Button>
-            {error && <div className="text-red-500 text-sm mt-2 text-center">{error}</div>}
+            {error && (
+              <ErrorDisplay
+                error={error}
+                variant="inline"
+                showRetry={false}
+                className="mt-2"
+              />
+            )}
           </form>
         </CardContent>
       </Card>

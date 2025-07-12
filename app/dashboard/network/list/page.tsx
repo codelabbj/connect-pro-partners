@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search } from "lucide-react"
+import { Search, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -21,6 +22,8 @@ export default function NetworkListPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [countryFilter, setCountryFilter] = useState("all")
   const [countries, setCountries] = useState<any[]>([])
+  const [sortField, setSortField] = useState<"nom" | "code" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -31,12 +34,23 @@ export default function NetworkListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "") {
+        if (searchTerm.trim() !== "" || statusFilter !== "all" || countryFilter !== "all" || sortField) {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
-            search: searchTerm,
           });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (statusFilter !== "all") {
+            params.append("is_active", statusFilter === "active" ? "true" : "false");
+          }
+          if (countryFilter !== "all") {
+            params.append("country", countryFilter);
+          }
+          if (sortField) {
+            params.append("order_by", `${sortField}:${sortDirection}`);
+          }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/networks/?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
@@ -52,9 +66,7 @@ export default function NetworkListPage() {
           description: t("network.loadedSuccessfully"),
         })
       } catch (err: any) {
-        const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-          ? JSON.stringify(err, null, 2)
-          : err.message || t("network.failedToLoad")
+        const errorMessage = extractErrorMessages(err) || t("network.failedToLoad")
         setError(errorMessage)
         setNetworks([])
         toast({
@@ -69,7 +81,7 @@ export default function NetworkListPage() {
     }
     
     fetchNetworks()
-  }, [searchTerm])
+  }, [searchTerm, statusFilter, countryFilter, sortField, sortDirection])
 
   // Fetch countries for filter
   useEffect(() => {
@@ -82,11 +94,12 @@ export default function NetworkListPage() {
           description: t("network.countriesLoadedSuccessfully"),
         })
       } catch (err: any) {
+        const errorMessage = extractErrorMessages(err) || t("network.failedToLoadCountries")
         console.error('Countries fetch error:', err)
         setCountries([])
         toast({
           title: t("network.countriesFailedToLoad"),
-          description: err.message || t("network.failedToLoadCountries"),
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -95,14 +108,17 @@ export default function NetworkListPage() {
     fetchCountries()
   }, [])
 
-  // Remove client-side search filtering for networks
-  const filteredNetworks = useMemo(() => {
-    return networks.filter((network) => {
-      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && network.is_active) || (statusFilter === "inactive" && !network.is_active)
-      const matchesCountry = countryFilter === "all" || network.country === countryFilter || network.country_name === countries.find(c => c.uid === countryFilter)?.nom
-      return matchesStatus && matchesCountry
-    })
-  }, [networks, statusFilter, countryFilter, countries])
+  // Remove client-side filtering since it's now handled by the API
+  const filteredNetworks = networks
+
+  const handleSort = (field: "nom" | "code") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
 
   if (loading) {
     return (
@@ -167,35 +183,31 @@ export default function NetworkListPage() {
         </div>
 
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {t("network.errorLoading")}
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {error.startsWith('{') ? (
-                    <pre className="whitespace-pre-wrap bg-red-100 p-2 rounded border text-xs">
-                      {error}
-                    </pre>
-                  ) : (
-                    error
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => {
+              setError("")
+              // This will trigger the useEffect to refetch
+            }}
+            variant="inline"
+            className="mb-6"
+          />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("network.name")}</TableHead>
-                <TableHead>{t("network.code")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("nom")} className="h-auto p-0 font-semibold">
+                    {t("network.name")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("code")} className="h-auto p-0 font-semibold">
+                    {t("network.code")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("network.country")}</TableHead>
                 <TableHead>{t("network.status")}</TableHead>
                 <TableHead>{t("network.actions")}</TableHead>

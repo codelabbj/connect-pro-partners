@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 export default function RegisterUserForm() {
   const [form, setForm] = useState({
@@ -33,15 +34,7 @@ export default function RegisterUserForm() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  function extractErrorMessages(errorObj: any): string {
-    if (!errorObj || typeof errorObj !== "object" || Array.isArray(errorObj)) return String(errorObj)
-    if (errorObj.detail) return errorObj.detail
-    if (errorObj.message) return errorObj.message
-    // If it's a field error object, join all messages without field names
-    return Object.values(errorObj)
-      .flat()
-      .join(" | ")
-  }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,7 +86,7 @@ export default function RegisterUserForm() {
         })
       }
     } catch (err: any) {
-      const backendError = err?.message || t("register.networkError")
+      const backendError = extractErrorMessages(err) || t("register.networkError")
       setError(backendError)
       toast({
         title: t("register.networkError"),
@@ -169,7 +162,14 @@ export default function RegisterUserForm() {
               required
             />
           </div>
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
+          )}
           {success && <div className="text-green-600 text-sm">{success}</div>}
           <Button type="submit" disabled={loading}>
             {loading ? t("register.registering") : t("register.submit")}

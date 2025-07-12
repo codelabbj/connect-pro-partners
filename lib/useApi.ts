@@ -9,17 +9,37 @@ export function useApi() {
 
   async function refreshAccessToken() {
     const refresh = getRefreshToken();
-    if (!refresh) throw new Error('No refresh token');
-    const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/auth/token/refresh/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
-    });
-    if (!res.ok) throw new Error('Refresh token invalid');
-    const data = await res.json();
-    if (!data.access) throw new Error('No access token in refresh response');
-    setTokens({ access: data.access, refresh });
-    return data.access;
+    if (!refresh) {
+      console.log('No refresh token available');
+      throw new Error('No refresh token available');
+    }
+    
+    try {
+      const res = await fetch(`${baseUrl.replace(/\/$/, "")}/api/auth/token/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.log('Refresh token request failed:', res.status, errorData);
+        throw new Error(errorData?.detail || 'Refresh token invalid');
+      }
+      
+      const data = await res.json();
+      if (!data.access) {
+        console.log('No access token in refresh response');
+        throw new Error('No access token in refresh response');
+      }
+      
+      setTokens({ access: data.access, refresh });
+      console.log('Token refreshed successfully');
+      return data.access;
+    } catch (error) {
+      console.log('Refresh token error:', error);
+      throw error;
+    }
   }
 
   function clearAllAuth() {
@@ -32,42 +52,56 @@ export function useApi() {
 
   async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
     let accessToken = getAccessToken();
-    console.log('Access token before fetch:', accessToken);
+    
     // Attach access token if available
     const headers = new Headers(init.headers || {});
     if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+    
     let res = await fetch(input, { ...init, headers });
     let data;
+    
     try {
       data = await res.clone().json();
     } catch (e) {
       // If not JSON, just return the response
       return res;
     }
+    
     // If token is invalid/expired, try to refresh and retry once
     if (data?.code === 'token_not_valid' || res.status === 401) {
       try {
+        console.log('Token expired, attempting refresh...');
         accessToken = await refreshAccessToken();
-        console.log('Access token after refresh:', accessToken);
         headers.set('Authorization', `Bearer ${accessToken}`);
+        
+        // Retry the original request with new token
         res = await fetch(input, { ...init, headers });
         try {
           data = await res.clone().json();
         } catch (e) {
           return res;
         }
-        // If still unauthorized, force logout
+        
+        // If still unauthorized after refresh, force logout
         if (data?.code === 'token_not_valid' || res.status === 401) {
+          console.log('Token refresh failed, logging out...');
           clearAllAuth();
           router.push('/');
-          throw new Error('Token not valid after refresh');
+          throw new Error('Authentication failed after token refresh');
         }
       } catch (refreshErr) {
+        console.log('Token refresh error:', refreshErr);
         clearAllAuth();
         router.push('/');
         throw new Error('Token refresh failed');
       }
     }
+    
+    // If the response is an error, throw it so it can be handled by the calling component
+    if (!res.ok) {
+      throw new Error(data?.detail || data?.message || `HTTP ${res.status}: ${res.statusText}`);
+    }
+    
     return data;
   }
 

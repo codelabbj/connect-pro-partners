@@ -32,6 +32,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -70,92 +71,69 @@ export default function TransactionsPage() {
   })
 
   // Fetch transactions from API
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true)
-      setError("")
-      try {
-        let endpoint = "";
-        if (searchTerm.trim() !== "" || statusFilter !== "all" || typeFilter !== "all") {
-          const params = new URLSearchParams({
-            page: currentPage.toString(),
-            page_size: itemsPerPage.toString(),
-          });
-          if (searchTerm.trim() !== "") {
-            params.append("search", searchTerm);
-          }
-          if (statusFilter !== "all") {
-            params.append("status", statusFilter);
-          }
-          if (typeFilter !== "all") {
-            params.append("trans_type", typeFilter);
-          }
-          endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
-        } else {
-          const params = new URLSearchParams({
-            page: currentPage.toString(),
-            page_size: itemsPerPage.toString(),
-          });
-          endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
+  const fetchTransactions = async () => {
+    setLoading(true)
+    setError("")
+    try {
+      let endpoint = "";
+      if (searchTerm.trim() !== "" || statusFilter !== "all" || typeFilter !== "all" || sortField) {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          page_size: itemsPerPage.toString(),
+        });
+        if (searchTerm.trim() !== "") {
+          params.append("search", searchTerm);
         }
-        const data = await apiFetch(endpoint)
-        setTransactions(data.results || [])
-        setTotalCount(data.count || 0)
-        toast({
-          title: t("transactions.success"),
-          description: t("transactions.loadedSuccessfully"),
-        })
-      } catch (err: any) {
-        const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-          ? JSON.stringify(err, null, 2)
-          : t("transactions.failedToLoad")
-        setError(errorMessage)
-        setTransactions([])
-        setTotalCount(0)
-        toast({
-          title: t("transactions.failedToLoad"),
-          description: errorMessage,
-          variant: "destructive",
-        })
-        console.error('Transactions fetch error:', err)
-      } finally {
-        setLoading(false)
+        if (statusFilter !== "all") {
+          params.append("status", statusFilter);
+        }
+        if (typeFilter !== "all") {
+          params.append("trans_type", typeFilter);
+        }
+        if (sortField) {
+          const orderBy = sortField === "date" ? "created_at" : "amount";
+          params.append("order_by", `${orderBy}:${sortDirection}`);
+        }
+        endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
+      } else {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          page_size: itemsPerPage.toString(),
+        });
+        endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
       }
-    }
-    fetchTransactions()
-  }, [currentPage, itemsPerPage, baseUrl, searchTerm, statusFilter, typeFilter])
-
-  // Remove client-side search filtering for transactions
-  const filteredAndSortedTransactions = useMemo(() => {
-    let filtered = transactions.filter((transaction) => {
-      const matchesStatus = statusFilter === "all" || transaction.status === statusFilter
-      const matchesType = typeFilter === "all" || transaction.type === typeFilter
-      return matchesStatus && matchesType
-    })
-    if (sortField) {
-      filtered = [...filtered].sort((a, b) => {
-        let aValue = a[sortField === "amount" ? "amount" : "created_at"]
-        let bValue = b[sortField === "amount" ? "amount" : "created_at"]
-        if (sortField === "date") {
-          aValue = new Date(aValue as string).getTime()
-          bValue = new Date(bValue as string).getTime()
-        } else {
-          aValue = parseFloat(aValue)
-          bValue = parseFloat(bValue)
-        }
-        if (sortDirection === "asc") {
-          return aValue > bValue ? 1 : -1
-        } else {
-          return aValue < bValue ? 1 : -1
-        }
+      const data = await apiFetch(endpoint)
+      setTransactions(data.results || [])
+      setTotalCount(data.count || 0)
+      toast({
+        title: t("transactions.success"),
+        description: t("transactions.loadedSuccessfully"),
       })
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err) || t("transactions.failedToLoad")
+      setError(errorMessage)
+      setTransactions([])
+      setTotalCount(0)
+      toast({
+        title: t("transactions.failedToLoad"),
+        description: errorMessage,
+        variant: "destructive",
+      })
+      console.error('Transactions fetch error:', err)
+    } finally {
+      setLoading(false)
     }
-    return filtered
-  }, [transactions, statusFilter, typeFilter, sortField, sortDirection])
+  }
 
+  useEffect(() => {
+    fetchTransactions()
+  }, [currentPage, itemsPerPage, baseUrl, searchTerm, statusFilter, typeFilter, sortField, sortDirection])
+
+  // Remove client-side filtering and sorting since it's now handled by the API
+  const filteredAndSortedTransactions = transactions
   const totalPages = Math.ceil(totalCount / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedTransactions = filteredAndSortedTransactions.slice(0, itemsPerPage)
+  const paginatedTransactions = filteredAndSortedTransactions
 
   const handleSort = (field: "amount" | "date") => {
     if (sortField === field) {
@@ -290,6 +268,17 @@ export default function TransactionsPage() {
     )
   }
 
+  if (error) {
+    return (
+      <ErrorDisplay
+        error={error}
+        onRetry={fetchTransactions}
+        variant="full"
+        showDismiss={false}
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -302,7 +291,7 @@ export default function TransactionsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder={t("transactions.search")}
+                placeholder={t("common.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -337,8 +326,6 @@ export default function TransactionsPage() {
           <div className="rounded-md border min-h-[200px]">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div>
-            ) : error ? (
-              <div className="p-8 text-center text-red-500">{error}</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -486,7 +473,14 @@ export default function TransactionsPage() {
                 <Input name="error_message" value={editForm.error_message} onChange={handleEditChange} />
               </label>
             </div>
-            {editError && <div className="text-red-500 text-sm">{editError}</div>}
+            {editError && (
+              <ErrorDisplay
+                error={editError}
+                variant="inline"
+                showRetry={false}
+                className="mb-4"
+              />
+            )}
             <DialogFooter>
               <Button type="submit" disabled={editLoading}>{editLoading ? t("transactions.saving") : t("transactions.saveChanges")}</Button>
               <DialogClose asChild>

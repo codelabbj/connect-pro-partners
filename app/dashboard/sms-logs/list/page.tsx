@@ -10,6 +10,8 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Search } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ArrowUpDown } from "lucide-react"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -20,6 +22,8 @@ export default function SmsLogsListPage() {
   const [copied, setCopied] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [sortField, setSortField] = useState<"received_at" | "sender" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -30,7 +34,7 @@ export default function SmsLogsListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "" || typeFilter !== "all") {
+        if (searchTerm.trim() !== "" || typeFilter !== "all" || sortField) {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
@@ -40,6 +44,9 @@ export default function SmsLogsListPage() {
           }
           if (typeFilter !== "all") {
             params.append("sms_type", typeFilter);
+          }
+          if (sortField) {
+            params.append("order_by", `${sortField}:${sortDirection}`);
           }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${params.toString()}`;
         } else {
@@ -56,9 +63,7 @@ export default function SmsLogsListPage() {
           description: t("smsLogs.loadedSuccessfully"),
         })
       } catch (err: any) {
-        const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-          ? JSON.stringify(err, null, 2)
-          : err.message || t("smsLogs.failedToLoad")
+        const errorMessage = extractErrorMessages(err) || t("smsLogs.failedToLoad")
         setError(errorMessage)
         setLogs([])
         toast({
@@ -72,10 +77,19 @@ export default function SmsLogsListPage() {
       }
     }
     fetchSmsLogs()
-  }, [searchTerm, typeFilter])
+  }, [searchTerm, typeFilter, sortField, sortDirection])
 
   // Remove client-side filtering since it's now handled by the API
   const filteredLogs = logs
+
+  const handleSort = (field: "received_at" | "sender") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
 
   const handleCopy = (content: string, uid: string) => {
     navigator.clipboard.writeText(content)
@@ -122,36 +136,32 @@ export default function SmsLogsListPage() {
         </div>
 
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {t("smsLogs.errorLoading")}
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {error.startsWith('{') ? (
-                    <pre className="whitespace-pre-wrap bg-red-100 p-2 rounded border text-xs">
-                      {error}
-                    </pre>
-                  ) : (
-                    error
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => {
+              setError("")
+              // This will trigger the useEffect to refetch
+            }}
+            variant="inline"
+            className="mb-6"
+          />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("smsLogs.sender")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("sender")} className="h-auto p-0 font-semibold">
+                    {t("smsLogs.sender")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("smsLogs.content")}</TableHead>
-                <TableHead>{t("smsLogs.receivedAt")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("received_at")} className="h-auto p-0 font-semibold">
+                    {t("smsLogs.receivedAt")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("smsLogs.type")}</TableHead>
                 <TableHead>{t("smsLogs.copy")}</TableHead>
               </TableRow>

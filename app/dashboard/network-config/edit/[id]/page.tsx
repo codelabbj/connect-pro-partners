@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -55,11 +56,12 @@ export default function NetworkConfigEditPage() {
           description: "Networks loaded successfully.",
         })
       } catch (err: any) {
-        setError("Failed to load networks")
+        const errorMessage = extractErrorMessages(err) || "Failed to load networks"
+        setError(errorMessage)
         setNetworks([])
         toast({
           title: "Failed to Load Networks",
-          description: err.message || "Failed to load networks.",
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -110,10 +112,11 @@ export default function NetworkConfigEditPage() {
           description: "Network configuration loaded successfully.",
         })
       } catch (err: any) {
-        setError(err.message || "Failed to load network configuration")
+        const errorMessage = extractErrorMessages(err) || "Failed to load network configuration"
+        setError(errorMessage)
         toast({
           title: "Failed to Load Config",
-          description: err.message || "Failed to load network configuration.",
+          description: errorMessage,
           variant: "destructive",
         })
       } finally {
@@ -162,10 +165,11 @@ export default function NetworkConfigEditPage() {
       })
       router.push("/dashboard/network-config/list")
     } catch (err: any) {
-      setError(err.message || "Failed to update network configuration")
+      const errorMessage = extractErrorMessages(err) || "Failed to update network configuration"
+      setError(errorMessage)
       toast({
         title: "Failed to Update Config",
-        description: err.message || "Failed to update network configuration.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -342,7 +346,14 @@ export default function NetworkConfigEditPage() {
               </div>
             </div>
 
-            {error && <div className="text-red-500">{error}</div>}
+            {error && (
+              <ErrorDisplay
+                error={error}
+                variant="inline"
+                showRetry={false}
+                className="mb-4"
+              />
+            )}
             
             <div className="flex gap-4">
               <Button type="submit" disabled={loading}>

@@ -16,6 +16,7 @@ function clearTokens() {
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   localStorage.removeItem('rememberMe');
+  localStorage.removeItem('theme'); // Clear theme preference on logout
 }
 
 // Export helpers for use in login/logout flows

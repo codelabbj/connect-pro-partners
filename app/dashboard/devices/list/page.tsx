@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search } from "lucide-react"
+import { Search, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -17,6 +19,8 @@ export default function DevicesListPage() {
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [sortField, setSortField] = useState<"name" | "last_sync" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -27,7 +31,7 @@ export default function DevicesListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "" || statusFilter !== "all") {
+        if (searchTerm.trim() !== "" || statusFilter !== "all" || sortField) {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
@@ -38,6 +42,9 @@ export default function DevicesListPage() {
           if (statusFilter !== "all") {
             params.append("is_active", statusFilter === "active" ? "true" : "false");
           }
+          if (sortField) {
+            params.append("order_by", `${sortField}:${sortDirection}`);
+          }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
@@ -46,16 +53,20 @@ export default function DevicesListPage() {
           });
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
         }
+        // Test error handling - uncomment to test
+        // throw new Error('{"detail":"Method \"GET\" not allowed."}')
+        
         const data = await apiFetch(endpoint)
+        console.log('Devices API response:', data)
         setDevices(Array.isArray(data) ? data : data.results || [])
         toast({
           title: t("devices.success"),
           description: t("devices.loadedSuccessfully"),
         })
       } catch (err: any) {
-        const errorMessage = typeof err === "object" && Object.keys(err).length > 0 
-          ? JSON.stringify(err, null, 2)
-          : err.message || t("devices.failedToLoad")
+        console.log('Devices fetch error caught:', err)
+        const errorMessage = extractErrorMessages(err) || t("devices.failedToLoad")
+        console.log('Extracted error message:', errorMessage)
         setError(errorMessage)
         setDevices([])
         toast({
@@ -69,10 +80,19 @@ export default function DevicesListPage() {
       }
     }
     fetchDevices()
-  }, [searchTerm, statusFilter])
+  }, [searchTerm, statusFilter, sortField, sortDirection])
 
   // Remove client-side filtering since it's now handled by the API
   const filteredDevices = devices
+
+  const handleSort = (field: "name" | "last_sync") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
 
   if (loading) {
     return (
@@ -112,37 +132,33 @@ export default function DevicesListPage() {
         </div>
 
         {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  {t("devices.errorLoading")}
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  {error.startsWith('{') ? (
-                    <pre className="whitespace-pre-wrap bg-red-100 p-2 rounded border text-xs">
-                      {error}
-                    </pre>
-                  ) : (
-                    error
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ErrorDisplay
+            error={error}
+            onRetry={() => {
+              setError("")
+              // This will trigger the useEffect to refetch
+            }}
+            variant="inline"
+            className="mb-6"
+          />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("devices.deviceId")}</TableHead>
-                <TableHead>{t("devices.name")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
+                    {t("devices.name")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("devices.status")}</TableHead>
-                <TableHead>{t("devices.lastSync")}</TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort("last_sync")} className="h-auto p-0 font-semibold">
+                    {t("devices.lastSync")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>{t("devices.actions")}</TableHead>
               </TableRow>
             </TableHeader>

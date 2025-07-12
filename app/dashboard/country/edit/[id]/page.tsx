@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -39,10 +40,11 @@ export default function CountryEditPage() {
           description: t("country.loadedSuccessfully"),
         })
       } catch (err: any) {
-        setError(err.message || t("country.failedToLoad"))
+        const errorMessage = extractErrorMessages(err) || t("country.failedToLoad")
+        setError(errorMessage)
         toast({
           title: t("country.failedToLoad"),
-          description: err.message || t("country.failedToLoad"),
+          description: errorMessage,
           variant: "destructive",
         })
       } finally {
@@ -69,10 +71,11 @@ export default function CountryEditPage() {
       })
       router.push("/dashboard/country/list")
     } catch (err: any) {
-      setError(err.message || t("country.failedToUpdate"))
+      const errorMessage = extractErrorMessages(err) || t("country.failedToUpdate")
+      setError(errorMessage)
       toast({
         title: t("country.failedToUpdate"),
-        description: err.message || t("country.failedToUpdate"),
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -117,7 +120,14 @@ export default function CountryEditPage() {
                 </svg>
               </div>
             </div>
-            {error && <div className="text-red-500">{error}</div>}
+            {error && (
+              <ErrorDisplay
+                error={error}
+                variant="inline"
+                showRetry={false}
+                className="mb-4"
+              />
+            )}
             <Button type="submit" disabled={loading}>{loading ? t("country.saving") : t("common.save")}</Button>
           </form>
       </CardContent>

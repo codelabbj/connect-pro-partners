@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -37,10 +38,11 @@ export default function CountryCreatePage() {
       })
       router.push("/dashboard/country/list")
     } catch (err: any) {
-      setError(err.message || t("country.failedToCreate"))
+      const errorMessage = extractErrorMessages(err) || t("country.failedToCreate")
+      setError(errorMessage)
       toast({
         title: t("country.failedToCreate"),
-        description: err.message || t("country.failedToCreate"),
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -85,7 +87,14 @@ export default function CountryCreatePage() {
               </svg>
             </div>
           </div>
-          {error && <div className="text-red-500">{error}</div>}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
+          )}
           <Button type="submit" disabled={loading}>{loading ? t("country.creating") : t("country.create")}</Button>
         </form>
       </CardContent>

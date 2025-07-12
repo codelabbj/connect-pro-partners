@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, MoreHorizontal, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -16,6 +16,7 @@ import { useApi } from "@/lib/useApi"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -26,6 +27,8 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [sortField, setSortField] = useState<"name" | "email" | "created_at" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const { t } = useLanguage()
   const itemsPerPage = 10
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
@@ -51,15 +54,7 @@ export default function UsersPage() {
   const [confirmEmailToggle, setConfirmEmailToggle] = useState<null | boolean>(null);
   const [confirmPhoneToggle, setConfirmPhoneToggle] = useState<null | boolean>(null);
 
-  // Helper to extract error messages from API responses
-  function extractErrorMessages(errorObj: any): string {
-    if (!errorObj || typeof errorObj !== "object") return String(errorObj)
-    // Show the raw API response if it's an object
-    if (typeof errorObj === "object" && Object.keys(errorObj).length > 0) {
-      return JSON.stringify(errorObj, null, 2)
-    }
-    return String(errorObj)
-  }
+
 
   // Fetch users from API
   useEffect(() => {
@@ -68,13 +63,21 @@ export default function UsersPage() {
       setError("");
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "") {
+        if (searchTerm.trim() !== "" || statusFilter !== "all" || sortField) {
           const params = new URLSearchParams({
             page: currentPage.toString(),
             page_size: itemsPerPage.toString(),
-            
-            search: searchTerm,
           });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (statusFilter !== "all") {
+            params.append("status", statusFilter);
+          }
+          if (sortField) {
+            const orderBy = sortField === "name" ? "display_name" : sortField;
+            params.append("order_by", `${orderBy}:${sortDirection}`);
+          }
           endpoint =
             viewType === "pending"
               ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
@@ -99,13 +102,14 @@ export default function UsersPage() {
           description: t("users.loadedSuccessfully"),
         });
       } catch (err: any) {
-        setError(extractErrorMessages(err));
+        const errorMessage = extractErrorMessages(err);
+        setError(errorMessage);
         setUsers([]);
         setTotalCount(0);
         setTotalPages(1);
         toast({
           title: t("users.failedToLoad"),
-          description: extractErrorMessages(err),
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {
@@ -113,11 +117,20 @@ export default function UsersPage() {
       }
     };
     fetchUsers();
-  }, [searchTerm, currentPage, itemsPerPage, baseUrl, viewType]);
+  }, [searchTerm, currentPage, itemsPerPage, baseUrl, viewType, statusFilter, sortField, sortDirection]);
 
   const filteredUsers = users // Filtering is now handled by the API
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedUsers = filteredUsers // Already paginated by API
+
+  const handleSort = (field: "name" | "email" | "created_at") => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("desc")
+    }
+  }
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -322,6 +335,17 @@ export default function UsersPage() {
                 <SelectItem value="all">{t("users.allUsers")}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder={t("users.allStatuses")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("users.allStatuses")}</SelectItem>
+                <SelectItem value="active">{t("users.active")}</SelectItem>
+                <SelectItem value="inactive">{t("users.inactive")}</SelectItem>
+                <SelectItem value="pending">{t("users.pending")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bulk Actions */}
@@ -346,7 +370,15 @@ export default function UsersPage() {
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div>
             ) : error ? (
-              <div className="p-8 text-center text-red-500">{error}</div>
+              <ErrorDisplay
+                error={error}
+                onRetry={() => {
+                  setCurrentPage(1)
+                  setError("")
+                }}
+                variant="full"
+                showDismiss={false}
+              />
             ) : (
               <Table>
                 <TableHeader>
@@ -358,12 +390,27 @@ export default function UsersPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
-                    <TableHead>{t("users.name")}</TableHead>
-                    <TableHead>{t("users.email")}</TableHead>
+                    <TableHead>
+                      <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
+                        {t("users.name")}
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </TableHead>
+                    <TableHead>
+                      <Button variant="ghost" onClick={() => handleSort("email")} className="h-auto p-0 font-semibold">
+                        {t("users.email")}
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </TableHead>
                     <TableHead>{t("users.phone")}</TableHead>
                     <TableHead>{t("users.status")}</TableHead>
                     <TableHead>{t("users.lastLogin")}</TableHead>
-                    <TableHead>{t("users.createdAt")}</TableHead>
+                    <TableHead>
+                      <Button variant="ghost" onClick={() => handleSort("created_at")} className="h-auto p-0 font-semibold">
+                        {t("users.createdAt")}
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </TableHead>
                     <TableHead>{t("users.details")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -460,7 +507,12 @@ export default function UsersPage() {
           {detailLoading ? (
             <div className="p-4 text-center">{t("common.loading")}</div>
           ) : detailError ? (
-            <div className="p-4 text-red-500">{detailError}</div>
+            <ErrorDisplay
+              error={detailError}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
           ) : detailUser ? (
             <div className="space-y-2">
                 <div><b>{t("users.uid")}:</b> {detailUser.uid}</div>

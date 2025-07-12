@@ -8,6 +8,7 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -35,10 +36,11 @@ export default function NetworkCreatePage() {
           description: t("network.countriesLoadedSuccessfully"),
         })
       } catch (err: any) {
+        const errorMessage = extractErrorMessages(err) || t("network.failedToLoadCountries")
         setCountries([])
         toast({
           title: t("network.countriesFailedToLoad"),
-          description: err.message || t("network.failedToLoadCountries"),
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -62,10 +64,11 @@ export default function NetworkCreatePage() {
       })
       router.push("/dashboard/network/list")
     } catch (err: any) {
-      setError(err.message || t("network.failedToCreate"))
+      const errorMessage = extractErrorMessages(err) || t("network.failedToCreate")
+      setError(errorMessage)
       toast({
         title: t("network.failedToCreate"),
-        description: err.message || t("network.failedToCreate"),
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -139,7 +142,14 @@ export default function NetworkCreatePage() {
               </svg>
             </div>
           </div>
-          {error && <div className="text-red-500">{error}</div>}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
+          )}
           <Button type="submit" disabled={loading}>{loading ? t("network.creating") : t("network.create")}</Button>
         </form>
       </CardContent>

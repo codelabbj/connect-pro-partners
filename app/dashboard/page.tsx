@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Switch } from "@/components/ui/switch"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ClipboardList, Users, KeyRound, Bell, Clock } from "lucide-react";
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -33,16 +34,7 @@ const mockFeed = [
   { time: "15 min ago", message: "Task #124 scheduled." },
 ]
 
-// Helper to extract error messages from API responses
-function extractErrorMessages(errorObj: any): string {
-  if (!errorObj || typeof errorObj !== "object") return String(errorObj)
-  if (errorObj.detail) return errorObj.detail
-  if (errorObj.message) return errorObj.message
-  // If it's a field error object, join all array values for all fields
-  return Object.values(errorObj)
-    .map((v) => Array.isArray(v) ? v.join(" ") : String(v))
-    .join(" ")
-}
+
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null)
@@ -107,15 +99,12 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 space-y-4">
-        <span className="text-lg font-semibold text-red-600 dark:text-red-400">{error}</span>
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          onClick={fetchStats}
-        >
-          {t("dashboard.retry")}
-        </button>
-      </div>
+      <ErrorDisplay
+        error={error}
+        onRetry={fetchStats}
+        variant="full"
+        showDismiss={false}
+      />
     );
   }
 

@@ -218,6 +218,10 @@ const translations = {
     "common.all": "All",
     "common.ok": "OK",
     "common.save": "Save",
+    "common.errorOccurred": "An error occurred",
+    "common.retry": "Retry",
+    "common.retrying": "Retrying...",
+    "common.dismiss": "Dismiss",
 
     // Registration Form
     "register.title": "Register New User",
@@ -328,6 +332,8 @@ const translations = {
     "devices.title": "Devices",
     "devices.list": "Devices List",
     "devices.failedToLoad": "Failed to load devices",
+    "devices.success": "Devices loaded successfully",
+    "devices.loadedSuccessfully": "Devices loaded successfully",
     "devices.deviceId": "Device ID",
     "devices.name": "Name",
     "devices.status": "Status",
@@ -592,6 +598,10 @@ const translations = {
     "common.all": "Tous",
     "common.ok": "OK",
     "common.save": "Enregistrer",
+    "common.errorOccurred": "Une erreur s'est produite",
+    "common.retry": "Réessayer",
+    "common.retrying": "Nouvelle tentative...",
+    "common.dismiss": "Fermer",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",
@@ -702,6 +712,8 @@ const translations = {
     "devices.title": "Appareils",
     "devices.list": "Liste des appareils",
     "devices.failedToLoad": "Échec du chargement des appareils",
+    "devices.success": "Appareils chargés avec succès",
+    "devices.loadedSuccessfully": "Appareils chargés avec succès",
     "devices.deviceId": "ID de l'appareil",
     "devices.name": "Nom",
     "devices.status": "Statut",

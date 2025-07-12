@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -55,11 +56,12 @@ export default function NetworkConfigCreatePage() {
           description: t("networkConfig.networksLoadedSuccessfully"),
         })
       } catch (err: any) {
-        setError(t("networkConfig.failedToLoadNetworks"))
+        const errorMessage = extractErrorMessages(err) || t("networkConfig.failedToLoadNetworks")
+        setError(errorMessage)
         setNetworks([])
         toast({
           title: t("networkConfig.networksFailedToLoad"),
-          description: err.message || t("networkConfig.failedToLoadNetworks"),
+          description: errorMessage,
           variant: "destructive",
         })
       }
@@ -107,10 +109,11 @@ export default function NetworkConfigCreatePage() {
       })
       router.push("/dashboard/network-config/list")
     } catch (err: any) {
-      setError(err.message || t("networkConfig.failedToCreate"))
+      const errorMessage = extractErrorMessages(err) || t("networkConfig.failedToCreate")
+      setError(errorMessage)
       toast({
         title: t("networkConfig.failedToCreate"),
-        description: err.message || t("networkConfig.failedToCreate"),
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -286,7 +289,14 @@ export default function NetworkConfigCreatePage() {
             </div>
           </div>
 
-          {error && <div className="text-red-500">{error}</div>}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
+          )}
           
           <div className="flex gap-4">
             <Button type="submit" disabled={loading}>

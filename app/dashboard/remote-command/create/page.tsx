@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -64,7 +65,7 @@ export default function RemoteCommandCreatePage() {
         description: data.status || t("remoteCommand.commandSentSuccessfully"),
       })
     } catch (err: any) {
-      const backendError = err.message || t("remoteCommand.failedToCreate")
+      const backendError = extractErrorMessages(err) || t("remoteCommand.failedToCreate")
       setError(backendError)
       toast({
         title: t("remoteCommand.failed"),
@@ -124,7 +125,14 @@ export default function RemoteCommandCreatePage() {
             <label>{t("remoteCommand.priority")}</label>
             <Input type="number" value={priority} onChange={e => setPriority(Number(e.target.value))} required />
           </div>
-          {error && <div className="text-red-500">{error}</div>}
+          {error && (
+            <ErrorDisplay
+              error={error}
+              variant="inline"
+              showRetry={false}
+              className="mb-4"
+            />
+          )}
           {success && <div className="text-green-600">{success}</div>}
           <Button type="submit" disabled={loading}>{loading ? t("remoteCommand.sending") : t("remoteCommand.sendCommand")}</Button>
         </form>

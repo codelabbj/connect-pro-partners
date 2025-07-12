@@ -30,12 +30,17 @@ export default function SmsLogsListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "") {
+        if (searchTerm.trim() !== "" || typeFilter !== "all") {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
-            search: searchTerm,
           });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (typeFilter !== "all") {
+            params.append("sms_type", typeFilter);
+          }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
@@ -67,15 +72,10 @@ export default function SmsLogsListPage() {
       }
     }
     fetchSmsLogs()
-  }, [searchTerm])
+  }, [searchTerm, typeFilter])
 
-  // Remove client-side search filtering for logs
-  const filteredLogs = useMemo(() => {
-    return logs.filter((log) => {
-      const matchesType = typeFilter === "all" || log.sms_type === typeFilter
-      return matchesType
-    })
-  }, [logs, typeFilter])
+  // Remove client-side filtering since it's now handled by the API
+  const filteredLogs = logs
 
   const handleCopy = (content: string, uid: string) => {
     navigator.clipboard.writeText(content)

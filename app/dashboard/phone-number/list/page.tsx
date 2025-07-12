@@ -28,12 +28,17 @@ export default function PhoneNumberListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "") {
+        if (searchTerm.trim() !== "" || networkFilter !== "all") {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
-            search: searchTerm,
           });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (networkFilter !== "all") {
+            params.append("network", networkFilter);
+          }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/numeros/?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
@@ -65,7 +70,7 @@ export default function PhoneNumberListPage() {
       }
     }
     fetchPhoneNumbers()
-  }, [searchTerm])
+  }, [searchTerm, networkFilter])
 
   // Fetch networks for filter
   useEffect(() => {
@@ -91,13 +96,8 @@ export default function PhoneNumberListPage() {
     fetchNetworks()
   }, [])
 
-  // Remove client-side search filtering for numbers
-  const filteredNumbers = useMemo(() => {
-    return numbers.filter((number) => {
-      const matchesNetwork = networkFilter === "all" || number.network === networkFilter || number.network === networks.find(n => n.uid === networkFilter)?.nom
-      return matchesNetwork
-    })
-  }, [numbers, networkFilter, networks])
+  // Remove client-side filtering since it's now handled by the API
+  const filteredNumbers = numbers
 
   if (loading) {
     return (

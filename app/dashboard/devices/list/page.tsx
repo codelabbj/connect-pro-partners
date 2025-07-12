@@ -27,12 +27,17 @@ export default function DevicesListPage() {
       setError("")
       try {
         let endpoint = "";
-        if (searchTerm.trim() !== "") {
+        if (searchTerm.trim() !== "" || statusFilter !== "all") {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
-            search: searchTerm,
           });
+          if (searchTerm.trim() !== "") {
+            params.append("search", searchTerm);
+          }
+          if (statusFilter !== "all") {
+            params.append("is_active", statusFilter === "active" ? "true" : "false");
+          }
           endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
@@ -64,15 +69,10 @@ export default function DevicesListPage() {
       }
     }
     fetchDevices()
-  }, [searchTerm])
+  }, [searchTerm, statusFilter])
 
-  // Remove client-side search filtering for devices
-  const filteredDevices = useMemo(() => {
-    return devices.filter((device) => {
-      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && device.is_active) || (statusFilter === "inactive" && !device.is_active)
-      return matchesStatus
-    })
-  }, [devices, statusFilter])
+  // Remove client-side filtering since it's now handled by the API
+  const filteredDevices = devices
 
   if (loading) {
     return (

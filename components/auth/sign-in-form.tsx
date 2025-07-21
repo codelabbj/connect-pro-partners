@@ -69,14 +69,27 @@ export function SignInForm() {
       })
       router.push("/dashboard")
     } catch (err: any) {
-      const backendError = extractErrorMessages(err) || t("auth.networkError")
-      setError(backendError)
+      let backendError = t("auth.networkError");
+      // Try to extract error message from API response
+      if (err && err.message) {
+        try {
+          // Try to parse JSON from the error message if possible
+          const parsed = JSON.parse(err.message);
+          backendError = extractErrorMessages(parsed) || backendError;
+        } catch {
+          // If not JSON, try to extract from err.message directly
+          backendError = extractErrorMessages(err.message) || backendError;
+        }
+      } else if (err) {
+        backendError = extractErrorMessages(err) || backendError;
+      }
+      setError(backendError);
       toast({
         title: t("auth.networkError"),
         description: backendError,
         variant: "destructive",
-      })
-      setLoading(false)
+      });
+      setLoading(false);
     }
   }
 

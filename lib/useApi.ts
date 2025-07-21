@@ -99,7 +99,8 @@ export function useApi() {
     
     // If the response is an error, throw it so it can be handled by the calling component
     if (!res.ok) {
-      throw new Error(data?.detail || data?.message || `HTTP ${res.status}: ${res.statusText}`);
+      // Throw the full data object so error extraction works for non_field_errors and other fields
+      throw data;
     }
     
     return data;

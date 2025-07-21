@@ -9,11 +9,11 @@ import { useLanguage } from "@/components/providers/language-provider"
 import { BarChart3, Users, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal } from "lucide-react"
 import { clearTokens } from "@/lib/api"
 
-const navigation = [
-  { name: "nav.dashboard", href: "/dashboard", icon: BarChart3 },
-  { name: "nav.users", href: "/dashboard/users", icon: Users },
-  { name: "nav.transactions", href: "/dashboard/transactions", icon: CreditCard },
-]
+// const navigation = [
+//   { name: "nav.dashboard", href: "/dashboard", icon: BarChart3 },
+//   { name: "nav.users", href: "/dashboard/users", icon: Users },
+//   { name: "nav.transactions", href: "/dashboard/transactions", icon: CreditCard },
+// ]
 
 export function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false)

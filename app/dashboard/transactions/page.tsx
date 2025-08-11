@@ -56,6 +56,7 @@ export default function TransactionsPage() {
   const [editError, setEditError] = useState("")
   const [editTransaction, setEditTransaction] = useState<any | null>(null)
   const [deleteUid, setDeleteUid] = useState<string | null>(null)
+  const [searchInput, setSearchInput] = useState(""); // NEW: for input control
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -144,15 +145,37 @@ export default function TransactionsPage() {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      completed: "default",
-      pending: "outline",
-      failed: "destructive",
-      sent_to_user: "secondary",
-    }
-    return <Badge variant={variants[status] || "outline"}>{t(`transactions.${status}`) || status}</Badge>
-  }
+  
+    const statusMap: Record<string, { label: string; color: string }> = {
+      pending:      { label: "En attente", color: "#ffc107" },      // jaune
+      sent_to_user: { label: "Envoyé", color: "#17a2b8" },          // bleu clair
+      processing:   { label: "En cours", color: "#fd7e14" },        // orange
+      completed:    { label: "Terminé", color: "#28a745" },         // vert foncé
+      success:      { label: "Succès", color: "#20c997" },          // turquoise
+      failed:       { label: "Échec", color: "#dc3545" },           // rouge
+      cancelled:    { label: "Annulé", color: "#6c757d" },          // gris
+      timeout:      { label: "Expiré", color: "#6f42c1" },          // violet
+    };
+
+    const getStatusBadge = (status: string) => {
+      const info = statusMap[status] || { label: status, color: "#adb5bd" };
+      return (
+        <span
+          style={{
+            backgroundColor: info.color,
+            color: "#fff",
+            borderRadius: "0.375rem",
+            padding: "0.25em 0.75em",
+            fontWeight: 500,
+            fontSize: "0.875rem",
+            display: "inline-block",
+          }}
+        >
+          {info.label}
+        </span>
+      );
+    };
+   
 
   const getTypeBadge = (type: string) => {
     const colors: Record<string, string> = {
@@ -260,6 +283,12 @@ export default function TransactionsPage() {
     }
   }
 
+  // Update searchTerm only when user submits
+  const handleSearchSubmit = () => {
+    setSearchTerm(searchInput.trim());
+    setCurrentPage(1); // Reset to first page on new search
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -292,10 +321,22 @@ export default function TransactionsPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder={t("common.search")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearchSubmit();
+                }}
+                onBlur={handleSearchSubmit}
                 className="pl-10"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                onClick={handleSearchSubmit}
+              >
+                {t("common.search")}
+              </Button>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full lg:w-48">
@@ -336,7 +377,8 @@ export default function TransactionsPage() {
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>
                     </TableHead>
-                    <TableHead>{t("transactions.user")}</TableHead>
+                    <TableHead>{t("transactions.recipientName")}</TableHead> {/* NEW COLUMN */}
+                    <TableHead>{t("transactions.recipientPhone")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>
                       <Button variant="ghost" onClick={() => handleSort("date")} className="h-auto p-0 font-semibold">
                         {t("transactions.date")}
@@ -344,6 +386,7 @@ export default function TransactionsPage() {
                       </Button>
                     </TableHead>
                     <TableHead>{t("transactions.type")}</TableHead>
+                    <TableHead>{t("transactions.reference")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>{t("transactions.status")}</TableHead>
                     <TableHead>{t("transactions.actions")}</TableHead>
                   </TableRow>
@@ -351,19 +394,28 @@ export default function TransactionsPage() {
                 <TableBody>
                   {paginatedTransactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">{t("transactions.noTransactionsFound")}</TableCell>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground">{t("transactions.noTransactionsFound")}</TableCell>
                     </TableRow>
                   ) : (
                     paginatedTransactions.map((transaction) => (
                       <TableRow key={transaction.uid}>
                         <TableCell className="font-medium">${parseFloat(transaction.amount).toLocaleString()}</TableCell>
-                        <TableCell>{transaction.display_recipient_name || transaction.recipient_phone || "-"}</TableCell>
+                        <TableCell>{transaction.display_recipient_name || "-"}</TableCell> {/* NEW CELL */}
+                        <TableCell>{transaction.recipient_phone || "-"}</TableCell> {/* NEW CELL */}
                         <TableCell>{transaction.created_at ? new Date(transaction.created_at).toLocaleDateString() : "-"}</TableCell>
                         <TableCell>{getTypeBadge(transaction.type)}</TableCell>
+                        <TableCell>{transaction.reference || "-"}</TableCell> {/* NEW COLUMN */}
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(transaction)} title={t("transactions.edit")}>
-                            <Pencil className="w-4 h-4" />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            title={t("transactions.edit")}
+                          >
+                            <a href={`/dashboard/transactions/${transaction.uid}/edit`}>
+                              <Pencil className="w-4 h-4" />
+                            </a>
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>

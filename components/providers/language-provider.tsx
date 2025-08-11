@@ -112,6 +112,7 @@ const translations = {
     "users.phoneVerified": "Phone Verified",
     "users.lastLogin": "Last Login",
     "users.details": "Details",
+    "users.isActive": "Is Active",
     "users.uid": "UID",
     "users.verifyEmail": "Verify Email",
     "users.verifyPhone": "Verify Phone",
@@ -154,6 +155,11 @@ const translations = {
     "users.confirmUnverifyEmail": "Are you sure you want to unverify this user's email?",
     "users.confirmVerifyPhone": "Are you sure you want to verify this user's phone?",
     "users.confirmUnverifyPhone": "Are you sure you want to unverify this user's phone?",
+
+    "users.confirmActivateTitle": "Activate User",
+    "users.confirmDeactivateTitle": "Deactivate User",
+    "users.confirmActivateText": "Are you sure that you want to activate user?",
+    "users.confirmDeactivateText": "Are you sure that you want to deactivate user?",
 
     // Transactions
     "transactions.title": "Transactions",
@@ -201,6 +207,9 @@ const translations = {
     "transactions.deleteFailed": "Delete failed",
     "transactions.showingResults": "Showing {start} to {end} of {total} results",
     "transactions.pageOf": "Page {current} of {total}",
+    "transactions.recipientName": "Recipient Name",
+    "transactions.recipientPhone": "Recipient Phone",
+    "transactions.reference": "Reference",
 
     // Common
     "common.previous": "Previous",
@@ -491,6 +500,7 @@ const translations = {
     "users.phoneVerified": "Téléphone vérifié",
     "users.lastLogin": "Dernière connexion",
     "users.details": "Détails",
+    "users.isActive": "Est actif",
     "users.uid": "UID",
     "users.verifyEmail": "Vérifier l'email",
     "users.verifyPhone": "Vérifier le téléphone",
@@ -513,6 +523,7 @@ const translations = {
     "users.enterPhone": "Entrez le numéro de téléphone",
     "users.sending": "Envoi...",
     "users.verifying": "Vérification...",
+    
 
     // Activation/Deactivation
     "users.activate": "Activer",
@@ -534,6 +545,10 @@ const translations = {
     "users.confirmUnverifyEmail": "Êtes-vous sûr de vouloir annuler la vérification de l'email de cet utilisateur ?",
     "users.confirmVerifyPhone": "Êtes-vous sûr de vouloir vérifier le téléphone de cet utilisateur ?",
     "users.confirmUnverifyPhone": "Êtes-vous sûr de vouloir annuler la vérification du téléphone de cet utilisateur ?",
+    "users.confirmActivateTitle": "Activer l'utilisateur",
+    "users.confirmDeactivateTitle": "Désactiver l'utilisateur",
+    "users.confirmActivateText": "Êtes-vous sûr de vouloir activer l'utilisateur ?",
+    "users.confirmDeactivateText": "Êtes-vous sûr de vouloir désactiver l'utilisateur ?",
 
     // Transactions
     "transactions.title": "Transactions",
@@ -581,6 +596,9 @@ const translations = {
     "transactions.deleteFailed": "Échec de la suppression",
     "transactions.showingResults": "Affichage de {start} à {end} sur {total} résultats",
     "transactions.pageOf": "Page {current} sur {total}",
+    "transactions.recipientName": "Nom du destinataire",
+    "transactions.recipientPhone": "Téléphone du destinataire",
+    "transactions.reference": "Référence",
 
     // Common
     "common.previous": "Précédent",

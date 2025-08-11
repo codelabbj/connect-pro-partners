@@ -17,6 +17,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
+import { Copy } from "lucide-react"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -53,6 +54,9 @@ export default function UsersPage() {
   // Add state for confirmation modals
   const [confirmEmailToggle, setConfirmEmailToggle] = useState<null | boolean>(null);
   const [confirmPhoneToggle, setConfirmPhoneToggle] = useState<null | boolean>(null);
+
+  const [confirmActionUser, setConfirmActionUser] = useState<any | null>(null);
+  const [confirmActionType, setConfirmActionType] = useState<"activate" | "deactivate" | null>(null);
 
 
 
@@ -390,6 +394,7 @@ export default function UsersPage() {
                         aria-label="Select all"
                       />
                     </TableHead>
+                    <TableHead>{t("users.uid")}</TableHead> {/* Add UID header */}
                     <TableHead>
                       <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
                         {t("users.name")}
@@ -403,7 +408,7 @@ export default function UsersPage() {
                       </Button>
                     </TableHead>
                     <TableHead>{t("users.phone")}</TableHead>
-                    <TableHead>{t("users.status")}</TableHead>
+                    <TableHead>{t("users.isActive")}</TableHead>
                     <TableHead>{t("users.lastLogin")}</TableHead>
                     <TableHead>
                       <Button variant="ghost" onClick={() => handleSort("created_at")} className="h-auto p-0 font-semibold">
@@ -411,6 +416,7 @@ export default function UsersPage() {
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>
                     </TableHead>
+                    <TableHead>{t("users.status")}</TableHead>
                     <TableHead>{t("users.details")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -424,10 +430,11 @@ export default function UsersPage() {
                           aria-label={`Select user ${user.display_name || user.email}`}
                         />
                       </TableCell>
+                      <TableCell>{user.uid}</TableCell> {/* Add UID cell */}
                       <TableCell className="font-medium">{user.display_name || `${user.first_name || ""} ${user.last_name || ""}`}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phone}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         {user.is_active ? (
                           <Button
                             size="sm"
@@ -451,9 +458,63 @@ export default function UsersPage() {
                             ) : t("users.activate")}
                           </Button>
                         )}
+                      </TableCell> */}
+                      <TableCell>
+                        {user.is_active ? (
+                          // <span className="inline-flex items-center justify-center rounded-full bg-green-100 text-green-700 p-1">
+                            <img src="/icon-yes.svg" alt="Active" className="h-4 w-4" />
+                          // </span>
+                        ) : (
+                          // <span className="inline-flex items-center justify-center rounded-full bg-red-100 text-red-700 p-1">
+                            <img src="/icon-no.svg" alt="Active" className="h-4 w-4" />
+                          // </span>
+                        )}
                       </TableCell>
                       <TableCell>{user.last_login_at ? user.last_login_at.split("T")[0] : "-"}</TableCell>
                       <TableCell>{user.created_at ? user.created_at.split("T")[0] : "-"}</TableCell>
+                      <TableCell>
+                        {user.is_active ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={deactivatingUid === user.uid}
+                            onClick={() => {
+                              setConfirmActionUser(user);
+                              setConfirmActionType("deactivate");
+                            }}
+                          >
+                            {deactivatingUid === user.uid ? (
+                              <span className="flex items-center">
+                                <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                </svg>
+                                {t("users.deactivating")}
+                              </span>
+                            ) : t("users.deactivate")}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={activatingUid === user.uid}
+                            onClick={() => { 
+                                  setConfirmActionUser(user);
+                                  setConfirmActionType("activate");
+                                }}
+                              >
+                            {activatingUid === user.uid ? (
+                              <span className="flex items-center">
+                                <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                </svg>
+                                {t("users.activating")}
+                              </span>
+                            ) : t("users.activate")}
+                          </Button>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Button size="sm" variant="secondary" onClick={() => handleOpenDetail(user.uid)}>
                           {t("users.details")}
@@ -515,7 +576,21 @@ export default function UsersPage() {
             />
           ) : detailUser ? (
             <div className="space-y-2">
-                <div><b>{t("users.uid")}:</b> {detailUser.uid}</div>
+                <div className="flex items-center gap-2">
+                  <b>{t("users.uid")}:</b> {detailUser.uid}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={() => {
+                      navigator.clipboard.writeText(detailUser.uid);
+                      toast({ title: t("users.copiedUid") || "UID copied!" });
+                    }}
+                    aria-label={t("users.copyUid") || "Copy UID"}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
                 <div><b>{t("users.name")}:</b> {detailUser.display_name || `${detailUser.first_name || ""} ${detailUser.last_name || ""}`}</div>
                 <div><b>{t("users.email")}:</b> {detailUser.email}</div>
                 <div><b>{t("users.phone")}:</b> {detailUser.phone}</div>
@@ -614,6 +689,54 @@ export default function UsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!confirmActionType} onOpenChange={(open) => { if (!open) { setConfirmActionType(null); setConfirmActionUser(null); } }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {confirmActionType === "activate"
+              ? t("users.confirmActivateTitle") || "Activate User"
+              : t("users.confirmDeactivateTitle") || "Deactivate User"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-4 text-center">
+          {confirmActionType === "activate"
+            ? t("users.confirmActivateText") || "Are you sure that you want to activate user?"
+            : t("users.confirmDeactivateText") || "Are you sure that you want to deactivate user?"}
+        </div>
+        <DialogFooter>
+          <Button
+            className="w-full"
+            onClick={async () => {
+              if (confirmActionUser) {
+                if (confirmActionType === "activate") {
+                  await handleActivate(confirmActionUser);
+                } else {
+                  await handleDeactivate(confirmActionUser);
+                }
+              }
+              setConfirmActionType(null);
+              setConfirmActionUser(null);
+            }}
+            disabled={activatingUid === confirmActionUser?.uid || deactivatingUid === confirmActionUser?.uid}
+          >
+            {confirmActionType === "activate"
+              ? t("users.activate")
+              : t("users.deactivate")}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => {
+              setConfirmActionType(null);
+              setConfirmActionUser(null);
+            }}
+            disabled={activatingUid === confirmActionUser?.uid || deactivatingUid === confirmActionUser?.uid}
+          >
+            {t("common.cancel")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   )
 }

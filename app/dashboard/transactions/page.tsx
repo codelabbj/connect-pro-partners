@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
+import { useWebSocket } from "@/components/providers/websocket-provider"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -289,6 +290,30 @@ export default function TransactionsPage() {
     setCurrentPage(1); // Reset to first page on new search
   };
 
+  // Listen for transaction_update WebSocket messages
+  const { lastMessage } = useWebSocket();
+  useEffect(() => {
+    if (!lastMessage) return;
+    try {
+      const data = typeof lastMessage.data === "string" ? JSON.parse(lastMessage.data) : lastMessage.data;
+      if (data.type === "transaction_update" && data.transaction_uid) {
+        setTransactions((prev) =>
+          prev.map((tx) =>
+            tx.uid === data.transaction_uid
+              ? { ...tx, status: data.status, ...data.data }
+              : tx
+          )
+        );
+        toast({
+          title: t("transactions.liveUpdate"),
+          description: `${t("transactions.transaction")} ${data.transaction_uid} ${t("transactions.statusUpdated")}: ${data.status}`,
+        });
+      }
+    } catch (err) {
+      // Optionally log or handle parse errors
+    }
+  }, [lastMessage, t, toast]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -371,6 +396,7 @@ export default function TransactionsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>{t("transactions.reference")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>
                       <Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
                         {t("transactions.amount")}
@@ -386,7 +412,8 @@ export default function TransactionsPage() {
                       </Button>
                     </TableHead>
                     <TableHead>{t("transactions.type")}</TableHead>
-                    <TableHead>{t("transactions.reference")}</TableHead> {/* NEW COLUMN */}
+                    {/* <TableHead>{t("transactions.reference")}</TableHead> */}
+                    <TableHead>{t("transactions.network")}</TableHead>
                     <TableHead>{t("transactions.status")}</TableHead>
                     <TableHead>{t("transactions.actions")}</TableHead>
                   </TableRow>
@@ -399,12 +426,13 @@ export default function TransactionsPage() {
                   ) : (
                     paginatedTransactions.map((transaction) => (
                       <TableRow key={transaction.uid}>
+                        <TableCell>{transaction.reference || "-"}</TableCell> {/* NEW COLUMN */}
                         <TableCell className="font-medium">${parseFloat(transaction.amount).toLocaleString()}</TableCell>
                         <TableCell>{transaction.display_recipient_name || "-"}</TableCell> {/* NEW CELL */}
                         <TableCell>{transaction.recipient_phone || "-"}</TableCell> {/* NEW CELL */}
                         <TableCell>{transaction.created_at ? new Date(transaction.created_at).toLocaleDateString() : "-"}</TableCell>
                         <TableCell>{getTypeBadge(transaction.type)}</TableCell>
-                        <TableCell>{transaction.reference || "-"}</TableCell> {/* NEW COLUMN */}
+                        <TableCell>{transaction.network_name || "-"}</TableCell>
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                         <TableCell>
                           <Button

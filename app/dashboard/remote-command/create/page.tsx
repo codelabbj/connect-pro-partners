@@ -7,6 +7,7 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
+import { useWebSocket } from "@/components/providers/websocket-provider"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -22,6 +23,7 @@ export default function RemoteCommandCreatePage() {
   const { t } = useLanguage()
   const { toast } = useToast();
   const [devices, setDevices] = useState<any[]>([])
+  const { sendRemoteCommand } = useWebSocket();
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -54,16 +56,24 @@ export default function RemoteCommandCreatePage() {
       return
     }
     try {
-      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/remote-command/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command, device_id: deviceId, parameters: paramsObj, priority })
-      })
-      setSuccess(data.status || t("remoteCommand.commandSentSuccessfully"))
+      // Send remote command via WebSocket
+      sendRemoteCommand(deviceId, command, paramsObj, priority === 1 ? "normal" : String(priority));
+      setSuccess(t("remoteCommand.commandSentSuccessfully"))
       toast({
         title: t("remoteCommand.success"),
-        description: data.status || t("remoteCommand.commandSentSuccessfully"),
+        description: t("remoteCommand.commandSentSuccessfully"),
       })
+      // Optionally, you can still send via API if needed
+      // const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/remote-command/`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ command, device_id: deviceId, parameters: paramsObj, priority })
+      // })
+      // setSuccess(data.status || t("remoteCommand.commandSentSuccessfully"))
+      // toast({
+      //   title: t("remoteCommand.success"),
+      //   description: data.status || t("remoteCommand.commandSentSuccessfully"),
+      // })
     } catch (err: any) {
       const backendError = extractErrorMessages(err) || t("remoteCommand.failedToCreate")
       setError(backendError)
@@ -139,4 +149,4 @@ export default function RemoteCommandCreatePage() {
       </CardContent>
     </Card>
   )
-} 
+}

@@ -210,6 +210,8 @@ const translations = {
     "transactions.recipientName": "Recipient Name",
     "transactions.recipientPhone": "Recipient Phone",
     "transactions.reference": "Reference",
+    "transactions.network": "Network",
+    "transactions.createdAt": "Created At",
 
     // Common
     "common.previous": "Previous",
@@ -599,6 +601,8 @@ const translations = {
     "transactions.recipientName": "Nom du destinataire",
     "transactions.recipientPhone": "Téléphone du destinataire",
     "transactions.reference": "Référence",
+    "transactions.network": "Réseau",
+    "transactions.createdAt": "Créé le",
 
     // Common
     "common.previous": "Précédent",

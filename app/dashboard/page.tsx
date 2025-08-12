@@ -236,7 +236,7 @@ export default function DashboardPage() {
       {/* Trends Chart & Live Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Trends Chart */}
-        <div className="col-span-2 bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col">
+        {/* <div className="col-span-2 bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{t("dashboard.userTaskActivity")}</h2>
           <ChartContainer
             config={{ users: { color: '#2563eb', label: t("dashboard.users") }, tasks: { color: '#16a34a', label: t("dashboard.tasks") } }}
@@ -253,9 +253,9 @@ export default function DashboardPage() {
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
-        </div>
+        </div> */}
         {/* Live Activity Feed */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col h-full">
+        {/* <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 flex flex-col h-full">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{t("dashboard.liveActivityFeed")}</h2>
           <div className="flex-1 overflow-y-auto max-h-72">
             <Table>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
               </TableBody>
             </Table>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
     </>

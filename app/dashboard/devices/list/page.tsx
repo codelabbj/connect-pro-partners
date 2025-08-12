@@ -10,6 +10,7 @@ import { Search, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
+import { useWebSocket } from "@/components/providers/websocket-provider"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -26,6 +27,7 @@ export default function DevicesListPage() {
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState(""); // NEW: for input control
   const [currentPage, setCurrentPage] = useState(1)
+  const { lastMessage } = useWebSocket(); // Add this line
 
   useEffect(() => {
     const fetchDevices = async () => {
@@ -83,6 +85,29 @@ export default function DevicesListPage() {
     }
     fetchDevices()
   }, [searchTerm, statusFilter, sortField, sortDirection])
+
+  // Listen for device_status_update WebSocket messages
+  useEffect(() => {
+    if (!lastMessage) return;
+    try {
+      const data = typeof lastMessage.data === "string" ? JSON.parse(lastMessage.data) : lastMessage.data;
+      if (data.type === "device_status_update" && data.device_id) {
+        setDevices((prev) =>
+          prev.map((device) =>
+            device.device_id === data.device_id
+              ? { ...device, ...data.data }
+              : device
+          )
+        );
+        toast({
+          title: t("devices.liveUpdate"),
+          description: `${t("devices.deviceId")} ${data.device_id} ${t("devices.statusUpdated")}`,
+        });
+      }
+    } catch (err) {
+      // Optionally log or handle parse errors
+    }
+  }, [lastMessage, t, toast]);
 
   // Remove client-side filtering since it's now handled by the API
   const filteredDevices = devices
@@ -202,4 +227,4 @@ export default function DevicesListPage() {
       </CardContent>
     </Card>
   )
-} 
+}

@@ -131,10 +131,21 @@ export default function EditTransactionPage() {
           {/* USSD Path */}
           {transaction.ussd_path && Array.isArray(transaction.ussd_path) && (
             <div className="mb-4">
-              <strong>USSD Path:</strong>
-              <pre className="bg-muted p-2 rounded text-xs whitespace-pre-wrap">{transaction.ussd_path.join("\n")}</pre>
+                <strong>USSD Path:</strong>
+                <pre className="bg-muted p-2 rounded text-xs whitespace-pre-wrap font-mono">
+                {transaction.ussd_path.map((step: string, idx: number) => {
+                    const [key, ...rest] = step.split(":");
+                    const value = rest.join(":").trim();
+                    return (
+                    <div key={idx} style={{ marginBottom: "0.75em" }}>
+                        <span style={{ fontWeight: "bold" }}>{key}:</span>{" "}
+                        <span>{value}</span>
+                    </div>
+                    );
+                })}
+                </pre>
             </div>
-          )}
+            )}
           {/* Editable fields */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -191,3 +202,5 @@ export default function EditTransactionPage() {
     </Card>
   )
 }
+
+

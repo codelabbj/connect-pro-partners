@@ -78,14 +78,13 @@ export default function UsersPage() {
           if (statusFilter !== "all") {
             params.append("status", statusFilter);
           }
-          if (sortField) {
-            const orderBy = sortField === "name" ? "display_name" : sortField;
-            params.append("order_by", `${orderBy}:${sortDirection}`);
-          }
+          const orderingParam = sortField
+            ? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${(sortField === "name" ? "field_real_name" : sortField)}`
+            : "";
           endpoint =
             viewType === "pending"
-              ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}`
-              : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/?${params.toString()}`;
+              ? `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/pending/?${params.toString()}${orderingParam}`
+              : `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/?${params.toString()}${orderingParam}`;
         } else {
           const params = new URLSearchParams({
             page: currentPage.toString(),

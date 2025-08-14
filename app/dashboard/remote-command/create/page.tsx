@@ -28,7 +28,7 @@ function RemoteCommandCreatePage() {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync`)
+        const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/stats/devices/`)
         setDevices(Array.isArray(data) ? data : data.results || [])
       } catch (err) {
         setDevices([])

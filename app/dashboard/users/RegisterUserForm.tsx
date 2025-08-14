@@ -13,8 +13,7 @@ export default function RegisterUserForm() {
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
-    email: "",
-    phone: "",
+    identifier: "",
     password: "",
     password_confirm: "",
   })
@@ -33,8 +32,6 @@ export default function RegisterUserForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
-
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,10 +54,20 @@ export default function RegisterUserForm() {
       if (apiToken) {
         headers["Authorization"] = `Bearer ${apiToken}`
       }
+      // Map identifier to email or phone for backend compatibility
+      const isEmail = /@/.test(form.identifier)
+      const submitBody = {
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: isEmail ? form.identifier : "",
+        phone: isEmail ? "" : form.identifier,
+        password: form.password,
+        password_confirm: form.password_confirm,
+      }
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/register/`, {
         method: "POST",
         headers,
-        body: JSON.stringify(form),
+        body: JSON.stringify(submitBody),
       })
       if (data && data.detail) {
         const backendError = extractErrorMessages(data)
@@ -79,8 +86,7 @@ export default function RegisterUserForm() {
         setForm({
           first_name: "",
           last_name: "",
-          email: "",
-          phone: "",
+          identifier: "",
           password: "",
           password_confirm: "",
         })
@@ -130,17 +136,10 @@ export default function RegisterUserForm() {
             />
           </div>
           <Input
-            name="email"
-            type="email"
-            placeholder={t("register.email")}
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            name="phone"
-            placeholder={t("register.phone")}
-            value={form.phone}
+            name="identifier"
+            type="text"
+            placeholder={t("register.emailOrPhone") || "Email or phone number"}
+            value={(form as any).identifier}
             onChange={handleChange}
             required
           />
@@ -178,4 +177,4 @@ export default function RegisterUserForm() {
       </CardContent>
     </Card>
   )
-} 
+}

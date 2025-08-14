@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useApi } from "@/lib/useApi"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -16,14 +17,16 @@ const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 export default function DepositPage() {
   const [networks, setNetworks] = useState<any[]>([])
   const [network, setNetwork] = useState("")
-  const [amount, setAmount] = useState("5500")
-  const [confirmAmount, setConfirmAmount] = useState("5500")
-  const [recipientPhone, setRecipientPhone] = useState("0167890123")
-  const [confirmRecipientPhone, setConfirmRecipientPhone] = useState("0167890123")
-  const [objet, setObjet] = useState("test")
+  const [amount, setAmount] = useState("")
+  const [confirmAmount, setConfirmAmount] = useState("")
+  const [recipientPhone, setRecipientPhone] = useState("")
+  const [confirmRecipientPhone, setConfirmRecipientPhone] = useState("")
+  const [objet, setObjet] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [confirmDetails, setConfirmDetails] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingPayload, setPendingPayload] = useState<any | null>(null)
   const apiFetch = useApi()
   const router = useRouter()
   const { toast } = useToast()
@@ -56,25 +59,35 @@ export default function DepositPage() {
       setError(t("transactions.confirmDetailsRequired") || "Please confirm the phone number and amount")
       return
     }
+    // Prepare payload and open confirmation modal instead of immediate submit
+    const payload = {
+      type: "deposit",
+      amount,
+      recipient_phone: recipientPhone,
+      recipient_name: null,
+      objet,
+      network,
+    }
+    setPendingPayload(payload)
+    setShowConfirmModal(true)
+  }
+
+  const handleConfirmSubmit = async () => {
+    if (!pendingPayload) return
     setLoading(true)
     setError("")
     try {
       await apiFetch(`${baseUrl}api/payments/transactions/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "deposit",
-          amount,
-          recipient_phone: recipientPhone,
-          recipient_name: null,
-          objet,
-          network,
-        }),
+        body: JSON.stringify(pendingPayload),
       })
       toast({
         title: t("transactions.depositCreatedTitle") || "Deposit created",
         description: t("transactions.transactionCreatedDesc") || "Transaction created successfully",
       })
+      setShowConfirmModal(false)
+      setPendingPayload(null)
       router.push("/dashboard/transactions")
     } catch (err: any) {
       setError(extractErrorMessages(err) || t("transactions.failedToCreateDeposit") || "Failed to create deposit")
@@ -154,11 +167,34 @@ export default function DepositPage() {
             >
               {loading
                 ? t("common.submitting") || "Submitting..."
-                : t("transactions.createDeposit") || "Create Deposit"}
+                : t("transactions.reviewAndConfirm") || "Review & Submit"}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      {/* Confirmation Modal */}
+      <Dialog open={showConfirmModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.confirmDepositTitle") || t("transactions.reviewAndConfirm") || "Confirm Deposit"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.selectNetwork") || "Network"}:</span><span className="font-medium">{networks.find(n => n.uid === network)?.nom || network}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.amount") || "Amount"}:</span><span className="font-medium">{amount}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.recipientPhone") || "Recipient Phone"}:</span><span className="font-medium">{recipientPhone}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.purpose") || "Purpose"}:</span><span className="font-medium">{objet}</span></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowConfirmModal(false); }} disabled={loading}>
+              {t("common.cancel") || "Cancel"}
+            </Button>
+            <Button onClick={handleConfirmSubmit} disabled={loading}>
+              {loading ? (t("common.submitting") || "Submitting...") : (t("transactions.submit") || "Submit")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

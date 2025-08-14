@@ -61,9 +61,10 @@ export default function TransactionsPage() {
   const [editError, setEditError] = useState("")
   const [editTransaction, setEditTransaction] = useState<any | null>(null)
   const [deleteUid, setDeleteUid] = useState<string | null>(null)
-  const [searchInput, setSearchInput] = useState(""); // NEW: for input control
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const router = useRouter()
+  const [showEditConfirm, setShowEditConfirm] = useState(false)
+  const [pendingEditPayload, setPendingEditPayload] = useState<any | null>(null)
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -215,26 +216,30 @@ export default function TransactionsPage() {
     const { name, value } = e.target
     setEditForm((prev) => ({ ...prev, [name]: value }))
   }
-  // Submit edit
+  // Submit edit -> open confirm modal
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editTransaction) return
+    const payload = { ...editForm }
+    setPendingEditPayload(payload)
+    setShowEditConfirm(true)
+  }
+
+  // Confirm and send PATCH
+  const confirmEditAndSend = async () => {
+    if (!editTransaction || !pendingEditPayload) return
     setEditLoading(true)
     setEditError("")
     try {
       const endpoint = `${baseUrl}api/payments/transactions/${editTransaction.uid}/`
-      const payload = {
-        ...editForm,
-      }
-      const data = await apiFetch(endpoint, {
+      await apiFetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(pendingEditPayload),
       })
-      toast({
-        title: t("transactions.editSuccess"),
-        description: t("transactions.transactionUpdatedSuccessfully"),
-      })
+      toast({ title: t("transactions.editSuccess"), description: t("transactions.transactionUpdatedSuccessfully") })
+      setShowEditConfirm(false)
+      setPendingEditPayload(null)
       setEditModalOpen(false)
       setEditTransaction(null)
       setEditForm({
@@ -248,16 +253,11 @@ export default function TransactionsPage() {
         completed_at: "",
         error_message: "",
       })
-      // Refetch transactions
       setCurrentPage(1)
     } catch (err: any) {
-      const backendError = err?.message || t("transactions.failedToEdit")
+      const backendError = extractErrorMessages(err) || t("transactions.failedToEdit")
       setEditError(backendError)
-      toast({
-        title: t("transactions.failedToEdit"),
-        description: backendError,
-        variant: "destructive",
-      })
+      toast({ title: t("transactions.failedToEdit"), description: backendError, variant: "destructive" })
     } finally {
       setEditLoading(false)
     }
@@ -290,18 +290,27 @@ export default function TransactionsPage() {
     }
   }
 
-  // Update searchTerm only when user submits
-  const handleSearchSubmit = () => {
-    setSearchTerm(searchInput.trim());
-    setCurrentPage(1); // Reset to first page on new search
-  };
-
   // Listen for transaction_update WebSocket messages
   const { lastMessage } = useWebSocket();
   useEffect(() => {
     if (!lastMessage) return;
     try {
       const data = typeof lastMessage.data === "string" ? JSON.parse(lastMessage.data) : lastMessage.data;
+
+      // Handle new transaction creation (per backend docs)
+      if (data.type === "new_transaction" && data.event === "transaction_created" && data.transaction_data) {
+        const newTx = data.transaction_data;
+        // If user is on page 1, show it immediately on top; otherwise, just bump count
+        setTransactions(prev => (currentPage === 1 ? [newTx, ...prev].slice(0, itemsPerPage) : prev));
+        setTotalCount(prev => prev + 1);
+        toast({
+          title: t("transactions.created") || "Transaction created",
+          description: data.message || `${t("transactions.transaction")} ${newTx.uid} ${t("transactions.createdSuccessfully") || "was created."}`,
+        });
+        return;
+      }
+
+      // Handle live transaction updates (existing behavior)
       if (data.type === "transaction_update" && data.transaction_uid) {
         setTransactions((prev) =>
           prev.map((tx) =>
@@ -314,13 +323,107 @@ export default function TransactionsPage() {
           title: t("transactions.liveUpdate"),
           description: `${t("transactions.transaction")} ${data.transaction_uid} ${t("transactions.statusUpdated")}: ${data.status}`,
         });
+        return;
+      }
+
+      // Optionally surface system events as informational toasts
+      if (data.type === "system_event" && data.event === "system_event_created") {
+        toast({
+          title: t("transactions.systemEvent") || "System event",
+          description: data.message || data?.event_data?.description || "",
+        });
+        return;
       }
     } catch (err) {
       // Optionally log or handle parse errors
     }
-  }, [lastMessage, t, toast]);
+  }, [lastMessage, t, toast, currentPage, itemsPerPage]);
 
-  if (loading) {
+  // Retry modal state
+  const [retryModalOpen, setRetryModalOpen] = useState(false)
+  const [retryReason, setRetryReason] = useState("")
+  const [retryLoading, setRetryLoading] = useState(false)
+  const [retryError, setRetryError] = useState("")
+  const [retryTransaction, setRetryTransaction] = useState<any | null>(null)
+
+  // Extract a user uid from transaction, trying several likely fields
+  const extractUserUid = (tx: any): string | null => {
+    return tx?.user_uid || tx?.user_id || tx?.user?.uid || tx?.owner_uid || null
+  }
+
+  // Assign transaction to its user
+  const handleAssign = async (tx: any) => {
+    const userUid = extractUserUid(tx)
+    if (!userUid) {
+      toast({
+        title: t("transactions.assignFailed") || "Assign failed",
+        description: t("transactions.userIdMissing") || "User ID not found on this transaction.",
+        variant: "destructive",
+      })
+      return
+    }
+    try {
+      const endpoint = `${baseUrl}api/payments/transactions/${tx.uid}/assign/`
+      await apiFetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_uid: userUid }),
+      })
+      toast({
+        title: t("transactions.assignSuccess") || "Assigned",
+        description: t("transactions.assignedSuccessfully") || "Transaction assigned successfully.",
+      })
+      // Refresh list
+      setCurrentPage(1)
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err) || t("transactions.assignFailed") || "Failed to assign transaction"
+      toast({ title: t("transactions.assignFailed") || "Assign failed", description: errorMessage, variant: "destructive" })
+    }
+  }
+
+  // Open retry modal
+  const openRetryModal = (tx: any) => {
+    setRetryTransaction(tx)
+    setRetryReason("")
+    setRetryError("")
+    setRetryModalOpen(true)
+  }
+
+  // Submit retry request
+  const handleRetrySubmit = async () => {
+    if (!retryTransaction) return
+    if (!retryReason.trim()) {
+      setRetryError(t("transactions.retryReasonRequired") || "Reason is required")
+      return
+    }
+    setRetryLoading(true)
+    setRetryError("")
+    try {
+      const endpoint = `${baseUrl}api/payments/transactions/${retryTransaction.uid}/retry/`
+      await apiFetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: retryReason.trim() }),
+      })
+      toast({
+        title: t("transactions.retryQueued") || "Retry queued",
+        description: t("transactions.retryRequested") || "Retry request sent successfully.",
+      })
+      setRetryModalOpen(false)
+      setRetryTransaction(null)
+      setRetryReason("")
+      // Refresh list
+      setCurrentPage(1)
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err) || t("transactions.retryFailed") || "Failed to retry transaction"
+      setRetryError(errorMessage)
+      toast({ title: t("transactions.retryFailed") || "Retry failed", description: errorMessage, variant: "destructive" })
+    } finally {
+      setRetryLoading(false)
+    }
+  }
+
+  if (false && loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <span className="text-lg font-semibold">{t("common.loading")}</span>
@@ -328,7 +431,7 @@ export default function TransactionsPage() {
     )
   }
 
-  if (error) {
+  if (false && error) {
     return (
       <ErrorDisplay
         error={error}
@@ -393,22 +496,13 @@ export default function TransactionsPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder={t("common.search")}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSearchSubmit();
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value)
+                  setCurrentPage(1)
                 }}
-                onBlur={handleSearchSubmit}
                 className="pl-10"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                onClick={handleSearchSubmit}
-              >
-                {t("common.search")}
-              </Button>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full lg:w-48">
@@ -417,6 +511,7 @@ export default function TransactionsPage() {
               <SelectContent>
                 <SelectItem value="all">{t("transactions.allStatuses")}</SelectItem>
                 <SelectItem value="completed">{t("transactions.completed")}</SelectItem>
+                <SelectItem value="success">{t("transactions.success")}</SelectItem>
                 <SelectItem value="pending">{t("transactions.pending")}</SelectItem>
                 <SelectItem value="failed">{t("transactions.failed")}</SelectItem>
                 <SelectItem value="sent_to_user">{t("transactions.sentToUser")}</SelectItem>
@@ -435,6 +530,17 @@ export default function TransactionsPage() {
             </Select>
           </div>
 
+          {/* Inline error display to avoid unmounting the page */}
+          {error && (
+            <div className="mb-4">
+              <ErrorDisplay
+                error={error}
+                onRetry={fetchTransactions}
+                variant="full"
+                showDismiss={false}
+              />
+            </div>
+          )}
           {/* Table */}
           <div className="rounded-md border min-h-[200px]">
             {loading ? (
@@ -482,35 +588,53 @@ export default function TransactionsPage() {
                         <TableCell>{transaction.network_name || "-"}</TableCell>
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            asChild
-                            title={t("transactions.edit")}
-                          >
-                            <a href={`/dashboard/transactions/${transaction.uid}/edit`}>
-                              <Pencil className="w-4 h-4" />
-                            </a>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" title={t("transactions.delete")} onClick={() => setDeleteUid(transaction.uid)}>
-                                <Trash className="w-4 h-4 text-red-500" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                                              <AlertDialogTitle>{t("transactions.deleteTransaction")}</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {t("transactions.deleteConfirmation")}
-                              </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setDeleteUid(null)}>{t("transactions.cancel")}</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete}>{t("transactions.delete")}</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              title={t("transactions.assign") || "Assign"}
+                              onClick={() => handleAssign(transaction)}
+                            >
+                              {t("transactions.assign") || "Assign"}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              title={t("transactions.retry") || "Retry"}
+                              onClick={() => openRetryModal(transaction)}
+                            >
+                              {t("transactions.retry") || "Retry"}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              asChild
+                              title={t("transactions.edit")}
+                            >
+                              <a href={`/dashboard/transactions/${transaction.uid}/edit`}>
+                                <Pencil className="w-4 h-4" />
+                              </a>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" title={t("transactions.delete")} onClick={() => setDeleteUid(transaction.uid)}>
+                                  <Trash className="w-4 h-4 text-red-500" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                                                <AlertDialogTitle>{t("transactions.deleteTransaction")}</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t("transactions.deleteConfirmation")}
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel onClick={() => setDeleteUid(null)}>{t("transactions.cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={handleDelete}>{t("transactions.delete")}</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -570,6 +694,7 @@ export default function TransactionsPage() {
                   required
                 >
                   <option value="completed">{t("transactions.completed")}</option>
+                  <option value="success">{t("transactions.success")}</option>
                   <option value="pending">{t("transactions.pending")}</option>
                   <option value="failed">{t("transactions.failed")}</option>
                   <option value="sent_to_user">{t("transactions.sentToUser")}</option>
@@ -609,12 +734,71 @@ export default function TransactionsPage() {
               />
             )}
             <DialogFooter>
-              <Button type="submit" disabled={editLoading}>{editLoading ? t("transactions.saving") : t("transactions.saveChanges")}</Button>
+              <Button type="submit" disabled={editLoading}>{editLoading ? t("transactions.saving") : (t("transactions.reviewAndConfirm") || t("transactions.saveChanges"))}</Button>
               <DialogClose asChild>
                 <Button type="button" variant="outline">{t("transactions.cancel")}</Button>
               </DialogClose>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Confirmation Modal */}
+      <Dialog open={showEditConfirm} onOpenChange={setShowEditConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.confirmEditTitle") || t("transactions.reviewAndConfirm") || "Confirm Changes"}</DialogTitle>
+            <DialogDescription>
+              {t("transactions.reviewBeforeSaving") || "Please review the details below before saving changes."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">UID:</span><span className="font-medium">{editTransaction?.uid}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.status")}:</span><span className="font-medium">{pendingEditPayload?.status || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.externalTransactionId")}:</span><span className="font-medium">{pendingEditPayload?.external_transaction_id || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.fees")}:</span><span className="font-medium">{pendingEditPayload?.fees || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.completedAt")}:</span><span className="font-medium">{pendingEditPayload?.completed_at || "-"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">{t("transactions.errorMessage")}:</span><span className="font-medium">{pendingEditPayload?.error_message || "-"}</span></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditConfirm(false)} disabled={editLoading}>
+              {t("transactions.cancel")}
+            </Button>
+            <Button onClick={confirmEditAndSend} disabled={editLoading}>
+              {editLoading ? (t("transactions.saving") || "Saving...") : (t("transactions.submit") || "Submit")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Retry Transaction Modal */}
+      <Dialog open={retryModalOpen} onOpenChange={setRetryModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.retryTransaction") || "Retry Transaction"}</DialogTitle>
+            <DialogDescription>{t("transactions.enterRetryReason") || "Provide a reason for retrying this transaction."}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium">
+              {t("transactions.reason") || "Reason"}
+            </label>
+            <Input
+              placeholder={t("transactions.reasonPlaceholder") || "Tentative de relance après timeout"}
+              value={retryReason}
+              onChange={(e) => setRetryReason(e.target.value)}
+            />
+            {retryError && (
+              <ErrorDisplay error={retryError} variant="inline" showRetry={false} className="mb-2" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleRetrySubmit} disabled={retryLoading}>
+              {retryLoading ? (t("transactions.sending") || "Sending...") : (t("transactions.submit") || "Submit")}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">{t("transactions.cancel")}</Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

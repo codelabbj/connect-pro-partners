@@ -34,6 +34,10 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { useWebSocket } from "@/components/providers/websocket-provider"
+import { Plus } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useCallback } from "react"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -58,6 +62,8 @@ export default function TransactionsPage() {
   const [editTransaction, setEditTransaction] = useState<any | null>(null)
   const [deleteUid, setDeleteUid] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState(""); // NEW: for input control
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const router = useRouter()
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -335,6 +341,47 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Create Transaction Button */}
+      <div className="flex justify-end">
+        <Button onClick={() => setCreateModalOpen(true)} className="mb-4" variant="default">
+          <Plus className="w-4 h-4 mr-2" />
+          {t("transactions.createTransaction") || "Create Transaction"}
+        </Button>
+      </div>
+      {/* Create Transaction Modal */}
+      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.createTransaction") || "Create Transaction"}</DialogTitle>
+            <DialogDescription>
+              {t("transactions.chooseType") || "Choose transaction type"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-4 justify-center mt-4">
+            <Button
+              variant="outline"
+              className="w-32"
+              onClick={() => {
+                setCreateModalOpen(false)
+                router.push("/dashboard/transactions/deposit")
+              }}
+            >
+              {t("transactions.deposit") || "Deposit"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-32"
+              onClick={() => {
+                setCreateModalOpen(false)
+                router.push("/dashboard/transactions/withdraw")
+              }}
+            >
+              {t("transactions.withdrawal") || "Withdraw"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+     
       <Card>
         <CardHeader>
           <CardTitle>{t("transactions.title")}</CardTitle>

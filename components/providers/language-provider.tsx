@@ -212,6 +212,27 @@ const translations = {
     "transactions.reference": "Reference",
     "transactions.network": "Network",
     "transactions.createdAt": "Created At",
+    "transactions.createTransaction": "Create Transaction",
+    "transactions.chooseType": "Choose Transaction Type",
+    // Transaction Forms (Deposit/Withdraw)
+    "transactions.depositTitle": "Deposit",
+    "transactions.selectNetwork": "Select Network",
+    "transactions.confirmAmount": "Confirm Amount",
+    "transactions.confirmRecipientPhone": "Confirm Recipient Phone",
+    "transactions.purpose": "Purpose",
+    "transactions.createDeposit": "Create Deposit",
+    "transactions.depositCreatedTitle": "Deposit created",
+    "transactions.transactionCreatedDesc": "Transaction created successfully",
+    "transactions.failedToLoadNetworks": "Failed to load networks",
+    "transactions.failedToCreateDeposit": "Failed to create deposit",
+    "transactions.amountMismatch": "Amount and Confirm Amount do not match",
+    "transactions.phoneMismatch": "Phone number and Confirm Phone number do not match",
+    "transactions.confirmDetailsRequired": "Please confirm the phone number and amount",
+    "transactions.confirmationLabel": "I confirm the phone number and amount are correct",
+    "transactions.withdrawTitle": "Withdraw",
+    "transactions.createWithdrawal": "Create Withdrawal",
+    "transactions.withdrawalCreatedTitle": "Withdrawal created",
+    "transactions.failedToCreateWithdrawal": "Failed to create withdrawal",
 
     // Common
     "common.previous": "Previous",
@@ -233,6 +254,7 @@ const translations = {
     "common.retry": "Retry",
     "common.retrying": "Retrying...",
     "common.dismiss": "Dismiss",
+    "common.submitting": "Submitting...",
 
     // Registration Form
     "register.title": "Register New User",
@@ -603,6 +625,27 @@ const translations = {
     "transactions.reference": "Référence",
     "transactions.network": "Réseau",
     "transactions.createdAt": "Créé le",
+    "transactions.createTransaction": "Créer une transaction",
+    "transactions.chooseType": "Choisir le type de transaction",
+    // Transaction Forms (Deposit/Withdraw)
+    "transactions.depositTitle": "Dépôt",
+    "transactions.selectNetwork": "Sélectionner un réseau",
+    "transactions.confirmAmount": "Confirmer le montant",
+    "transactions.confirmRecipientPhone": "Confirmer le téléphone du destinataire",
+    "transactions.purpose": "Objet",
+    "transactions.createDeposit": "Créer un dépôt",
+    "transactions.depositCreatedTitle": "Dépôt créé",
+    "transactions.transactionCreatedDesc": "Transaction créée avec succès",
+    "transactions.failedToLoadNetworks": "Échec du chargement des réseaux",
+    "transactions.failedToCreateDeposit": "Échec de la création du dépôt",
+    "transactions.amountMismatch": "Le montant et la confirmation du montant ne correspondent pas",
+    "transactions.phoneMismatch": "Le numéro de téléphone et sa confirmation ne correspondent pas",
+    "transactions.confirmDetailsRequired": "Veuillez confirmer le numéro de téléphone et le montant",
+    "transactions.confirmationLabel": "Je confirme que le numéro de téléphone et le montant sont corrects",
+    "transactions.withdrawTitle": "Retrait",
+    "transactions.createWithdrawal": "Créer un retrait",
+    "transactions.withdrawalCreatedTitle": "Retrait créé",
+    "transactions.failedToCreateWithdrawal": "Échec de la création du retrait",
 
     // Common
     "common.previous": "Précédent",
@@ -624,6 +667,7 @@ const translations = {
     "common.retry": "Réessayer",
     "common.retrying": "Nouvelle tentative...",
     "common.dismiss": "Fermer",
+    "common.submitting": "Envoi...",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",

@@ -53,6 +53,21 @@ export function SignInForm() {
         setLoading(false)
         return
       }
+      // Enforce staff/superuser-only access
+      const user = data.user
+      const isStaff = Boolean(user?.is_staff)
+      const isSuperuser = Boolean(user?.is_superuser)
+      if (!isStaff && !isSuperuser) {
+        const notAllowedMsg = t("auth.notAllowed") || "User is not allowed to access this dashboard."
+        setError(notAllowedMsg)
+        toast({
+          title: t("auth.loginFailed"),
+          description: notAllowedMsg,
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
       localStorage.setItem("accessToken", data.access)
       localStorage.setItem("refreshToken", data.refresh)
       localStorage.setItem("user", JSON.stringify(data.user))

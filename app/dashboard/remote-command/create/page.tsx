@@ -7,11 +7,11 @@ import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { useWebSocket } from "@/components/providers/websocket-provider"
+import { WebSocketProvider, useWebSocket } from "@/components/providers/websocket-provider"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
-export default function RemoteCommandCreatePage() {
+function RemoteCommandCreatePage() {
   const [command, setCommand] = useState("")
   const [deviceId, setDeviceId] = useState("")
   const [parameters, setParameters] = useState("{}")
@@ -149,4 +149,15 @@ export default function RemoteCommandCreatePage() {
       </CardContent>
     </Card>
   )
+}
+
+export default function RemoteCommandCreatePageWrapper() {
+  // Replace this with your actual logic to get the token, e.g., from context, props, or environment
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") || "" : "";
+
+  return (
+    <WebSocketProvider token={token}>
+      <RemoteCommandCreatePage />
+    </WebSocketProvider>
+  );
 }

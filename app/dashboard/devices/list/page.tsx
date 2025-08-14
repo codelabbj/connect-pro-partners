@@ -20,7 +20,7 @@ export default function DevicesListPage() {
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [sortField, setSortField] = useState<"name" | "last_sync" | null>(null)
+  const [sortField, setSortField] = useState<"device_name" | "last_seen" | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const apiFetch = useApi()
   const { t } = useLanguage()
@@ -44,18 +44,18 @@ export default function DevicesListPage() {
             params.append("search", searchTerm);
           }
           if (statusFilter !== "all") {
-            params.append("is_active", statusFilter === "active" ? "true" : "false");
+            params.append("is_online", statusFilter === "active" ? "true" : "false");
           }
           if (sortField) {
             params.append("order_by", `${sortField}:${sortDirection}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/stats/devices/?${params.toString()}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
             page_size: "100",
           });
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/devices/sync?${params.toString()}`;
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/stats/devices/?${params.toString()}`;
         }
         // Test error handling - uncomment to test
         // throw new Error('{"detail":"Method \"GET\" not allowed."}')
@@ -112,7 +112,7 @@ export default function DevicesListPage() {
   // Remove client-side filtering since it's now handled by the API
   const filteredDevices = devices
 
-  const handleSort = (field: "name" | "last_sync") => {
+  const handleSort = (field: "device_name" | "last_seen") => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
@@ -193,14 +193,18 @@ export default function DevicesListPage() {
               <TableRow>
                 <TableHead>{t("devices.deviceId")}</TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
+                  <Button variant="ghost" onClick={() => handleSort("device_name")} className="h-auto p-0 font-semibold">
                     {t("devices.name")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                <TableHead>{t("devices.status")}</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Network</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Total Txns</TableHead>
+                <TableHead>Success Rate</TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("last_sync")} className="h-auto p-0 font-semibold">
+                  <Button variant="ghost" onClick={() => handleSort("last_seen")} className="h-auto p-0 font-semibold">
                     {t("devices.lastSync")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
@@ -210,11 +214,15 @@ export default function DevicesListPage() {
             </TableHeader>
             <TableBody>
               {filteredDevices.map((device: any) => (
-                <TableRow key={device.uid || device.id}>
+                <TableRow key={device.device_id || device.uid || device.id}>
                   <TableCell>{device.device_id || device.uid}</TableCell>
-                  <TableCell>{device.name || device.device_name || '-'}</TableCell>
-                  <TableCell>{device.is_active ? t("common.active") : t("common.inactive")}</TableCell>
-                  <TableCell>{device.last_sync ? new Date(device.last_sync).toLocaleDateString() : '-'}</TableCell>
+                  <TableCell>{device.device_name || device.name || '-'}</TableCell>
+                  <TableCell>{device.is_online ? 'Online' : 'Offline'}</TableCell>
+                  <TableCell>{device.network_name || '-'}</TableCell>
+                  <TableCell>{device.user_name || '-'}</TableCell>
+                  <TableCell>{typeof device.total_transactions === 'number' ? device.total_transactions : (device.total_transactions ?? 0)}</TableCell>
+                  <TableCell>{device.success_rate !== undefined && device.success_rate !== null ? `${device.success_rate}%` : '0.00%'}</TableCell>
+                  <TableCell>{device.last_seen ? new Date(device.last_seen).toLocaleString() : '-'}</TableCell>
                   <TableCell>
                     {/* TODO: Add device actions like edit, delete, etc. */}
                     <span className="text-gray-500">{t("devices.noActionsAvailable")}</span>

@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ClipboardList, Users, KeyRound, Bell, Clock } from "lucide-react";
+import { ClipboardList, Users, KeyRound, Bell, Clock, TrendingUp, Loader, ServerCrash } from "lucide-react";
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
@@ -43,6 +43,17 @@ export default function DashboardPage() {
   const [authError, setAuthError] = useState("")
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showOnlyActiveUsers, setShowOnlyActiveUsers] = useState(false)
+  const [summary, setSummary] = useState<any>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
+  const [transactionStats, setTransactionStats] = useState<any>(null);
+  const [transactionStatsLoading, setTransactionStatsLoading] = useState(false);
+  const [transactionStatsError, setTransactionStatsError] = useState("");
+
+  const [systemEvents, setSystemEvents] = useState<any[]>([]);
+  const [systemEventsLoading, setSystemEventsLoading] = useState(false);
+  const [systemEventsError, setSystemEventsError] = useState("");
+
   const apiFetch = useApi();
   const { t } = useLanguage();
   const router = useRouter();
@@ -84,10 +95,63 @@ export default function DashboardPage() {
     }
   };
 
+  // Fetch summary data
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setSummaryLoading(true);
+      setSummaryError("");
+      try {
+        const res = await apiFetch(`${baseUrl}api/payments/dashboard/summary/`);
+        setSummary(res);
+      } catch (err: any) {
+        setSummaryError("Failed to load payment summary");
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [apiFetch, baseUrl]);
+
+  // Fetch transaction stats
+  useEffect(() => {
+    const fetchTransactionStats = async () => {
+      setTransactionStatsLoading(true);
+      setTransactionStatsError("");
+      try {
+        const res = await apiFetch(`${baseUrl}api/payments/stats/transactions/`);
+        setTransactionStats(res);
+      } catch (err: any) {
+        setTransactionStatsError("Failed to load transaction stats");
+      } finally {
+        setTransactionStatsLoading(false);
+      }
+    };
+    fetchTransactionStats();
+  }, [apiFetch, baseUrl]);
+
+  // Fetch system events
+  useEffect(() => {
+    const fetchSystemEvents = async () => {
+      setSystemEventsLoading(true);
+      setSystemEventsError("");
+      try {
+        const res = await apiFetch(`${baseUrl}api/payments/system-events/`);
+        setSystemEvents(res.results || []);
+      } catch (err: any) {
+        setSystemEventsError("Failed to load system events");
+      } finally {
+        setSystemEventsLoading(false);
+      }
+    };
+    fetchSystemEvents();
+  }, [apiFetch, baseUrl]);
+
   useEffect(() => {
     fetchStats();
+    
+  // }, [fetchStats, fetchSystemEvents, fetchSummary, fetchTransactionStats]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [apiFetch, baseUrl]);
 
   if (loading) {
     return (
@@ -232,6 +296,145 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment Summary Card */}
+        <div className="mb-8">
+          <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-indigo-100 dark:border-indigo-900">
+            <CardHeader className="flex flex-row items-center gap-3 w-full">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-2 rounded-full">
+                <TrendingUp className="text-indigo-700 dark:text-indigo-200 w-6 h-6" />
+              </div>
+              <CardTitle className="text-indigo-700 dark:text-indigo-200 text-lg">
+                {t("dashboard.paymentSummary") || "Payment Summary"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 w-full">
+              {summaryLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader className="animate-spin mr-2" /> {t("common.loading")}
+                </div>
+              ) : summaryError ? (
+                <div className="text-red-600 text-center py-2">{summaryError}</div>
+              ) : summary ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium">{t("dashboard.todayTransactions") || "Today's Transactions"}:</span>
+                    <span className="ml-2">{summary.today_transactions}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{t("dashboard.todayCompleted") || "Today's Completed"}:</span>
+                    <span className="ml-2">{summary.today_completed}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{t("dashboard.todayRevenue") || "Today's Revenue"}:</span>
+                    <span className="ml-2">{summary.today_revenue}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{t("dashboard.todaySuccessRate") || "Today's Success Rate"}:</span>
+                    <span className="ml-2">{summary.today_success_rate}%</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{t("dashboard.onlineDevices") || "Online Devices"}:</span>
+                    <span className="ml-2">{summary.online_devices}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{t("dashboard.pendingTransactions") || "Pending Transactions"}:</span>
+                    <span className="ml-2">{summary.pending_transactions}</span>
+                  </div>
+                  <div className="col-span-2 text-right text-xs text-gray-500 mt-2">
+                    {t("dashboard.lastUpdated") || "Last Updated"}:{" "}
+                    {summary.last_updated ? new Date(summary.last_updated).toLocaleString() : "-"}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center py-2">{t("dashboard.noData") || "No data"}</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+      {/* Transaction Stats Card */}
+      <div className="mb-8">
+        <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-pink-100 dark:border-pink-900">
+          <CardHeader className="flex flex-row items-center gap-3 w-full">
+            <div className="bg-pink-100 dark:bg-pink-900 p-2 rounded-full">
+              <TrendingUp className="text-pink-700 dark:text-pink-200 w-6 h-6" />
+            </div>
+            <CardTitle className="text-pink-700 dark:text-pink-200 text-lg">
+              {t("dashboard.transactionStats") || "Transaction Stats"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 w-full">
+            {transactionStatsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader className="animate-spin mr-2" /> {t("common.loading")}
+              </div>
+            ) : transactionStatsError ? (
+              <div className="text-red-600 text-center py-2">{transactionStatsError}</div>
+            ) : transactionStats ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div><span className="font-medium">{t("dashboard.totalTransactions") || "Total Transactions"}:</span> <span className="ml-2">{transactionStats.total_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.completedTransactions") || "Completed"}:</span> <span className="ml-2">{transactionStats.completed_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.failedTransactions") || "Failed"}:</span> <span className="ml-2">{transactionStats.failed_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.pendingTransactions") || "Pending"}:</span> <span className="ml-2">{transactionStats.pending_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.processingTransactions") || "Processing"}:</span> <span className="ml-2">{transactionStats.processing_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.successRate") || "Success Rate"}:</span> <span className="ml-2">{transactionStats.success_rate}%</span></div>
+                <div><span className="font-medium">{t("dashboard.avgProcessingTime") || "Avg. Processing Time"}:</span> <span className="ml-2">{transactionStats.avg_processing_time ?? "-"}</span></div>
+                <div><span className="font-medium">{t("dashboard.totalAmount") || "Total Amount"}:</span> <span className="ml-2">{transactionStats.total_amount ?? "-"}</span></div>
+                <div><span className="font-medium">{t("dashboard.depositsCount") || "Deposits"}:</span> <span className="ml-2">{transactionStats.deposits_count}</span></div>
+                <div><span className="font-medium">{t("dashboard.withdrawalsCount") || "Withdrawals"}:</span> <span className="ml-2">{transactionStats.withdrawals_count}</span></div>
+                <div><span className="font-medium">{t("dashboard.depositsAmount") || "Deposits Amount"}:</span> <span className="ml-2">{transactionStats.deposits_amount ?? "-"}</span></div>
+                <div><span className="font-medium">{t("dashboard.withdrawalsAmount") || "Withdrawals Amount"}:</span> <span className="ml-2">{transactionStats.withdrawals_amount ?? "-"}</span></div>
+              </div>
+            ) : (
+              <div className="text-gray-500 text-center py-2">{t("dashboard.noData") || "No data"}</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* System Events Card */}
+      <div className="mb-8">
+        <Card className="flex flex-col items-center hover:shadow-lg transition-shadow border-cyan-100 dark:border-cyan-900">
+          <CardHeader className="flex flex-row items-center gap-3 w-full">
+            <div className="bg-cyan-100 dark:bg-cyan-900 p-2 rounded-full">
+              <ServerCrash className="text-cyan-700 dark:text-cyan-200 w-6 h-6" />
+            </div>
+            <CardTitle className="text-cyan-700 dark:text-cyan-200 text-lg">
+              {t("dashboard.systemEvents") || "System Events"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 w-full">
+            {systemEventsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader className="animate-spin mr-2" /> {t("common.loading")}
+              </div>
+            ) : systemEventsError ? (
+              <div className="text-red-600 text-center py-2">{systemEventsError}</div>
+            ) : systemEvents && systemEvents.length > 0 ? (
+              <div className="divide-y divide-cyan-100 dark:divide-cyan-800">
+                {systemEvents.slice(0, 5).map((event, idx) => (
+                  <div key={event.uid} className="py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{event.event_type.replace(/_/g, " ").toUpperCase()}</span>
+                      <span className="text-xs text-gray-400">{new Date(event.created_at).toLocaleString()}</span>
+                      <Badge className="ml-2" variant="outline">{event.level}</Badge>
+                    </div>
+                    <div className="text-sm text-gray-700 dark:text-gray-200">{event.description}</div>
+                    {event.data && (
+                      <pre className="bg-cyan-50 dark:bg-cyan-950 rounded p-2 mt-1 text-xs overflow-x-auto">
+                        {JSON.stringify(event.data, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-center py-2">{t("dashboard.noEvents") || "No recent events"}</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Trends Chart & Live Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

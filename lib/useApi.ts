@@ -1,13 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { getAccessToken, getRefreshToken, setTokens, clearTokens } from "./api";
 
 export function useApi() {
   const router = useRouter();
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
-  async function refreshAccessToken() {
+  const refreshAccessToken = useCallback(async () => {
     const refresh = getRefreshToken();
     if (!refresh) {
       console.log('No refresh token available');
@@ -40,17 +41,17 @@ export function useApi() {
       console.log('Refresh token error:', error);
       throw error;
     }
-  }
+  }, [baseUrl]);
 
-  function clearAllAuth() {
+  const clearAllAuth = useCallback(() => {
     clearTokens();
     // Remove accessToken cookie
     if (typeof document !== 'undefined') {
       document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
     }
-  }
+  }, []);
 
-  async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
+  const apiFetch = useCallback(async (input: RequestInfo, init: RequestInit = {}) => {
     let accessToken = getAccessToken();
     
     // Attach access token if available
@@ -104,7 +105,7 @@ export function useApi() {
     }
     
     return data;
-  }
+  }, [refreshAccessToken, clearAllAuth, router]);
 
   return apiFetch;
-} 
+}

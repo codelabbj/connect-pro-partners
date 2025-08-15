@@ -407,7 +407,7 @@ export default function UsersPage() {
                       </Button>
                     </TableHead>
                     <TableHead>{t("users.phone")}</TableHead>
-                    <TableHead>{t("users.isActive")}</TableHead>
+                    <TableHead>{t("users.status")}</TableHead>
                     <TableHead>{t("users.lastLogin")}</TableHead>
                     <TableHead>
                       <Button variant="ghost" onClick={() => handleSort("created_at")} className="h-auto p-0 font-semibold">
@@ -415,7 +415,7 @@ export default function UsersPage() {
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>
                     </TableHead>
-                    <TableHead>{t("users.status")}</TableHead>
+                        <TableHead>{t("common.actions")}</TableHead>
                     <TableHead>{t("users.details")}</TableHead>
                   </TableRow>
                 </TableHeader>

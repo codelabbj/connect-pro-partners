@@ -22,7 +22,7 @@ export default function CountryListPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortField, setSortField] = useState<"nom" | "code" | null>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [sortDirection, setSortDirection] = useState<"+" | "-">("-")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -45,9 +45,11 @@ export default function CountryListPage() {
             params.append("is_active", statusFilter === "active" ? "true" : "false");
           }
           if (sortField) {
-            params.append("order_by", `${sortField}:${sortDirection}`);
+            params.append("ordering", `${sortDirection === "+" ? "+" : "-"}${sortField}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/countries/?${params.toString()}`;
+          // Keep '+' literal for ordering (avoid %2B)
+          let query = params.toString().replace(/ordering=%2B/g, "ordering=+");
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/countries/?${query}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
@@ -83,10 +85,11 @@ export default function CountryListPage() {
 
   const handleSort = (field: "nom" | "code") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection((prev) => (prev === "+" ? "-" : "+"))
+      setSortField(field)
     } else {
       setSortField(field)
-      setSortDirection("desc")
+      setSortDirection("-")
     }
   }
 
@@ -140,13 +143,13 @@ export default function CountryListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("nom")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("nom")} className="h-auto p-0 font-semibold">
                     {t("country.name")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("code")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("code")} className="h-auto p-0 font-semibold">
                     {t("country.code")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>

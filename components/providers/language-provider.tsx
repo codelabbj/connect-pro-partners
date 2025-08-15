@@ -287,6 +287,22 @@ const translations = {
     "transactions.submit": "Submit",
     "transactions.sending": "Sending...",
 
+    // Transactions - New actions: Cancel / Mark as Success
+    "transactions.cancelAction": "Cancel Transaction",
+    "transactions.cancelTransaction": "Cancel Transaction",
+    "transactions.enterCancelReason": "Provide a reason for cancelling this transaction.",
+    "transactions.cancelQueued": "Cancel queued",
+    "transactions.cancelRequested": "Cancel request sent successfully.",
+    "transactions.cancelFailed": "Failed to cancel transaction",
+    "transactions.cancelReasonRequired": "Reason is required",
+
+    "transactions.markSuccess": "Mark as Success",
+    "transactions.successTransaction": "Mark Transaction as Success",
+    "transactions.enterSuccessReason": "Provide a reason for marking this transaction as success.",
+    "transactions.successQueued": "Success queued",
+    "transactions.successRequested": "Success update sent successfully.",
+    "transactions.successFailed": "Failed to mark transaction as success",
+    "transactions.successReasonRequired": "Reason is required",
     // Transaction Forms (Deposit/Withdraw)
     "transactions.depositTitle": "Deposit",
     "transactions.selectNetwork": "Select Network",
@@ -310,6 +326,7 @@ const translations = {
     "transactions.reviewAndConfirm": "Review and Confirm",
     "transactions.confirmDepositTitle": "Confirm Deposit",
     "transactions.confirmWithdrawalTitle": "Confirm Withdrawal",
+    "transactionLogs.empty": "No transaction logs found.",
     
     
     
@@ -335,6 +352,7 @@ const translations = {
     "common.retrying": "Retrying...",
     "common.dismiss": "Dismiss",
     "common.submitting": "Submitting...",
+    "common.refresh": "Refresh",
 
     // Registration Form
     "register.title": "Register New User",
@@ -520,6 +538,7 @@ const translations = {
     "common.failedToCreate": "Failed to create",
     "common.failedToUpdate": "Failed to update",
     "common.failedToDelete": "Failed to delete",
+
   },
   fr: {
     // Auth
@@ -784,16 +803,32 @@ const translations = {
     "transactions.userIdMissing": "ID utilisateur introuvable pour cette transaction.",
     "transactions.retry": "Relancer",
     "transactions.retryTransaction": "Relancer la transaction",
-    "transactions.enterRetryReason": "Veuillez indiquer la raison de la relance de cette transaction.",
+    "transactions.enterRetryReason": "Fournissez une raison pour relancer cette transaction.",
     "transactions.reason": "Raison",
     "transactions.reasonPlaceholder": "Tentative de relance après timeout",
     "transactions.retryQueued": "Relance demandée",
     "transactions.retryRequested": "Demande de relance envoyée avec succès.",
     "transactions.retryFailed": "Échec de la relance de la transaction",
-    "transactions.retryReasonRequired": "La raison est obligatoire",
+    "transactions.retryReasonRequired": "La raison est requise",
     "transactions.submit": "Soumettre",
     "transactions.sending": "Envoi...",
 
+    // Transactions - New actions: Cancel / Mark as Success
+    "transactions.cancelAction": "Annuler la transaction",
+    "transactions.cancelTransaction": "Annuler la transaction",
+    "transactions.enterCancelReason": "Fournissez une raison pour annuler cette transaction.",
+    "transactions.cancelQueued": "Annulation en file d'attente",
+    "transactions.cancelRequested": "Demande d'annulation envoyée avec succès.",
+    "transactions.cancelFailed": "Échec de l'annulation de la transaction",
+    "transactions.cancelReasonRequired": "La raison est requise",
+
+    "transactions.markSuccess": "Marquer comme succès",
+    "transactions.successTransaction": "Marquer la transaction comme succès",
+    "transactions.enterSuccessReason": "Fournissez une raison pour marquer cette transaction comme succès.",
+    "transactions.successQueued": "Marquage en succès en file d'attente",
+    "transactions.successRequested": "Mise à jour de succès envoyée avec succès.",
+    "transactions.successFailed": "Échec du marquage de la transaction comme succès",
+    "transactions.successReasonRequired": "La raison est requise",
     // Transaction Forms (Deposit/Withdraw)
     "transactions.depositTitle": "Dépôt",
     "transactions.selectNetwork": "Sélectionner un réseau",
@@ -817,6 +852,7 @@ const translations = {
     "transactions.reviewAndConfirm": "Vérifier et confirmer",
     "transactions.confirmDepositTitle": "Confirmer le dépôt",
     "transactions.confirmWithdrawalTitle": "Confirmer le retrait",
+    "transactionLogs.empty": "Aucun journal de transaction trouvé.",
     
 
     // Common
@@ -840,6 +876,7 @@ const translations = {
     "common.retrying": "Nouvelle tentative...",
     "common.dismiss": "Fermer",
     "common.submitting": "Envoi...",
+    "common.refresh": "Rafraîchir",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",

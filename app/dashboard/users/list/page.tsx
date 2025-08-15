@@ -28,7 +28,7 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [sortField, setSortField] = useState<"name" | "email" | "created_at" | null>(null)
+  const [sortField, setSortField] = useState<"display_name" | "email" | "created_at" | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const { t } = useLanguage()
   const itemsPerPage = 10
@@ -79,7 +79,7 @@ export default function UsersPage() {
             params.append("status", statusFilter);
           }
           const orderingParam = sortField
-            ? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${(sortField === "name" ? "field_real_name" : sortField)}`
+            ? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${(sortField === "display_name" ? "display_name" : sortField)}`
             : "";
           endpoint =
             viewType === "pending"
@@ -126,7 +126,7 @@ export default function UsersPage() {
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedUsers = filteredUsers // Already paginated by API
 
-  const handleSort = (field: "name" | "email" | "created_at") => {
+  const handleSort = (field: "display_name" | "email" | "created_at") => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
@@ -395,7 +395,7 @@ export default function UsersPage() {
                     </TableHead>
                     <TableHead>{t("users.uid")}</TableHead> {/* Add UID header */}
                     <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
+                      <Button variant="ghost" onClick={() => handleSort("display_name")} className="h-auto p-0 font-semibold">
                         {t("users.name")}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>

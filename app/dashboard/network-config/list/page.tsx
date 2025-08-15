@@ -25,7 +25,7 @@ export default function NetworkConfigListPage() {
   const [networkFilter, setNetworkFilter] = useState("all")
   const [networks, setNetworks] = useState<any[]>([])
   const [sortField, setSortField] = useState<"network_name" | "created_at" | null>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [sortDirection, setSortDirection] = useState<"+" | "-">("-")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -52,9 +52,11 @@ export default function NetworkConfigListPage() {
             params.append("network", networkFilter);
           }
           if (sortField) {
-            params.append("order_by", `${sortField}:${sortDirection}`);
+            params.append("ordering", `${sortDirection === "+" ? "+" : "-"}${sortField}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/?${params.toString()}`;
+          // Keep '+' literal for ordering (avoid %2B)
+          const query = params.toString().replace(/ordering=%2B/g, "ordering=+");
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/network-configs/?${query}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
@@ -114,10 +116,11 @@ export default function NetworkConfigListPage() {
 
   const handleSort = (field: "network_name" | "created_at") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection((prev) => (prev === "+" ? "-" : "+"))
+      setSortField(field)
     } else {
       setSortField(field)
-      setSortDirection("desc")
+      setSortDirection("-")
     }
   }
 
@@ -205,7 +208,7 @@ export default function NetworkConfigListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("network_name")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("network_name")} className="h-auto p-0 font-semibold">
                     {t("networkConfig.networkName")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>

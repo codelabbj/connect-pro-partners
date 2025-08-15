@@ -23,7 +23,7 @@ export default function SmsLogsListPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [typeFilter, setTypeFilter] = useState("all")
   const [sortField, setSortField] = useState<"received_at" | "sender" | null>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [sortDirection, setSortDirection] = useState<"+" | "-">("-")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -47,9 +47,10 @@ export default function SmsLogsListPage() {
             params.append("sms_type", typeFilter);
           }
           if (sortField) {
-            params.append("order_by", `${sortField}:${sortDirection}`);
+            params.append("ordering", `${sortDirection}${sortField}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${params.toString()}`;
+          const query = params.toString().replace(/ordering=%2B/g, "ordering=+");
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/sms-logs/?${query}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
@@ -85,10 +86,11 @@ export default function SmsLogsListPage() {
 
   const handleSort = (field: "received_at" | "sender") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection(prev => prev === "+" ? "-" : "+")
+      setSortField(field)
     } else {
       setSortField(field)
-      setSortDirection("desc")
+      setSortDirection("-")
     }
   }
 
@@ -148,14 +150,14 @@ export default function SmsLogsListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("sender")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("sender")} className="h-auto p-0 font-semibold">
                     {t("smsLogs.sender")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
                 <TableHead>{t("smsLogs.content")}</TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("received_at")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("received_at")} className="h-auto p-0 font-semibold">
                     {t("smsLogs.receivedAt")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>

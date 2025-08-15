@@ -101,7 +101,9 @@ export default function TransactionsPage() {
         }
         if (sortField) {
           const orderBy = sortField === "date" ? "created_at" : "amount";
-          params.append("order_by", `${orderBy}:${sortDirection}`);
+          const prefix = sortDirection === "desc" ? "-" : "+";
+          params.append("ordering", `${prefix}${orderBy}`);
+          
         }
         endpoint = `${baseUrl}api/payments/transactions/?${params.toString()}`;
       } else {
@@ -145,12 +147,10 @@ export default function TransactionsPage() {
   const paginatedTransactions = filteredAndSortedTransactions
 
   const handleSort = (field: "amount" | "date") => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-    } else {
-      setSortField(field)
-      setSortDirection("desc")
-    }
+    setCurrentPage(1)
+    // Toggle direction if clicking the same field, else reset to desc
+    setSortDirection((prevDir) => (sortField === field ? (prevDir === "desc" ? "asc" : "desc") : "desc"))
+    setSortField(field)
   }
 
   
@@ -346,6 +346,20 @@ export default function TransactionsPage() {
   const [retryError, setRetryError] = useState("")
   const [retryTransaction, setRetryTransaction] = useState<any | null>(null)
 
+  // Cancel modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
+  const [cancelLoading, setCancelLoading] = useState(false)
+  const [cancelError, setCancelError] = useState("")
+  const [cancelTransaction, setCancelTransaction] = useState<any | null>(null)
+
+  // Mark as success modal state
+  const [successModalOpen, setSuccessModalOpen] = useState(false)
+  const [successReason, setSuccessReason] = useState("")
+  const [successLoading, setSuccessLoading] = useState(false)
+  const [successError, setSuccessError] = useState("")
+  const [successTransaction, setSuccessTransaction] = useState<any | null>(null)
+
   // Extract a user uid from transaction, trying several likely fields
   const extractUserUid = (tx: any): string | null => {
     return tx?.user_uid || tx?.user_id || tx?.user?.uid || tx?.owner_uid || null
@@ -420,6 +434,84 @@ export default function TransactionsPage() {
       toast({ title: t("transactions.retryFailed") || "Retry failed", description: errorMessage, variant: "destructive" })
     } finally {
       setRetryLoading(false)
+    }
+  }
+
+  // Open/submit cancel
+  const openCancelModal = (tx: any) => {
+    setCancelTransaction(tx)
+    setCancelReason("")
+    setCancelError("")
+    setCancelModalOpen(true)
+  }
+  const handleCancelSubmit = async () => {
+    if (!cancelTransaction) return
+    if (!cancelReason.trim()) {
+      setCancelError(t("transactions.cancelReasonRequired") || "Reason is required")
+      return
+    }
+    setCancelLoading(true)
+    setCancelError("")
+    try {
+      const endpoint = `${baseUrl}api/payments/transactions/${cancelTransaction.uid}/cancel/`
+      await apiFetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: cancelReason.trim() }),
+      })
+      toast({
+        title: t("transactions.cancelQueued") || "Cancel queued",
+        description: t("transactions.cancelRequested") || "Cancel request sent successfully.",
+      })
+      setCancelModalOpen(false)
+      setCancelTransaction(null)
+      setCancelReason("")
+      setCurrentPage(1)
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err) || t("transactions.cancelFailed") || "Failed to cancel transaction"
+      setCancelError(errorMessage)
+      toast({ title: t("transactions.cancelFailed") || "Cancel failed", description: errorMessage, variant: "destructive" })
+    } finally {
+      setCancelLoading(false)
+    }
+  }
+
+  // Open/submit success
+  const openSuccessModal = (tx: any) => {
+    setSuccessTransaction(tx)
+    setSuccessReason("")
+    setSuccessError("")
+    setSuccessModalOpen(true)
+  }
+  const handleSuccessSubmit = async () => {
+    if (!successTransaction) return
+    if (!successReason.trim()) {
+      setSuccessError(t("transactions.successReasonRequired") || "Reason is required")
+      return
+    }
+    setSuccessLoading(true)
+    setSuccessError("")
+    try {
+      const endpoint = `${baseUrl}api/payments/transactions/${successTransaction.uid}/success/`
+      await apiFetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: successReason.trim() }),
+      })
+      toast({
+        title: t("transactions.successQueued") || "Success queued",
+        description: t("transactions.successRequested") || "Success update sent successfully.",
+      })
+      setSuccessModalOpen(false)
+      setSuccessTransaction(null)
+      setSuccessReason("")
+      setCurrentPage(1)
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err) || t("transactions.successFailed") || "Failed to mark transaction as success"
+      setSuccessError(errorMessage)
+      toast({ title: t("transactions.successFailed") || "Mark as success failed", description: errorMessage, variant: "destructive" })
+    } finally {
+      setSuccessLoading(false)
     }
   }
 
@@ -551,7 +643,7 @@ export default function TransactionsPage() {
                   <TableRow>
                     <TableHead>{t("transactions.reference")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
+                      <Button type="button" variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
                         {t("transactions.amount")}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>
@@ -559,7 +651,7 @@ export default function TransactionsPage() {
                     <TableHead>{t("transactions.recipientName")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>{t("transactions.recipientPhone")}</TableHead> {/* NEW COLUMN */}
                     <TableHead>
-                      <Button variant="ghost" onClick={() => handleSort("date")} className="h-auto p-0 font-semibold">
+                      <Button type="button" variant="ghost" onClick={() => handleSort("date")} className="h-auto p-0 font-semibold">
                         {t("transactions.date")}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </Button>
@@ -589,14 +681,14 @@ export default function TransactionsPage() {
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button
+                            {/* <Button
                               variant="secondary"
                               size="sm"
                               title={t("transactions.assign") || "Assign"}
                               onClick={() => handleAssign(transaction)}
                             >
                               {t("transactions.assign") || "Assign"}
-                            </Button>
+                            </Button> */}
                             <Button
                               variant="secondary"
                               size="sm"
@@ -604,6 +696,22 @@ export default function TransactionsPage() {
                               onClick={() => openRetryModal(transaction)}
                             >
                               {t("transactions.retry") || "Retry"}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              title={t("transactions.cancelAction") || "Cancel Transaction"}
+                              onClick={() => openCancelModal(transaction)}
+                            >
+                              {t("transactions.cancelAction") || "Cancel Transaction"}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              title={t("transactions.markSuccess") || "Mark as Success"}
+                              onClick={() => openSuccessModal(transaction)}
+                            >
+                              {t("transactions.markSuccess") || "Mark as Success"}
                             </Button>
                             <Button
                               variant="ghost"
@@ -617,9 +725,9 @@ export default function TransactionsPage() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" title={t("transactions.delete")} onClick={() => setDeleteUid(transaction.uid)}>
+                                {/* <Button variant="ghost" size="icon" title={t("transactions.delete")} onClick={() => setDeleteUid(transaction.uid)}>
                                   <Trash className="w-4 h-4 text-red-500" />
-                                </Button>
+                                </Button> */}
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -794,6 +902,68 @@ export default function TransactionsPage() {
           <DialogFooter>
             <Button onClick={handleRetrySubmit} disabled={retryLoading}>
               {retryLoading ? (t("transactions.sending") || "Sending...") : (t("transactions.submit") || "Submit")}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">{t("transactions.cancel")}</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Transaction Modal */}
+      <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.cancelTransaction") || "Cancel Transaction"}</DialogTitle>
+            <DialogDescription>{t("transactions.enterCancelReason") || "Provide a reason for cancelling this transaction."}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium">
+              {t("transactions.reason") || "Reason"}
+            </label>
+            <Input
+              placeholder={t("transactions.reasonPlaceholder") || "Tentative de relance après timeout"}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+            {cancelError && (
+              <ErrorDisplay error={cancelError} variant="inline" showRetry={false} className="mb-2" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleCancelSubmit} disabled={cancelLoading}>
+              {cancelLoading ? (t("transactions.sending") || "Sending...") : (t("transactions.submit") || "Submit")}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">{t("transactions.cancel")}</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark as Success Modal */}
+      <Dialog open={successModalOpen} onOpenChange={setSuccessModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("transactions.successTransaction") || "Mark Transaction as Success"}</DialogTitle>
+            <DialogDescription>{t("transactions.enterSuccessReason") || "Provide a reason for marking this transaction as success."}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium">
+              {t("transactions.reason") || "Reason"}
+            </label>
+            <Input
+              placeholder={t("transactions.reasonPlaceholder") || "Tentative de relance après timeout"}
+              value={successReason}
+              onChange={(e) => setSuccessReason(e.target.value)}
+            />
+            {successError && (
+              <ErrorDisplay error={successError} variant="inline" showRetry={false} className="mb-2" />
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSuccessSubmit} disabled={successLoading}>
+              {successLoading ? (t("transactions.sending") || "Sending...") : (t("transactions.submit") || "Submit")}
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="outline">{t("transactions.cancel")}</Button>

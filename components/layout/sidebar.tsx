@@ -288,7 +288,7 @@ export function Sidebar() {
               <Bell className="mr-3 h-6 w-6 flex-shrink-0" />
               {t("nav.fcmLogs")}
             </Link>
-            <div>
+            {/* <div>
               <button
                 className={cn(
                   "group flex items-center w-full px-2 py-2 text-sm font-medium rounded-md transition-colors",
@@ -335,7 +335,7 @@ export function Sidebar() {
             )}>
               <Terminal className="mr-3 h-6 w-6 flex-shrink-0" />
               {t("nav.remoteCommand")}
-            </Link>
+            </Link> */}
           </nav>
           <div className="p-4">
             <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>

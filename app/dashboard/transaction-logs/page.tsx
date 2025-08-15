@@ -56,7 +56,7 @@ export default function TransactionLogsListPage() {
           page_size: pageSize.toString(),
         })
         if (searchTerm) params.append("search", searchTerm)
-        if (sortField) params.append("order_by", `${sortField}:${sortDirection}`)
+        if (sortField) params.append("ordering", `${sortDirection === "asc" ? "+" : "-"}${sortField}`)
 
         const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/transaction-logs/?${params.toString()}`
         const data = await apiFetch(endpoint)

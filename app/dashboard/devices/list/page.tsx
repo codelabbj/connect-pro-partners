@@ -20,8 +20,8 @@ export default function DevicesListPage() {
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [sortField, setSortField] = useState<"device_name" | "last_seen" | null>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [sortField, setSortField] = useState<"name" | "is_online" | null>(null)
+  const [sortDirection, setSortDirection] = useState<"+" | "-">("-")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -46,9 +46,10 @@ export default function DevicesListPage() {
             params.append("is_online", statusFilter === "active" ? "true" : "false");
           }
           if (sortField) {
-            params.append("order_by", `${sortField}:${sortDirection}`);
+            params.append("ordering", `${sortDirection}${sortField}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/stats/devices/?${params.toString()}`;
+          const query = params.toString().replace(/ordering=%2B/g, "ordering=+");
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/stats/devices/?${query}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
@@ -111,12 +112,13 @@ export default function DevicesListPage() {
   // Remove client-side filtering since it's now handled by the API
   const filteredDevices = devices
 
-  const handleSort = (field: "device_name" | "last_seen") => {
+  const handleSort = (field: "name" | "is_online") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection(prev => prev === "+" ? "-" : "+")
+      setSortField(field)
     } else {
       setSortField(field)
-      setSortDirection("desc")
+      setSortDirection("-")
     }
   }
 
@@ -170,22 +172,22 @@ export default function DevicesListPage() {
               <TableRow>
                 <TableHead>{t("devices.deviceId")}</TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("device_name")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("name")} className="h-auto p-0 font-semibold">
                     {t("devices.name")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>
+                  <Button type="button" variant="ghost" onClick={() => handleSort("is_online")} className="h-auto p-0 font-semibold">
+                    {t("devices.status")}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
                 <TableHead>Network</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Total Txns</TableHead>
                 <TableHead>Success Rate</TableHead>
-                <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("last_seen")} className="h-auto p-0 font-semibold">
-                    {t("devices.lastSync")}
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </TableHead>
+                <TableHead>{t("devices.lastSync")}</TableHead>
                 <TableHead>{t("devices.actions")}</TableHead>
               </TableRow>
             </TableHeader>

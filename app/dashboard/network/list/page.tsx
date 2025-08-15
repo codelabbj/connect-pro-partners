@@ -24,7 +24,7 @@ export default function NetworkListPage() {
   const [countryFilter, setCountryFilter] = useState("all")
   const [countries, setCountries] = useState<any[]>([])
   const [sortField, setSortField] = useState<"nom" | "code" | null>(null)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [sortDirection, setSortDirection] = useState<"+" | "-">("-")
   const apiFetch = useApi()
   const { t } = useLanguage()
   const { toast } = useToast();
@@ -52,9 +52,10 @@ export default function NetworkListPage() {
             params.append("country", countryFilter);
           }
           if (sortField) {
-            params.append("order_by", `${sortField}:${sortDirection}`);
+            params.append("ordering", `${sortDirection === "+" ? "+" : "-"}${sortField}`);
           }
-          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/networks/?${params.toString()}`;
+          const query = params.toString().replace(/ordering=%2B/g, "ordering=+");
+          endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/networks/?${query}`;
         } else {
           const params = new URLSearchParams({
             page: "1",
@@ -116,10 +117,11 @@ export default function NetworkListPage() {
 
   const handleSort = (field: "nom" | "code") => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+      setSortDirection((prev) => (prev === "+" ? "-" : "+"))
+      setSortField(field)
     } else {
       setSortField(field)
-      setSortDirection("desc")
+      setSortDirection("-")
     }
   }
 
@@ -197,13 +199,13 @@ export default function NetworkListPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("nom")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("nom")} className="h-auto p-0 font-semibold">
                     {t("network.name")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </TableHead>
                 <TableHead>
-                  <Button variant="ghost" onClick={() => handleSort("code")} className="h-auto p-0 font-semibold">
+                  <Button type="button" variant="ghost" onClick={() => handleSort("code")} className="h-auto p-0 font-semibold">
                     {t("network.code")}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>

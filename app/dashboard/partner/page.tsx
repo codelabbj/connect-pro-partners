@@ -177,7 +177,7 @@ export default function PartnerPage() {
 										<TableHead>{t("partners.phone")}</TableHead>
 										<TableHead>{t("partners.status")}</TableHead>
 										<TableHead>{t("partners.createdAt")}</TableHead>
-										<TableHead>{t("partners.details")}</TableHead>
+										{/* <TableHead>{t("partners.details")}</TableHead> */}
 								<TableHead>Commission Stat</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -196,11 +196,11 @@ export default function PartnerPage() {
 												)}
 											</TableCell>
 											<TableCell>{partner.created_at ? partner.created_at.split("T")[0] : "-"}</TableCell>
-											<TableCell>
-												<Button size="sm" variant="secondary" onClick={() => handleOpenDetail(partner.uid)}>
+											{/* <TableCell>
+												<Button size="sm" variant="secondary" onClick={() => window.location.assign(`/dashboard/partner/details/${partner.uid}`)}>
 													{t("partners.details")}
 												</Button>
-											</TableCell>
+											</TableCell> */}
 									<TableCell>
 										<Button size="sm" variant="outline" onClick={() => window.location.assign(`/dashboard/partner/commission/${partner.uid}`)}>
 											Commission Stat

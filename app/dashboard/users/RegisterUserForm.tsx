@@ -16,7 +16,8 @@ export default function RegisterUserForm() {
     identifier: "",
     password: "",
     password_confirm: "",
-  })
+      is_partner: false,
+    })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -30,7 +31,11 @@ export default function RegisterUserForm() {
   const apiToken = process.env.NEXT_PUBLIC_API_TOKEN || ""
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+      const { name, type, checked, value } = e.target;
+      setForm({
+        ...form,
+        [name]: type === "checkbox" ? checked : value,
+      });
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,14 +61,15 @@ export default function RegisterUserForm() {
       }
       // Map identifier to email or phone for backend compatibility
       const isEmail = /@/.test(form.identifier)
-      const submitBody = {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        email: isEmail ? form.identifier : "",
-        phone: isEmail ? "" : form.identifier,
-        password: form.password,
-        password_confirm: form.password_confirm,
-      }
+        const submitBody = {
+          first_name: form.first_name,
+          last_name: form.last_name,
+          email: isEmail ? form.identifier : null,
+          phone: isEmail ? null : form.identifier,
+          password: form.password,
+          password_confirm: form.password_confirm,
+          is_partner: form.is_partner,
+        }
       const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/register/`, {
         method: "POST",
         headers,
@@ -89,6 +95,7 @@ export default function RegisterUserForm() {
           identifier: "",
           password: "",
           password_confirm: "",
+          is_partner: false,
         })
       }
     } catch (err: any) {
@@ -160,6 +167,17 @@ export default function RegisterUserForm() {
               onChange={handleChange}
               required
             />
+          </div>
+          <div className="flex items-center mb-2">
+            <input
+              type="checkbox"
+              name="is_partner"
+              checked={form.is_partner}
+              onChange={handleChange}
+              id="is_partner"
+              className="mr-2"
+            />
+            <label htmlFor="is_partner">{t("register.isPartner") || "Is Partner"}</label>
           </div>
           {error && (
             <ErrorDisplay

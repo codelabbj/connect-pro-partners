@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,18 +28,35 @@ interface UserProfile {
   updated_at: string;
 }
 
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
   const { toast } = useToast();
 
+  // Get token from localStorage (same as sign-in-form and dashboard layout)
+  let token = "";
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("accessToken") || "";
+  }
+
   useEffect(() => {
+    // Redirect if not logged in (no token)
+    if (!token) {
+      router.push("/login");
+      return;
+    }
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/auth/profile/');
+        const response = await fetch(`${baseUrl}api/auth/profile/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
         if (!response.ok) throw new Error('Failed to fetch profile');
         const data = await response.json();
         setProfile(data);
@@ -62,7 +79,7 @@ export default function ProfilePage() {
     };
 
     fetchProfile();
-  }, [toast]);
+  }, [toast, router, token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,12 +92,13 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const response = await fetch('/api/auth/profile/', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -89,18 +107,6 @@ export default function ProfilePage() {
 
       const updatedProfile = await response.json();
       setProfile(updatedProfile);
-      
-      // Update the session if email was changed
-      if (formData.email && formData.email !== profile?.email) {
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            email: formData.email,
-            name: `${formData.first_name} ${formData.last_name}`.trim(),
-          },
-        });
-      }
 
       setEditing(false);
       toast({
@@ -310,6 +316,6 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+       </div>
   );
 }

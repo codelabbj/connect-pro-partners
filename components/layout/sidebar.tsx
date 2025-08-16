@@ -6,7 +6,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/providers/language-provider"
-import { BarChart3, Users, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal } from "lucide-react"
+import { BarChart3, Users, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal, User } from "lucide-react"
 import { clearTokens } from "@/lib/api"
 
 // const navigation = [
@@ -287,6 +287,33 @@ export function Sidebar() {
             )}>
               <Bell className="mr-3 h-6 w-6 flex-shrink-0" />
               {t("nav.fcmLogs")}
+            </Link>
+            <Link href="/dashboard/partner" className={cn(
+              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              pathname === "/dashboard/partner"
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white",
+            )}>
+              <User className="mr-3 h-6 w-6 flex-shrink-0" />
+              {t("nav.partner")}
+            </Link>
+            <Link href="/dashboard/topup" className={cn(
+              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              pathname === "/dashboard/topup"
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white",
+            )}>
+              <CreditCard className="mr-3 h-6 w-6 flex-shrink-0" />
+              {t("topup.title")}
+            </Link>
+            <Link href="/dashboard/earning-management" className={cn(
+              "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+              pathname === "/dashboard/earning-management"
+                ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white",
+            )}>
+              <BarChart3 className="mr-3 h-6 w-6 flex-shrink-0" />
+              {t("earning.title")}
             </Link>
             {/* <div>
               <button

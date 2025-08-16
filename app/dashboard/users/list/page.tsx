@@ -47,13 +47,15 @@ export default function UsersPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState("")
   
-  // Add state for loading email/phone verification
+  // Add state for loading email/phone/partner verification
   const [verifyingEmail, setVerifyingEmail] = useState(false);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [verifyingPartner, setVerifyingPartner] = useState(false);
 
   // Add state for confirmation modals
   const [confirmEmailToggle, setConfirmEmailToggle] = useState<null | boolean>(null);
   const [confirmPhoneToggle, setConfirmPhoneToggle] = useState<null | boolean>(null);
+  const [confirmPartnerToggle, setConfirmPartnerToggle] = useState<null | boolean>(null);
 
   const [confirmActionUser, setConfirmActionUser] = useState<any | null>(null);
   const [confirmActionType, setConfirmActionType] = useState<"activate" | "deactivate" | null>(null);
@@ -308,6 +310,25 @@ export default function UsersPage() {
       toast({ title: t("users.verificationFailed"), description: extractErrorMessages(err), variant: "destructive" });
     } finally {
       setVerifyingPhone(false);
+    }
+  };
+
+  // Add handler for toggling is_partner
+  const handleTogglePartner = async (isPartner: boolean) => {
+    if (!detailUser?.uid) return;
+    setVerifyingPartner(true);
+    try {
+      const data = await apiFetch(`${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/${detailUser.uid}/update/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_partner: isPartner }),
+      });
+      setDetailUser((prev: any) => prev ? { ...prev, is_partner: isPartner } : prev);
+      toast({ title: t("users.partnerToggled"), description: isPartner ? t("users.partnerEnabledSuccessfully") : t("users.partnerDisabledSuccessfully") });
+    } catch (err: any) {
+      toast({ title: t("users.partnerToggleFailed"), description: extractErrorMessages(err), variant: "destructive" });
+    } finally {
+      setVerifyingPartner(false);
     }
   };
 
@@ -611,6 +632,14 @@ export default function UsersPage() {
   />
 </div>
                 <div><b>{t("users.contactMethod")}:</b> {detailUser.contact_method}</div>
+                <div><b>{t("users.isPartner") || "Partner"}:</b> {detailUser.is_partner ? t("common.yes") : t("common.no")}
+                  <Switch
+                    checked={detailUser.is_partner}
+                    disabled={detailLoading || verifyingPartner}
+                    onCheckedChange={() => setConfirmPartnerToggle(!detailUser.is_partner)}
+                    className="ml-2"
+                  />
+                </div>
                 <div><b>{t("users.createdAt")}:</b> {detailUser.created_at ? detailUser.created_at.split("T")[0] : "-"}</div>
                 <div><b>{t("users.lastLogin")}:</b> {detailUser.last_login_at ? detailUser.last_login_at.split("T")[0] : "-"}</div>
             </div>
@@ -621,7 +650,7 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Email Verification Confirmation Modal */}
+  {/* Email Verification Confirmation Modal */}
       <Dialog open={confirmEmailToggle !== null} onOpenChange={(open) => { if (!open) setConfirmEmailToggle(null) }}>
         <DialogContent>
           <DialogHeader>
@@ -655,7 +684,40 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Phone Verification Confirmation Modal */}
+  {/* Phone Verification Confirmation Modal */}
+      {/* Partner Toggle Confirmation Modal */}
+      <Dialog open={confirmPartnerToggle !== null} onOpenChange={(open) => { if (!open) setConfirmPartnerToggle(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirmPartnerToggle ? t("users.enablePartner") || "Enable Partner" : t("users.disablePartner") || "Disable Partner"}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            {confirmPartnerToggle
+              ? t("users.confirmEnablePartner") || "Are you sure you want to enable partner status?"
+              : t("users.confirmDisablePartner") || "Are you sure you want to disable partner status?"}
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full"
+              onClick={async () => {
+                await handleTogglePartner(!!confirmPartnerToggle);
+                setConfirmPartnerToggle(null);
+              }}
+              disabled={verifyingPartner}
+            >
+              {verifyingPartner ? t("users.verifying") : t("common.ok")}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={() => setConfirmPartnerToggle(null)}
+              disabled={verifyingPartner}
+            >
+              {t("common.cancel")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={confirmPhoneToggle !== null} onOpenChange={(open) => { if (!open) setConfirmPhoneToggle(null) }}>
         <DialogContent>
           <DialogHeader>

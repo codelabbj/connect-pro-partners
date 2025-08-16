@@ -65,7 +65,7 @@ export default function WithdrawPage() {
       amount,
       recipient_phone: recipientPhone,
       recipient_name: null,
-      objet,
+      objet: objet.trim() === "" ? null : objet,
       network,
     }
     setPendingPayload(payload)
@@ -152,7 +152,6 @@ export default function WithdrawPage() {
               placeholder={t("transactions.purpose") || "Objet"}
               value={objet}
               onChange={e => setObjet(e.target.value)}
-              required
             />
             {error && <ErrorDisplay error={error} variant="inline" />}
             <Button

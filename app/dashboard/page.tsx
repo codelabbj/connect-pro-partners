@@ -375,9 +375,11 @@ export default function DashboardPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div><span className="font-medium">{t("dashboard.totalTransactions") || "Total Transactions"}:</span> <span className="ml-2">{transactionStats.total_transactions}</span></div>
                 <div><span className="font-medium">{t("dashboard.completedTransactions") || "Completed"}:</span> <span className="ml-2">{transactionStats.completed_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.successTransactions") || "Success Transaction"}:</span> <span className="ml-2">{transactionStats.success_transactions ?? "-"}</span></div>
                 <div><span className="font-medium">{t("dashboard.failedTransactions") || "Failed"}:</span> <span className="ml-2">{transactionStats.failed_transactions}</span></div>
                 <div><span className="font-medium">{t("dashboard.pendingTransactions") || "Pending"}:</span> <span className="ml-2">{transactionStats.pending_transactions}</span></div>
                 <div><span className="font-medium">{t("dashboard.processingTransactions") || "Processing"}:</span> <span className="ml-2">{transactionStats.processing_transactions}</span></div>
+                <div><span className="font-medium">{t("dashboard.totalAmount") || "total amount"}:</span> <span className="ml-2">{transactionStats.total_amount}</span></div>
                 <div><span className="font-medium">{t("dashboard.successRate") || "Success Rate"}:</span> <span className="ml-2">{transactionStats.success_rate}%</span></div>
                 <div><span className="font-medium">{t("dashboard.avgProcessingTime") || "Avg. Processing Time"}:</span> <span className="ml-2">{transactionStats.avg_processing_time ?? "-"}</span></div>
                 <div><span className="font-medium">{t("dashboard.totalAmount") || "Total Amount"}:</span> <span className="ml-2">{transactionStats.total_amount ?? "-"}</span></div>
@@ -385,6 +387,7 @@ export default function DashboardPage() {
                 <div><span className="font-medium">{t("dashboard.withdrawalsCount") || "Withdrawals"}:</span> <span className="ml-2">{transactionStats.withdrawals_count}</span></div>
                 <div><span className="font-medium">{t("dashboard.depositsAmount") || "Deposits Amount"}:</span> <span className="ml-2">{transactionStats.deposits_amount ?? "-"}</span></div>
                 <div><span className="font-medium">{t("dashboard.withdrawalsAmount") || "Withdrawals Amount"}:</span> <span className="ml-2">{transactionStats.withdrawals_amount ?? "-"}</span></div>
+                
               </div>
             ) : (
               <div className="text-gray-500 text-center py-2">{t("dashboard.noData") || "No data"}</div>

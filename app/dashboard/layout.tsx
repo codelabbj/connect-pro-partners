@@ -11,8 +11,13 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Get token from localStorage (set in sign-in-form.tsx after login)
+  let token = "";
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("accessToken") || "";
+  }
   return (
-    <WebSocketProvider token="YOUR_TOKEN_HERE">
+    <WebSocketProvider token={token}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar />
         <div className="lg:pl-64">

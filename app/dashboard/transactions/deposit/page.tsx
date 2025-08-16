@@ -65,7 +65,7 @@ export default function DepositPage() {
       amount,
       recipient_phone: recipientPhone,
       recipient_name: null,
-      objet,
+      objet: objet.trim() === "" ? null : objet,
       network,
     }
     setPendingPayload(payload)

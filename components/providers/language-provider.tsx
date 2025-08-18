@@ -146,6 +146,7 @@ const translations = {
     "dashboard.withdrawalsAmount": "Withdrawals Amount",
     "dashboard.systemEvents": "System Events",
     "dashboard.noEvents": "No recent events",
+    "dashboard.successTransactions": "Successful Transactions",
     // (Optional, currently commented in UI)
     // "dashboard.userTaskActivity": "User & Task Activity",
     // "dashboard.users": "Users",
@@ -764,6 +765,7 @@ const translations = {
     "dashboard.withdrawalsAmount": "Montant des retraits",
     "dashboard.systemEvents": "Événements système",
     "dashboard.noEvents": "Aucun événement récent",
+    "dashboard.successTransactions": "Transactions réussies",
     // (Optionnel, actuellement commenté dans l'UI)
     // "dashboard.userTaskActivity": "Activité Utilisateurs & Tâches",
     // "dashboard.users": "Utilisateurs",

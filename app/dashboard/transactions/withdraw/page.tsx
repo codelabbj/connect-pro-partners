@@ -18,7 +18,7 @@ export default function WithdrawPage() {
   const [networks, setNetworks] = useState<any[]>([])
   const [network, setNetwork] = useState("")
   const [amount, setAmount] = useState("")
-  const [confirmAmount, setConfirmAmount] = useState("")
+  // const [confirmAmount, setConfirmAmount] = useState("")
   const [recipientPhone, setRecipientPhone] = useState("")
   const [confirmRecipientPhone, setConfirmRecipientPhone] = useState("")
   const [objet, setObjet] = useState("")
@@ -47,10 +47,10 @@ export default function WithdrawPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Client-side validations for confirmations
-    if (amount.trim() !== confirmAmount.trim()) {
-      setError(t("transactions.amountMismatch") || "Amount and Confirm Amount do not match")
-      return
-    }
+    // if (amount.trim() !== confirmAmount.trim()) {
+    //   setError(t("transactions.amountMismatch") || "Amount and Confirm Amount do not match")
+    //   return
+    // }
     if (recipientPhone.trim() !== confirmRecipientPhone.trim()) {
       setError(t("transactions.phoneMismatch") || "Phone number and Confirm Phone number do not match")
       return
@@ -121,13 +121,13 @@ export default function WithdrawPage() {
               type="number"
               required
             />
-            <Input
+            {/* <Input
               placeholder={t("transactions.confirmAmount") || "Confirm Amount"}
               value={confirmAmount}
               onChange={e => setConfirmAmount(e.target.value)}
               type="number"
               required
-            />
+            /> */}
             <Input
               placeholder={t("transactions.recipientPhone") || "Recipient Phone"}
               value={recipientPhone}
@@ -160,7 +160,7 @@ export default function WithdrawPage() {
                 loading ||
                 !network ||
                 !confirmDetails ||
-                amount.trim() !== confirmAmount.trim() ||
+                // amount.trim() !== confirmAmount.trim() ||
                 recipientPhone.trim() !== confirmRecipientPhone.trim()
               }
             >

@@ -9,9 +9,9 @@ import { LanguageProvider } from "@/components/providers/language-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Connect Pro - Admin Dashboard",
-  description: "Professional admin dashboard for Connect Pro",
-    generator: 'v0.dev'
+  title: "Connect Pro - partners Dashboard",
+  description: "Professional partners site for Connect Pro",
+    // 
 }
 
 export default function RootLayout({

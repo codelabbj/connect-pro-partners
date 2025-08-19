@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,12 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Zap, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-
-
 
 export function SignInForm() {
   const [identifier, setIdentifier] = useState("")
@@ -55,9 +52,9 @@ export function SignInForm() {
       }
       // Enforce staff/superuser-only access
       const user = data.user
-      const isStaff = Boolean(user?.is_staff)
-      const isSuperuser = Boolean(user?.is_superuser)
-      if (!isStaff && !isSuperuser) {
+      // const isStaff = Boolean(user?.is_staff)
+      const isSuperuser = Boolean(user?.is_partner)
+      if (!isSuperuser) {
         const notAllowedMsg = t("auth.notAllowed") || "User is not allowed to access this dashboard."
         setError(notAllowedMsg)
         toast({
@@ -85,14 +82,11 @@ export function SignInForm() {
       router.push("/dashboard")
     } catch (err: any) {
       let backendError = t("auth.networkError");
-      // Try to extract error message from API response
       if (err && err.message) {
         try {
-          // Try to parse JSON from the error message if possible
           const parsed = JSON.parse(err.message);
           backendError = extractErrorMessages(parsed) || backendError;
         } catch {
-          // If not JSON, try to extract from err.message directly
           backendError = extractErrorMessages(err.message) || backendError;
         }
       } else if (err) {
@@ -109,21 +103,24 @@ export function SignInForm() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {/* <div className="flex justify-between items-center w-full max-w-md mb-6">
         <div className="flex items-center space-x-2">
-          <img src="/logo.png" alt="Connect Pro Logo" className="h-20 w-20" />
-          {/* <span className="text-2xl font-bold text-gray-900 dark:text-white">Connect Pro</span> */}
+          <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12" />
         </div>
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           <LanguageSwitcher />
         </div>
-      </div>
-
-      <Card>
+      </div> */}
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl text-center">{t("auth.welcome")}</CardTitle>
+          <div className="flex justify-center mb-4">
+             <div className="flex items-center space-x-2">
+                <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12" />
+              </div>
+          </div>
+          <CardTitle className="text-2xl text-center">Connect Pro Partner</CardTitle>
           <CardDescription className="text-center">{t("auth.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -137,6 +134,7 @@ export function SignInForm() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -148,6 +146,7 @@ export function SignInForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={loading}
                   className="pr-10"
                 />
                 <button
@@ -167,18 +166,16 @@ export function SignInForm() {
                   id="remember"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  disabled={loading}
                 />
                 <Label htmlFor="remember" className="text-sm">
                   {t("auth.rememberMe")}
                 </Label>
               </div>
-              <Button variant="link" className="px-0 text-sm">
+              {/* <Button variant="link" className="px-0 text-sm" disabled={loading}>
                 {t("auth.forgotPassword")}
-              </Button>
+              </Button> */}
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t("auth.loggingIn") : t("auth.signIn")}
-            </Button>
             {error && (
               <ErrorDisplay
                 error={error}
@@ -187,6 +184,9 @@ export function SignInForm() {
                 className="mt-2"
               />
             )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? t("auth.loggingIn") : t("auth.signIn")}
+            </Button>
           </form>
         </CardContent>
       </Card>

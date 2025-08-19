@@ -27,7 +27,8 @@ const translations = {
     "auth.welcome": "Welcome back",
     "auth.subtitle": "Enter your credentials to access your account",
     "auth.loggingIn": "Logging in...",
-     "auth.loginFailed": "Login failed.",
+    "auth.loginFailed": "Login failed.",
+    "auth.notAllowed": "You are not allowed to access this page.",
 
     // Navigation
     "nav.dashboard": "Dashboard",
@@ -53,8 +54,11 @@ const translations = {
     "nav.networkConfigCreate": "Create Network Config",
     "nav.remoteCommand": "Remote Command",
     "nav.partner": "Partners",
+    "nav.accountTransaction": "Account Transactions",
+    "nav.topup": "Top Up",
 
     // Dashboard
+    "dashboard": "Dashboard",
     "dashboard.title": "Dashboard",
     "dashboard.adminDashboard": "Admin Dashboard",
     "dashboard.liveOverview": "Live overview of your platform",
@@ -153,6 +157,39 @@ const translations = {
     // "dashboard.tasks": "Tasks",
     // "dashboard.liveActivityFeed": "Live Activity Feed",
 
+    "payment.accountOverview": "Account Overview",
+    "payment.currentBalance": "Current Balance",
+    "payment.totalRecharged": "Total Recharged",
+    "payment.totalDeposited": "Total Deposited",
+    "payment.totalWithdrawn": "Total Withdrawn",
+
+    "payment.accountStatus": "Account Status",
+    "payment.accountFrozen": "Account Frozen",
+    "payment.utilizationRate": "Utilization Rate",
+
+    "payment.active": "Active",
+    "payment.inactive": "Inactive",
+
+    "payment.transactionHistory": "Transaction History",
+    "payment.searchTransactions": "Search Transactions...",
+    "payment.allTypes": "All Types",
+    "payment.deposit": "Deposit",
+    "payment.withdraw": "Withdrawal",
+    "payment.recharge": "Recharge",
+    "payment.newTransaction": "New Transaction",
+    "payment.reference": "Reference",
+    "payment.type": "Type",
+    "payment.amount": "Amount",
+    "payment.balanceBefore": "Balance Before",
+    "payment.balanceAfter": "Balance After",
+    "payment.description": "Description",
+    "payment.date": "Date",
+    "payment.noTransactions": "No transactions found.",
+    "payment.network": "Network",
+    "payment.recipientPhone": "Recipient Phone",
+    "payment.transactionType": "Transaction Type",
+    "payment.selectNetwork": "Select Network",
+
     // Users
     "users.title": "Users",
     "users.search": "Search users...",
@@ -241,7 +278,7 @@ const translations = {
     "transactions.delete": "Delete",
     "transactions.deleteTransaction": "Delete Transaction",
     "transactions.deleteConfirmation": "Are you sure you want to delete this transaction? This action cannot be undone.",
-    "transactions.cancel": "Cancel",
+    "transactions.cancelled": "Cancel",
     "transactions.editTransaction": "Edit Transaction",
     "transactions.updateTransactionDetails": "Update the transaction details below.",
     "transactions.externalTransactionId": "External Transaction ID",
@@ -329,6 +366,12 @@ const translations = {
     "transactions.confirmDepositTitle": "Confirm Deposit",
     "transactions.confirmWithdrawalTitle": "Confirm Withdrawal",
     "transactionLogs.empty": "No transaction logs found.",
+    "transations.cancelled": "Cancelled",
+    "transactions.total": "Total",
+    "transactions.transactionHistory": "Transaction History",
+    "transactions.subtitle": "Manage your platform's transactions",
+    "transactions.recipientInfo": "Recipient Info",
+    "transactions.retryInfo": "Retry Info",
 
     // Partner List
     "partners.title": "Partners",
@@ -373,6 +416,22 @@ const translations = {
     "topup.userName": "User Name",
     "topup.userEmail": "User Email",
     "topup.reference": "Reference",
+    "topup.expiresAt": "Expires At",
+    "topup.timeRemaining": "Time Remaining",
+    "topup.adminNotes": "Admin Notes",
+    // "topup.timeRemaining": "Time Remaining",
+    "topup.transactionDate": "Transaction Date",
+    "topup.canSubmitProof": "Can Submit Proof",
+    "topup.proofSubmitted": "Proof Submitted",
+    "topup.reviewedAt": "Reviewed At",
+    "topup.processedAt": "Processed At",
+    "topup.noRequests": "No top up requests found.",
+    "topup.viewDetails": "View Details",
+    "topup.createNew": "Create New Top Up",
+    "topup.proofImage": "Proof Image",
+    "topup.proofDescription": "Proof Description",
+
+
     "topup.amount": "Amount",
     "topup.user": "User",
     "topup.status": "Status",
@@ -447,6 +506,8 @@ const translations = {
     "common.dismiss": "Dismiss",
     "common.submitting": "Submitting...",
     "common.refresh": "Refresh",
+    "common.create": "Create",
+    "common.searchPlaceholder": "Search...",
 
     // Registration Form
     "register.title": "Register New User",
@@ -645,6 +706,7 @@ const translations = {
     "auth.subtitle": "Entrez vos identifiants pour accéder à votre compte",
     "auth.loggingIn": "Connexion...",
     "auth.loginFailed": "Échec de la connexion.",
+    "auth.notAllowed": "Vous n'êtes pas autorisé à accéder à cette page.",
 
     // Navigation
     "nav.dashboard": "Tableau de bord",
@@ -670,8 +732,11 @@ const translations = {
     "nav.networkConfigCreate": "Créer une configuration réseau",
     "nav.remoteCommand": "Commande à distance",
     "nav.partner": "Partenaires",
+    "nav.accountTransaction": "Transactions de compte",
+    "nav.topup": "Recharger",
 
     // Dashboard
+    "dashboard": "Tableau de bord",
     "dashboard.title": "Tableau de bord",
     "dashboard.adminDashboard": "Tableau de bord administrateur",
     "dashboard.liveOverview": "Aperçu en direct de votre plateforme",
@@ -772,6 +837,39 @@ const translations = {
     // "dashboard.tasks": "Tâches",
     // "dashboard.liveActivityFeed": "Flux d'activité en direct",
 
+    "payment.accountOverview": "Aperçu du compte",
+    "payment.currentBalance": "Solde actuel",
+    "payment.totalRecharged": "Total rechargé",
+    "payment.totalDeposited": "Dépôts totaux",
+    "payment.totalWithdrawn": "Retraits totaux",
+
+    "payment.accountStatus": "Statut du compte",
+    "payment.accountFrozen": "Compte gelé",
+    "payment.utilizationRate": "Taux d'utilisation",
+
+    "payment.active": "Actif",
+    "payment.inactive": "Inactif",
+    "payment.transactionHistory": "Historique des transactions",
+    "payment.searchTransactions": "Rechercher des transactions...",
+    "payment.allTypes": "Tous les types",
+    "payment.deposit": "Dépôts",
+    "payment.withdraw": "Retraits",
+    "payment.recharge": "Recharges",
+    "payment.newTransaction": "Nouvelle transaction",
+    "payment.reference": "Référence",
+    "payment.type": "Type",
+    "payment.amount": "Montant",
+    "payment.balanceBefore": "Solde avant",
+    "payment.balanceAfter": "Solde après",
+    "payment.description": "Description",
+    "payment.date": "Date",
+    "payment.noTransactions": "Aucune transaction trouvée.",
+    "payment.network": "Réseau",
+    "payment.recipientPhone": "Téléphone du destinataire",
+    "payment.transactionType": "Type de transaction",
+    "payment.selectNetwork": "Sélectionner un réseau",
+    
+
     // Users
     "users.title": "Utilisateurs",
     "users.search": "Rechercher des utilisateurs...",
@@ -861,7 +959,7 @@ const translations = {
     "transactions.delete": "Supprimer",
     "transactions.deleteTransaction": "Supprimer la transaction",
     "transactions.deleteConfirmation": "Êtes-vous sûr de vouloir supprimer cette transaction ? Cette action ne peut pas être annulée.",
-    "transactions.cancel": "Annuler",
+    "transactions.cancelled": "Annuler",
     "transactions.editTransaction": "Modifier la transaction",
     "transactions.updateTransactionDetails": "Mettez à jour les détails de la transaction ci-dessous.",
     "transactions.externalTransactionId": "ID de transaction externe",
@@ -949,6 +1047,13 @@ const translations = {
     "transactions.confirmDepositTitle": "Confirmer le dépôt",
     "transactions.confirmWithdrawalTitle": "Confirmer le retrait",
     "transactionLogs.empty": "Aucun journal de transaction trouvé.",
+    "transations.cancelled": "Annulé",
+    "transactions.total": "Total",
+    "transactions.transactionHistory": "Historique des transactions",
+    "transactions.subtitle": "Gérez les transactions de votre plateforme",
+    "transactions.recipientInfo": "Informations sur le destinataire",
+    "transactions.retryInfo": "Informations de relance",
+
 
     // Partner List
     "partners.title": "Partenaires",
@@ -992,6 +1097,21 @@ const translations = {
     "topup.userName": "Nom de l'utilisateur",
     "topup.userEmail": "Email de l'utilisateur",
     "topup.reference": "Référence",
+    "topup.expiresAt": "Expire le",
+    "topup.timeRemaining": "Temps restant",
+    "topup.adminNotes": "Notes administrateur",
+    // "topup.timeRemaining": "Temps restant",
+    "topup.transactionDate": "Date de la transaction",
+    "topup.canSubmitProof": "Peut soumettre une preuve",
+    "topup.proofSubmitted": "Preuve soumise",
+    "topup.reviewedAt": "Révisé le",
+    "topup.processedAt": "Traité le",
+    "topup.noRequests": "Aucune demande de recharge trouvée.",
+    "topup.viewDetails": "Voir les détails",
+    "topup.createNew": "Créer une nouvelle recharge",
+    "topup.proofImage": "Image de preuve",
+    "topup.proofDescription": "Description de la preuve",
+
     "topup.amount": "Montant",
     "topup.user": "Utilisateur",
     "topup.status": "Statut",
@@ -1066,6 +1186,8 @@ const translations = {
     "common.dismiss": "Fermer",
     "common.submitting": "Envoi...",
     "common.refresh": "Rafraîchir",
+    "common.create": "Créer",
+    "common.searchPlaceholder": "Rechercher...",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",

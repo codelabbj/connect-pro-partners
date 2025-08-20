@@ -103,6 +103,20 @@ export function Sidebar() {
             <br></br>
             <SectionHeader>Transactions Management</SectionHeader>
             <Link
+              href="/dashboard/transactions"
+              aria-label="Transactions"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2 text-base rounded-lg font-medium transition-colors",
+                pathname === "/dashboard/transactions"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <CreditCard className="h-5 w-5" />
+              {t("nav.transactions")}
+            </Link>
+            <Link
               href="/dashboard/account-transaction"
               aria-label="Transactions"
               className={cn(
@@ -130,20 +144,7 @@ export function Sidebar() {
               <Zap className="h-5 w-5" />
               {t("nav.topup")}
             </Link>
-            <Link
-              href="/dashboard/transactions"
-              aria-label="Transactions"
-              className={cn(
-                "group flex items-center gap-3 px-3 py-2 text-base rounded-lg font-medium transition-colors",
-                pathname === "/dashboard/transactions"
-                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
-                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-              )}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <CreditCard className="h-5 w-5" />
-              {t("nav.transactions")}
-            </Link>
+            
             
             {/* Users Dropdown */}
             {/* <div>
@@ -502,6 +503,18 @@ export function Sidebar() {
             </div> */}
             <br></br>
             <SectionHeader>Transactions Management</SectionHeader>
+            <Link
+              href="/dashboard/transactions"
+              className={cn(
+                "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                pathname === "/dashboard/transactions"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white",
+              )}
+            >
+              <CreditCard className="mr-3 h-6 w-6 flex-shrink-0" />
+              {t("nav.transactions")}
+            </Link>
              <Link
               href="/dashboard/account-transaction"
               aria-label="Transactions"
@@ -530,18 +543,7 @@ export function Sidebar() {
               <Zap className="h-5 w-5" />
               {t("nav.topup")}
             </Link>
-            <Link
-              href="/dashboard/transactions"
-              className={cn(
-                "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-                pathname === "/dashboard/transactions"
-                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white",
-              )}
-            >
-              <CreditCard className="mr-3 h-6 w-6 flex-shrink-0" />
-              {t("nav.transactions")}
-            </Link>
+            
             
             {/* Country Dropdown */}
             {/* <div>

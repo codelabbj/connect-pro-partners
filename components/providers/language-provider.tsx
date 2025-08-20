@@ -54,7 +54,7 @@ const translations = {
     "nav.networkConfigCreate": "Create Network Config",
     "nav.remoteCommand": "Remote Command",
     "nav.partner": "Partners",
-    "nav.accountTransaction": "Account Transactions",
+    "nav.accountTransaction": "Account Balance History",
     "nav.topup": "Top Up",
 
     // Dashboard
@@ -732,7 +732,7 @@ const translations = {
     "nav.networkConfigCreate": "Créer une configuration réseau",
     "nav.remoteCommand": "Commande à distance",
     "nav.partner": "Partenaires",
-    "nav.accountTransaction": "Transactions de compte",
+    "nav.accountTransaction": "Historique du solde du compte",
     "nav.topup": "Recharger",
 
     // Dashboard

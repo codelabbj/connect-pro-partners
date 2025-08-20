@@ -323,10 +323,10 @@ export default function UserPaymentPage() {
 				<CardHeader>
 					<div className="flex justify-between items-center">
 						<CardTitle>{t("payment.transactionHistory") || "Transaction History"}</CardTitle>
-						<Button onClick={() => setCreateModalOpen(true)}>
+						{/* <Button onClick={() => setCreateModalOpen(true)}>
 							<Plus className="h-4 w-4 mr-2" />
 							{t("payment.newTransaction") || "New Transaction"}
-						</Button>
+						</Button> */}
 					</div>
 				</CardHeader>
 				<CardContent>

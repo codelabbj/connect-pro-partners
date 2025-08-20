@@ -712,17 +712,19 @@
 
 
 
-
 "use client"
 
 import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Users, CreditCard, DollarSign, TrendingUp } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Users, CreditCard, DollarSign, TrendingUp, TrendingDown, Wallet, RefreshCw } from "lucide-react"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
+import { useToast } from "@/hooks/use-toast"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip, LineChart, Line, PieChart, Pie, Cell } from "recharts"
 import { StatCard } from "@/components/ui/stat-card"
-import { ErrorDisplay } from "@/components/ui/error-display"
+import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -753,12 +755,50 @@ function ChartTooltipContent({ active, payload, label }: any) {
 export default function DashboardPage() {
   const { t } = useLanguage()
   const apiFetch = useApi()
+  const { toast } = useToast()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [stats, setStats] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [rechargeStats, setRechargeStats] = useState<any>(null)
+  
+  // Account data state (from UserPaymentPage)
+  const [accountData, setAccountData] = useState<any>(null)
+  const [accountLoading, setAccountLoading] = useState(true)
+  const [accountError, setAccountError] = useState("")
+
+  // Fetch account data (from UserPaymentPage)
+  const fetchAccountData = async () => {
+    setAccountLoading(true)
+    setAccountError("")
+    try {
+      const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/account/`
+      const data = await apiFetch(endpoint)
+      setAccountData(data)
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err)
+      setAccountError(errorMessage)
+      toast({ title: t("payment.failedToLoadAccount"), description: errorMessage, variant: "destructive" })
+    } finally {
+      setAccountLoading(false)
+    }
+  }
+
+  const refreshAccountData = async () => {
+    setAccountLoading(true)
+    try {
+      const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/account/`
+      const data = await apiFetch(endpoint)
+      setAccountData(data)
+      toast({ title: t("payment.accountRefreshed"), description: t("payment.accountDataUpdated") })
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err)
+      toast({ title: t("payment.refreshFailed"), description: errorMessage, variant: "destructive" })
+    } finally {
+      setAccountLoading(false)
+    }
+  }
 
   useEffect(() => {
     async function fetchAll() {
@@ -780,11 +820,12 @@ export default function DashboardPage() {
       }
     }
     fetchAll()
+    fetchAccountData() // Fetch account data
   }, [apiFetch, baseUrl])
 
   if (loading) {
     return (
-      <div className="ml-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
           <p className="text-muted-foreground">Vue d'ensemble de votre plateforme</p>
@@ -807,7 +848,7 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="ml-6">
+      <div className="container mx-auto p-6">
         <ErrorDisplay error={error} variant="full" />
       </div>
     )
@@ -858,17 +899,6 @@ export default function DashboardPage() {
     amount: data.amount,
     color: NETWORK_COLORS[index % NETWORK_COLORS.length]
   })) : []
-
-  // Monthly trend data (using available data)
-  const monthlyTrendData = [
-    {
-      name: "Ce mois",
-      deposits: userStats?.deposits?.total_amount ?? 0,
-      withdrawals: userStats?.withdrawals?.total_amount ?? 0,
-      recharges: rechargeStats?.month_stats?.approved_amount ?? 0,
-      transactions: userStats?.total_transactions ?? 0,
-    }
-  ]
 
   // Recent activity from recent_transactions with ALL transaction details
   type RecentTransaction = {
@@ -924,11 +954,104 @@ export default function DashboardPage() {
   })) ?? []
 
   return (
-    <div className="ml-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">{t("dashboard")}</h1>
         <p className="text-muted-foreground">Vue d'ensemble de votre plateforme</p>
       </div>
+
+      {/* Account Overview Section - From UserPaymentPage */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              {t("payment.accountOverview") || "Account Overview"}
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={refreshAccountData} disabled={accountLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${accountLoading ? 'animate-spin' : ''}`} />
+              {t("common.refresh") || "Refresh"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {accountLoading ? (
+            <div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div>
+          ) : accountError ? (
+            <ErrorDisplay
+              error={accountError}
+              onRetry={refreshAccountData}
+              variant="full"
+              showDismiss={false}
+            />
+          ) : accountData ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">{t("payment.currentBalance") || "Current Balance"}</p>
+                    <p className="text-2xl font-bold text-blue-900">{accountData.formatted_balance}</p>
+                  </div>
+                  <Wallet className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600">{t("payment.totalRecharged") || "Total Recharged"}</p>
+                    <p className="text-2xl font-bold text-green-900">{accountData.total_recharged} FCFA</p>
+                  </div>
+                  <TrendingUp className="h-8 w-8 text-green-600" />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600">{t("payment.totalDeposited") || "Total Deposited"}</p>
+                    <p className="text-2xl font-bold text-purple-900">{accountData.total_deposited} FCFA</p>
+                  </div>
+                  <TrendingDown className="h-8 w-8 text-purple-600" />
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-600">{t("payment.totalWithdrawn") || "Total Withdrawn"}</p>
+                    <p className="text-2xl font-bold text-orange-900">{accountData.total_withdrawn} FCFA</p>
+                  </div>
+                  <TrendingDown className="h-8 w-8 text-orange-600" />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {accountData && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <span className="text-sm font-medium">{t("payment.accountStatus") || "Account Status"}</span>
+                <Badge variant={accountData.is_active ? "default" : "destructive"}>
+                  {accountData.is_active ? (t("payment.active") || "Active") : (t("payment.inactive") || "Inactive")}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <span className="text-sm font-medium">{t("payment.accountFrozen") || "Account Frozen"}</span>
+                <Badge variant={accountData.is_frozen ? "destructive" : "default"}>
+                  {accountData.is_frozen ? (t("common.yes") || "Yes") : (t("common.no") || "No")}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <span className="text-sm font-medium">{t("payment.utilizationRate") || "Utilization Rate"}</span>
+                <span className="font-semibold">{(accountData.utilization_rate * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -1510,6 +1510,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
+// import { useRouter } from 'next/router';
 import { useApi } from "@/lib/useApi"
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Pencil, Trash, Clock, RefreshCw, Plus, Wallet, TrendingUp, TrendingDown, Copy } from "lucide-react"
 import {
@@ -1973,7 +1974,7 @@ export default function UserTransactionsPage() {
                 {/* {t("common.refresh") || "Refresh"} */}
               </Button>
             
-              <Button onClick={() => setCreateModalOpen(true)}>
+              <Button onClick={() => router.push('/dashboard/transactions/create')}>
                 <Plus className="h-4 w-4 mr-2" />
                 {t("payment.newTransaction") || "New Transaction"}
               </Button>

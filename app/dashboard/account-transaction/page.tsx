@@ -76,40 +76,41 @@ export default function UserPaymentPage() {
 	}, [baseUrl, apiFetch, t, toast])
 
 	// Fetch transactions
-	useEffect(() => {
-		const fetchTransactions = async () => {
-			setLoading(true)
-			setError("")
-			try {
-				const params = new URLSearchParams({
-					page: currentPage.toString(),
-					page_size: itemsPerPage.toString(),
-				})
-				if (searchTerm.trim() !== "") {
-					params.append("search", searchTerm)
-				}
-				if (typeFilter !== "all") {
-					params.append("type", typeFilter)
-				}
-				const orderingParam = sortField
-					? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
-					: ""
-				const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/account/transactions/?${params.toString()}${orderingParam}`
-				const data = await apiFetch(endpoint)
-				setTransactions(data.results || [])
-				setTotalCount(data.count || 0)
-				setTotalPages(Math.ceil((data.count || 0) / itemsPerPage))
-			} catch (err: any) {
-				const errorMessage = extractErrorMessages(err)
-				setError(errorMessage)
-				setTransactions([])
-				setTotalCount(0)
-				setTotalPages(1)
-				toast({ title: t("payment.failedToLoadTransactions"), description: errorMessage, variant: "destructive" })
-			} finally {
-				setLoading(false)
+	const fetchTransactions = async () => {
+		setLoading(true)
+		setError("")
+		try {
+			const params = new URLSearchParams({
+				page: currentPage.toString(),
+				page_size: itemsPerPage.toString(),
+			})
+			if (searchTerm.trim() !== "") {
+				params.append("search", searchTerm)
 			}
+			if (typeFilter !== "all") {
+				params.append("type", typeFilter)
+			}
+			const orderingParam = sortField
+				? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
+				: ""
+			const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/account/transactions/?${params.toString()}${orderingParam}`
+			const data = await apiFetch(endpoint)
+			setTransactions(data.results || [])
+			setTotalCount(data.count || 0)
+			setTotalPages(Math.ceil((data.count || 0) / itemsPerPage))
+		} catch (err: any) {
+			const errorMessage = extractErrorMessages(err)
+			setError(errorMessage)
+			setTransactions([])
+			setTotalCount(0)
+			setTotalPages(1)
+			toast({ title: t("payment.failedToLoadTransactions"), description: errorMessage, variant: "destructive" })
+		} finally {
+			setLoading(false)
 		}
+	}
+
+	useEffect(() => {
 		fetchTransactions()
 	}, [searchTerm, currentPage, itemsPerPage, baseUrl, typeFilter, sortField, sortDirection, t, toast, apiFetch])
 
@@ -223,6 +224,14 @@ export default function UserPaymentPage() {
 		}
 	}
 
+	const refreshTransactions = async () => {
+		await fetchTransactions()
+		toast({ 
+			title: t("payment.transactionsRefreshed") || "Transactions Refreshed", 
+			description: t("payment.transactionDataUpdated") || "Transaction data has been updated"
+		})
+	}
+
 	return (
 		<div className="container mx-auto p-6 space-y-6">
 			{/* Account Overview */}
@@ -323,10 +332,16 @@ export default function UserPaymentPage() {
 				<CardHeader>
 					<div className="flex justify-between items-center">
 						<CardTitle>{t("payment.transactionHistory") || "Transaction History"}</CardTitle>
-						{/* <Button onClick={() => setCreateModalOpen(true)}>
-							<Plus className="h-4 w-4 mr-2" />
-							{t("payment.newTransaction") || "New Transaction"}
-						</Button> */}
+						<div className="flex gap-2">
+							<Button variant="outline" size="sm" onClick={refreshTransactions} disabled={loading}>
+								<RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+								{t("common.refresh") || "Refresh"}
+							</Button>
+							{/* <Button onClick={() => setCreateModalOpen(true)}>
+								<Plus className="h-4 w-4 mr-2" />
+								{t("payment.newTransaction") || "New Transaction"}
+							</Button> */}
+						</div>
 					</div>
 				</CardHeader>
 				<CardContent>

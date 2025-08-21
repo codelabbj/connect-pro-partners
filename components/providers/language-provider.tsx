@@ -190,6 +190,19 @@ const translations = {
     "payment.transactionType": "Transaction Type",
     "payment.selectNetwork": "Select Network",
 
+    "payment.createTransactionSubtitle": "Create a new transaction",
+    "payment.selectTransactionType": "Select Transaction Type",
+    "payment.depositDescription": "Create a deposit to add funds to your account.",
+    "payment.withdrawDescription": "Create a withdrawal to transfer funds from your account.",
+    "payment.transactionDetails": "Transaction Details",
+
+    "payment.transactionSummary": "Transaction Summary",
+    "payment.createTransaction": "Create Transaction",
+    "payment.confirmationTransaction": "Confirmation Transaction",
+    "payment.confirmTransactionDescription": "Please review the transaction details before confirming.",
+    "payment.confirmationWarning": "Please ensure all details are correct before proceeding.",
+    "payment.confirmAndCreate": "Confirm and Create",
+
     // Users
     "users.title": "Users",
     "users.search": "Search users...",
@@ -508,6 +521,7 @@ const translations = {
     "common.refresh": "Refresh",
     "common.create": "Create",
     "common.searchPlaceholder": "Search...",
+    "common.back": "Back",
 
     // Registration Form
     "register.title": "Register New User",
@@ -868,6 +882,21 @@ const translations = {
     "payment.recipientPhone": "Téléphone du destinataire",
     "payment.transactionType": "Type de transaction",
     "payment.selectNetwork": "Sélectionner un réseau",
+
+    "payment.createTransactionSubtitle": "Créez une nouvelle transaction pour gérer les fonds de votre compte.",
+    "payment.selectTransactionType": "Sélectionner le type de transaction",
+    "payment.depositDescription": "Créez un dépôt pour ajouter des fonds à votre compte.",
+    "payment.withdrawDescription": "Créez un retrait pour transférer des fonds de votre compte.",
+    "payment.transactionDetails": "Détails de la transaction",
+    "payment.transactionSummary": "Résumé de la transaction",
+    "payment.createTransaction": "Créer une transaction",
+    "payment.confirmationTransaction": "Confirmer la transaction",
+    "payment.confirmTransactionDescription": "Veuillez vérifier les détails de la transaction avant de confirmer.",
+    "payment.confirmationWarning": "Assurez-vous que tous les détails sont corrects avant de soumettre.",
+    "payment.confirmAndCreate": "Confirmer et créer",
+
+
+
     
 
     // Users
@@ -1188,6 +1217,7 @@ const translations = {
     "common.refresh": "Rafraîchir",
     "common.create": "Créer",
     "common.searchPlaceholder": "Rechercher...",
+    "common.back": "Retour",
 
     // Registration Form
     "register.title": "Enregistrer un nouvel utilisateur",

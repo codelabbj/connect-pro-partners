@@ -258,7 +258,7 @@ export default function CreateTransactionPage() {
               <Input
                 id="recipient_phone"
                 type="tel"
-                placeholder="Enter phone number"
+                placeholder="Entrez le numéro de téléphone du destinataire"
                 value={transactionForm.recipient_phone}
                 onChange={(e) => setTransactionForm(prev => ({ ...prev, recipient_phone: e.target.value }))}
                 required
@@ -271,7 +271,7 @@ export default function CreateTransactionPage() {
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter amount"
+                placeholder="Entrez le montant"
                 value={transactionForm.amount}
                 onChange={(e) => setTransactionForm(prev => ({ ...prev, amount: e.target.value }))}
                 required

@@ -1071,8 +1071,12 @@ export default function DashboardPage() {
           title="Total Demandes Recharge"
           value={rechargeStats?.total_requests?.toLocaleString() ?? "0"}
           icon={DollarSign}
-          trend={{ value: `${rechargeStats?.month_stats?.approval_rate ?? 0}% approuvé`, isPositive: rechargeStats?.month_stats?.approval_rate > 50 }}
+          trend={{ 
+            value: `${(rechargeStats?.month_stats?.approval_rate ?? 0).toFixed(2)}% approuvé`, 
+            isPositive: rechargeStats?.month_stats?.approval_rate > 50 
+          }}
         />
+       
         <StatCard
           title="Total Rechargé"
           value={totalRecharged.toLocaleString() + " FCFA"}
@@ -1316,7 +1320,7 @@ export default function DashboardPage() {
             <CardTitle>Statistiques Mensuelles</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{rechargeStats?.month_stats?.approval_rate ?? 0}%</div>
+            <div className="text-2xl font-bold">{(rechargeStats?.month_stats?.approval_rate ?? 0) .toFixed(2)}%</div>
             <p className="text-sm text-muted-foreground">
               Taux d'approbation des recharges
             </p>

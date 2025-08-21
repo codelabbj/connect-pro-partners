@@ -78,14 +78,14 @@ export function Sidebar() {
           <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center space-x-2">
               <img src="/logo.png" alt="Connect Pro Logo" className="h-10 w-10" />
-              <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Connect Pro Partners</span>
+              <span className="text-sm font-bold text-gray-800 dark:text-gray-100">Connect Pro Partenaires</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
               <X className="h-6 w-6" />
             </Button>
           </div>
           <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto min-h-0">
-            <SectionHeader>General</SectionHeader>
+            <SectionHeader>Generale</SectionHeader>
             <Link
               href="/dashboard"
               aria-label="Dashboard"
@@ -101,7 +101,7 @@ export function Sidebar() {
               {t("nav.dashboard")}
             </Link>
             <br></br>
-            <SectionHeader>Transactions Management</SectionHeader>
+            <SectionHeader>Gestion des transactions</SectionHeader>
             <Link
               href="/dashboard/transactions"
               aria-label="Transactions"
@@ -434,7 +434,7 @@ export function Sidebar() {
           <div className="flex h-16 items-center px-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center space-x-2">
               <img src="/logo.png" alt="Connect Pro Logo" className="h-8 w-8" />
-              <span className="text-lg font-bold text-gray-800 dark:text-gray-100">Connect Pro Partners</span>
+              <span className="text-lg font-bold text-gray-800 dark:text-gray-100">Connect Pro Partenaires</span>
             </div>
           </div>
           <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto min-h-0">

@@ -1500,6 +1500,7 @@
 //   )
 // }
 
+
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -1678,6 +1679,8 @@ export default function UserTransactionsPage() {
       setLoading(false)
     }
   }
+
+  
 
   // Manual refresh function
   const handleRefresh = async () => {
@@ -2078,7 +2081,7 @@ export default function UserTransactionsPage() {
                     <TableHead>{t("transactions.type") || "Type"}</TableHead>
                     <TableHead>{t("transactions.network") || "Network"}</TableHead>
                     <TableHead>{t("transactions.status") || "Status"}</TableHead>
-                    <TableHead>{t("transactions.retryInfo") || "Retry Info"}</TableHead>
+                    {/* <TableHead>{t("transactions.retryInfo") || "Retry Info"}</TableHead> */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -2145,7 +2148,7 @@ export default function UserTransactionsPage() {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                        <TableCell>
+                        {/* <TableCell>
                           <div className="flex flex-col text-sm">
                             <span className="text-muted-foreground">
                               {transaction.retry_count || 0}/{transaction.max_retries || 3}
@@ -2160,7 +2163,7 @@ export default function UserTransactionsPage() {
                               </span>
                             )}
                           </div>
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     ))
                   )}
@@ -2318,3 +2321,4 @@ export default function UserTransactionsPage() {
     </div>
   )
 }
+

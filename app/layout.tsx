@@ -9,8 +9,8 @@ import { LanguageProvider } from "@/components/providers/language-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Connect Pro - partners Dashboard",
-  description: "Professional partners site for Connect Pro",
+  title: "Connect Pro - Partenaires Dashboard",
+  description: "Site partenaires professionnels pour Connect Pro",
     // 
 }
 

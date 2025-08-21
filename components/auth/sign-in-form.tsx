@@ -120,7 +120,7 @@ export function SignInForm() {
                 <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12" />
               </div>
           </div>
-          <CardTitle className="text-2xl text-center">Connect Pro Partner</CardTitle>
+          <CardTitle className="text-2xl text-center">Connect Pro Partenaires</CardTitle>
           <CardDescription className="text-center">{t("auth.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>

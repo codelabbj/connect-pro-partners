@@ -1263,7 +1263,7 @@ export default function DashboardPage() {
                 time: string;
                 type: string;
                 amount: string;
-                status: string;
+                status_display: string;
                 network?: string;
               }, index: number) => (
                 <div key={index} className="flex items-center space-x-4">
@@ -1278,18 +1278,20 @@ export default function DashboardPage() {
                   />
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {activity.action} {activity.amount} {activity.network && `(${activity.network})`}
+                      {/* {activity.action} {activity.amount} {activity.network && `(${activity.network})`} */}
+                      {activity.action} {activity.amount}
                     </p>
                     <p className="text-sm text-muted-foreground">{activity.user}</p>
                   </div>
                   <div className="text-sm text-muted-foreground">{activity.time}</div>
                   <div className={`text-xs px-2 py-1 rounded ${
-                    activity.status === "En attente" ? "bg-yellow-100 text-yellow-800" :
-                    activity.status === "Terminée" ? "bg-green-100 text-green-800" :
-                    activity.status === "Annulée" ? "bg-red-100 text-red-800" :
+                    activity.status_display === "En attente" ? "bg-yellow-100 text-yellow-800" :
+                    activity.status_display === "Terminée" ? "bg-green-100 text-green-800" :
+                    activity.status_display === "Succès" ? "bg-blue-100 text-blue-800" :
+                    activity.status_display === "Annulée" ? "bg-red-100 text-red-800" :
                     "bg-muted"
                   }`}>
-                    {activity.status}
+                    {activity.status_display}
                   </div>
                 </div>
               ))
@@ -1302,7 +1304,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
-            <CardTitle>Balance du Compte</CardTitle>
+            <CardTitle>Solde du Compte</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.account?.formatted_balance}</div>

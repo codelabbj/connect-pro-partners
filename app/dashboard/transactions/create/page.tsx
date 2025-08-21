@@ -29,7 +29,7 @@ export default function CreateTransactionPage() {
   const [networksError, setNetworksError] = useState("")
   
   const [transactionForm, setTransactionForm] = useState({
-    type: "" as "deposit" | "withdraw" | "",
+    type: "" as "deposit" | "withdrawal" | "",
     amount: "",
     recipient_phone: "",
     network: "" as any,
@@ -66,7 +66,7 @@ export default function CreateTransactionPage() {
     fetchNetworks()
   }, [baseUrl, apiFetch, t, toast])
 
-  const handleTransactionTypeSelect = (type: "deposit" | "withdraw") => {
+  const handleTransactionTypeSelect = (type: "deposit" | "withdrawal") => {
     setTransactionForm(prev => ({ ...prev, type }))
   }
 
@@ -105,7 +105,7 @@ export default function CreateTransactionPage() {
       })
       
       // Redirect back to transactions page
-      router.push("/transactions") // Adjust the path as needed
+      router.push("/dashboard/transactions") // Adjust the path as needed
       
     } catch (err: any) {
       const errorMessage = extractErrorMessages(err)
@@ -170,11 +170,11 @@ export default function CreateTransactionPage() {
 
             <div 
               className={`p-6 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                transactionForm.type === "withdraw" 
+                transactionForm.type === "withdrawal" 
                   ? "border-red-500 bg-red-50 dark:bg-red-900/20" 
                   : "border-gray-200 hover:border-red-300"
               }`}
-              onClick={() => handleTransactionTypeSelect("withdraw")}
+              onClick={() => handleTransactionTypeSelect("withdrawal")}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -182,11 +182,11 @@ export default function CreateTransactionPage() {
                     <TrendingDown className="h-6 w-6 text-red-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{t("payment.withdraw") || "Withdraw"}</h3>
+                    <h3 className="font-semibold text-lg">{t("payment.withdrawal") || "Withdraw"}</h3>
                     <p className="text-sm text-muted-foreground">{t("payment.withdrawDescription") || "Send money from your account"}</p>
                   </div>
                 </div>
-                {transactionForm.type === "withdraw" && (
+                {transactionForm.type === "withdrawal" && (
                   <Check className="h-6 w-6 text-red-600" />
                 )}
               </div>

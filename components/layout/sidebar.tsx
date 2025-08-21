@@ -438,7 +438,7 @@ export function Sidebar() {
             </div>
           </div>
           <nav className="flex-1 space-y-2 px-2 py-4 overflow-y-auto min-h-0">
-            <SectionHeader>General</SectionHeader>
+            <SectionHeader>Generale</SectionHeader>
             <Link
               href="/dashboard"
               className={cn(
@@ -502,7 +502,7 @@ export function Sidebar() {
               </div>
             </div> */}
             <br></br>
-            <SectionHeader>Transactions Management</SectionHeader>
+            <SectionHeader>Gestion des transactions</SectionHeader>
             <Link
               href="/dashboard/transactions"
               className={cn(

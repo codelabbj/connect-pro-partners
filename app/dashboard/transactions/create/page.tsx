@@ -262,7 +262,7 @@ export default function CreateTransactionPage() {
                 value={transactionForm.recipient_phone}
                 onChange={(e) => setTransactionForm(prev => ({ ...prev, recipient_phone: e.target.value }))}
                 required
-                className="mt-1"
+                className="mt-1 border-gray-400 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 dark:bg-gray-700/50 dark:border-gray-600/50 dark:text-gray-400/50"
               />
             </div>
 
@@ -276,7 +276,7 @@ export default function CreateTransactionPage() {
                 onChange={(e) => setTransactionForm(prev => ({ ...prev, amount: e.target.value }))}
                 required
                 min="1"
-                className="mt-1"
+                className="mt-1 border-gray-400 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 dark:bg-gray-700/50 dark:border-gray-600/50 dark:text-gray-400/50 "
               />
             </div>
 

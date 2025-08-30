@@ -535,9 +535,13 @@ export default function UserTopupPage() {
 		<div className="container mx-auto p-6">
 			<Card>
 				<CardHeader>
-					<div className="flex justify-between items-center">
-						<CardTitle>{t("topup.title") || "My Top Up Requests"}</CardTitle>
-						<Button onClick={() => setCreateModalOpen(true)}>
+					<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+						<CardTitle className="text-lg sm:text-xl">{t("topup.title") || "My Top Up Requests"}</CardTitle>
+						<Button 
+							onClick={() => setCreateModalOpen(true)}
+							size="sm"
+							className="w-full sm:w-auto"
+						>
 							<Plus className="h-4 w-4 mr-2" />
 							{t("topup.createNew") || "Create New Request"}
 						</Button>

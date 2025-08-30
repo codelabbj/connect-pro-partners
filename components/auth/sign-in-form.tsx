@@ -103,42 +103,43 @@ export function SignInForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      {/* <div className="flex justify-between items-center w-full max-w-md mb-6">
-        <div className="flex items-center space-x-2">
-          <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <ThemeToggle />
-          <LanguageSwitcher />
-        </div>
-      </div> */}
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-             <div className="flex items-center space-x-2">
-                <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12" />
+    <div className="w-full max-w-md mx-auto">
+      <Card className="w-full">
+        <CardHeader className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center space-x-2">
+              <img src="/logo.png" alt="Connect Pro Logo" className="h-15 w-15 sm:h-20 sm:w-20" />
+              <div>
+                <CardTitle className="text-xl sm:text-2xl">Connect Pro</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Partenaires Dashboard</CardDescription>
               </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              <LanguageSwitcher />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-center">Connect Pro Partenaires</CardTitle>
-          <CardDescription className="text-center">{t("auth.subtitle")}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-4 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">{t("auth.email")}</Label>
+              <Label htmlFor="identifier" className="text-sm sm:text-base">
+                {t("auth.email")}
+              </Label>
               <Input
-                id="email"
-                type="email"
+                id="identifier"
+                type="text"
                 placeholder="john@example.com"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
-                disabled={loading}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t("auth.password")}</Label>
+              <Label htmlFor="password" className="text-sm sm:text-base">
+                {t("auth.password")}
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -146,46 +147,43 @@ export function SignInForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={loading}
-                  className="pr-10"
+                  className="pr-10 text-sm sm:text-base"
                 />
-                <button
+                <Button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setShowPassword((v) => !v)}
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  disabled={loading}
-                />
-                <Label htmlFor="remember" className="text-sm">
-                  {t("auth.rememberMe")}
-                </Label>
-              </div>
-              {/* <Button variant="link" className="px-0 text-sm" disabled={loading}>
-                {t("auth.forgotPassword")}
-              </Button> */}
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              />
+              <Label htmlFor="rememberMe" className="text-xs sm:text-sm">
+                {t("auth.rememberMe")}
+              </Label>
             </div>
             {error && (
               <ErrorDisplay
                 error={error}
                 variant="inline"
-                showRetry={false}
-                className="mt-2"
+                showDismiss={true}
+                onDismiss={() => setError("")}
               />
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t("auth.loggingIn") : t("auth.signIn")}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ?t("auth.loggingIn") : t("auth.signIn")}
             </Button>
           </form>
         </CardContent>

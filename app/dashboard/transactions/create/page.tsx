@@ -398,3 +398,6 @@ export default function CreateTransactionPage() {
     </div>
   )
 }
+
+
+//https://connect.yapson.net/api/payments/transaction-logs/?transaction=c6238daf890b4c0aab8ff8ae688d6e63

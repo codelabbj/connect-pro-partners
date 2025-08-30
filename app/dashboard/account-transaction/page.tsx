@@ -369,9 +369,9 @@ export default function UserPaymentPage() {
 					</div>
 
 					{/* Table */}
-					<div className="rounded-md border">
+					<div className="rounded-md border overflow-hidden">
 						{loading ? (
-							<div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div>
+							<div className="p-6 sm:p-8 text-center text-muted-foreground">{t("common.loading")}</div>
 						) : error ? (
 							<ErrorDisplay
 								error={error}
@@ -383,88 +383,90 @@ export default function UserPaymentPage() {
 								showDismiss={false}
 							/>
 						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>{t("payment.reference") || "Reference"}</TableHead>
-										<TableHead>
-											<Button variant="ghost" onClick={() => handleSort("type")} className="h-auto p-0 font-semibold">
-												{t("payment.type") || "Type"}
-												<ArrowUpDown className="ml-2 h-4 w-4" />
-											</Button>
-										</TableHead>
-										<TableHead>
-											<Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
-												{t("payment.amount") || "Amount"}
-												<ArrowUpDown className="ml-2 h-4 w-4" />
-											</Button>
-										</TableHead>
-										<TableHead>{t("payment.balanceBefore") || "Balance Before"}</TableHead>
-										<TableHead>{t("payment.balanceAfter") || "Balance After"}</TableHead>
-										<TableHead>{t("payment.description") || "Description"}</TableHead>
-										<TableHead>
-											<Button variant="ghost" onClick={() => handleSort("created_at")} className="h-auto p-0 font-semibold">
-												{t("payment.date") || "Date"}
-												<ArrowUpDown className="ml-2 h-4 w-4" />
-											</Button>
-										</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{transactions.length === 0 ? (
+							<div className="overflow-x-auto">
+								<Table>
+									<TableHeader>
 										<TableRow>
-											<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-												{t("payment.noTransactions") || "No transactions found"}
-											</TableCell>
+											<TableHead className="text-xs sm:text-sm">{t("payment.reference") || "Reference"}</TableHead>
+											<TableHead className="text-xs sm:text-sm">
+												<Button variant="ghost" onClick={() => handleSort("type")} className="h-auto p-0 font-semibold text-xs sm:text-sm">
+													{t("payment.type") || "Type"}
+													<ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+												</Button>
+											</TableHead>
+											<TableHead className="text-xs sm:text-sm">
+												<Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold text-xs sm:text-sm">
+													{t("payment.amount") || "Amount"}
+													<ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+												</Button>
+											</TableHead>
+											<TableHead className="text-xs sm:text-sm hidden sm:table-cell">{t("payment.balanceBefore") || "Balance Before"}</TableHead>
+											<TableHead className="text-xs sm:text-sm hidden sm:table-cell">{t("payment.balanceAfter") || "Balance After"}</TableHead>
+											<TableHead className="text-xs sm:text-sm hidden lg:table-cell">{t("payment.description") || "Description"}</TableHead>
+											<TableHead className="text-xs sm:text-sm">
+												<Button variant="ghost" onClick={() => handleSort("created_at")} className="h-auto p-0 font-semibold text-xs sm:text-sm">
+													{t("payment.date") || "Date"}
+													<ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
+												</Button>
+											</TableHead>
 										</TableRow>
-									) : (
-										transactions.map((transaction) => (
-											<TableRow key={transaction.uid}>
-												<TableCell>
-													<div className="flex items-center gap-2">
-														<span className="font-mono text-sm">{transaction.reference}</span>
-														<Button
-															variant="ghost"
-															size="icon"
-															className="h-5 w-5"
-															onClick={() => {
-																navigator.clipboard.writeText(transaction.reference)
-																toast({ title: t("payment.referenceCopied") || "Reference copied!" })
-															}}
-														>
-															<Copy className="h-3 w-3" />
-														</Button>
-													</div>
+									</TableHeader>
+									<TableBody>
+										{transactions.length === 0 ? (
+											<TableRow>
+												<TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-sm">
+													{t("payment.noTransactions") || "No transactions found"}
 												</TableCell>
-												<TableCell>
-													<div className="flex items-center gap-2">
-														{getTransactionIcon(transaction.type, transaction.is_credit)}
-														<Badge variant={getTransactionBadgeVariant(transaction.type)}>
-															{transaction.type_display || transaction.type}
-														</Badge>
-													</div>
-												</TableCell>
-												<TableCell className={`font-semibold ${transaction.is_credit ? 'text-green-600' : 'text-red-600'}`}>
-													{transaction.formatted_amount}
-												</TableCell>
-												<TableCell>{transaction.balance_before} FCFA</TableCell>
-												<TableCell>{transaction.balance_after} FCFA</TableCell>
-												<TableCell className="max-w-xs truncate" title={transaction.description}>
-													{transaction.description}
-												</TableCell>
-												<TableCell>{new Date(transaction.created_at).toLocaleDateString()}</TableCell>
 											</TableRow>
-										))
-									)}
-								</TableBody>
-							</Table>
+										) : (
+											transactions.map((transaction) => (
+												<TableRow key={transaction.uid}>
+													<TableCell className="text-xs sm:text-sm">
+														<div className="flex items-center gap-1 sm:gap-2">
+															<span className="font-mono text-xs sm:text-sm truncate max-w-20 sm:max-w-32">{transaction.reference}</span>
+															<Button
+																variant="ghost"
+																size="icon"
+																className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+																onClick={() => {
+																	navigator.clipboard.writeText(transaction.reference)
+																	toast({ title: t("payment.referenceCopied") || "Reference copied!" })
+																}}
+															>
+																<Copy className="h-2 w-2 sm:h-3 sm:w-3" />
+															</Button>
+														</div>
+													</TableCell>
+													<TableCell className="text-xs sm:text-sm">
+														<div className="flex items-center gap-1 sm:gap-2">
+															{getTransactionIcon(transaction.type, transaction.is_credit)}
+															<Badge variant={getTransactionBadgeVariant(transaction.type)} className="text-xs">
+																{transaction.type_display || transaction.type}
+															</Badge>
+														</div>
+													</TableCell>
+													<TableCell className={`font-semibold text-xs sm:text-sm ${transaction.is_credit ? 'text-green-600' : 'text-red-600'}`}>
+														{transaction.formatted_amount}
+													</TableCell>
+													<TableCell className="text-xs sm:text-sm hidden sm:table-cell">{transaction.balance_before} FCFA</TableCell>
+													<TableCell className="text-xs sm:text-sm hidden sm:table-cell">{transaction.balance_after} FCFA</TableCell>
+													<TableCell className="max-w-xs truncate text-xs sm:text-sm hidden lg:table-cell" title={transaction.description}>
+														{transaction.description}
+													</TableCell>
+													<TableCell className="text-xs sm:text-sm">{new Date(transaction.created_at).toLocaleDateString()}</TableCell>
+												</TableRow>
+											))
+										)}
+									</TableBody>
+								</Table>
+							</div>
 						)}
 					</div>
 
 					{/* Pagination */}
 					{totalPages > 1 && (
-						<div className="flex items-center justify-between mt-6">
-							<div className="text-sm text-muted-foreground">
+						<div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 sm:mt-6">
+							<div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
 								{`${t("payment.showingResults") || "Showing"}: ${startIndex + 1}-${Math.min(startIndex + itemsPerPage, totalCount)} / ${totalCount}`}
 							</div>
 							<div className="flex items-center space-x-2">
@@ -473,11 +475,13 @@ export default function UserPaymentPage() {
 									size="sm"
 									onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
 									disabled={currentPage === 1}
+									className="h-8 px-2 sm:h-9 sm:px-3"
 								>
-									<ChevronLeft className="h-4 w-4 mr-1" />
-									{t("common.previous")}
+									<ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+									<span className="hidden sm:inline">{t("common.previous")}</span>
+									<span className="sm:hidden">Prev</span>
 								</Button>
-								<div className="text-sm">
+								<div className="text-xs sm:text-sm px-2">
 									{`${t("payment.pageOf") || "Page"}: ${currentPage}/${totalPages}`}
 								</div>
 								<Button
@@ -485,9 +489,11 @@ export default function UserPaymentPage() {
 									size="sm"
 									onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
 									disabled={currentPage === totalPages}
+									className="h-8 px-2 sm:h-9 sm:px-3"
 								>
-									{t("common.next")}
-									<ChevronRight className="h-4 w-4 ml-1" />
+									<span className="hidden sm:inline">{t("common.next")}</span>
+									<span className="sm:hidden">Next</span>
+									<ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
 								</Button>
 							</div>
 						</div>

@@ -20,10 +20,10 @@ export default function DashboardLayout({
     <WebSocketProvider token={token}>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Sidebar />
-        <div className="lg:pl-64">
+        <div className="lg:pl-64 transition-all duration-300">
           <Header />
-          <main className="py-6">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <main className="py-4 sm:py-6">
+            <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-6 xl:px-8">
               {children}
             </div>
           </main>

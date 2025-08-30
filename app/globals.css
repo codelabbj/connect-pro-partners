@@ -56,4 +56,114 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Mobile-first responsive utilities */
+  .container-responsive {
+    @apply w-full mx-auto px-3 sm:px-4 lg:px-6 xl:px-8;
+    max-width: 100%;
+  }
+  
+  /* Responsive text utilities */
+  .text-responsive-xs {
+    @apply text-xs sm:text-sm;
+  }
+  
+  .text-responsive-sm {
+    @apply text-sm sm:text-base;
+  }
+  
+  .text-responsive-base {
+    @apply text-base sm:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl;
+  }
+  
+  .text-responsive-2xl {
+    @apply text-2xl sm:text-3xl;
+  }
+  
+  /* Responsive spacing utilities */
+  .space-responsive {
+    @apply space-y-3 sm:space-y-4 lg:space-y-6;
+  }
+  
+  .gap-responsive {
+    @apply gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Responsive padding utilities */
+  .p-responsive {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+  
+  .px-responsive {
+    @apply px-3 sm:px-4 lg:px-6;
+  }
+  
+  .py-responsive {
+    @apply py-3 sm:py-4 lg:py-6;
+  }
+  
+  /* Responsive margin utilities */
+  .m-responsive {
+    @apply m-3 sm:m-4 lg:m-6;
+  }
+  
+  .mx-responsive {
+    @apply mx-3 sm:mx-4 lg:mx-6;
+  }
+  
+  .my-responsive {
+    @apply my-3 sm:my-4 lg:my-6;
+  }
+  
+  /* Responsive grid utilities */
+  .grid-responsive {
+    @apply grid gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  .grid-cols-responsive {
+    @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  
+  /* Responsive flex utilities */
+  .flex-responsive {
+    @apply flex flex-col sm:flex-row;
+  }
+  
+  .items-responsive {
+    @apply items-start sm:items-center;
+  }
+  
+  .justify-responsive {
+    @apply justify-start sm:justify-between;
+  }
+  
+  /* Responsive sizing utilities */
+  .h-responsive {
+    @apply h-8 sm:h-9 lg:h-10;
+  }
+  
+  .w-responsive {
+    @apply w-8 sm:w-9 lg:w-10;
+  }
+  
+  /* Responsive icon sizing */
+  .icon-responsive {
+    @apply h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6;
+  }
+  
+  .icon-responsive-sm {
+    @apply h-3 w-3 sm:h-4 sm:w-4;
+  }
+  
+  .icon-responsive-lg {
+    @apply h-6 w-6 sm:h-8 sm:w-8;
+  }
 }

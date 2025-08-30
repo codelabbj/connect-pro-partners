@@ -108,7 +108,7 @@ export function SignInForm() {
         <CardHeader className="space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center space-x-2">
-              <img src="/logo.png" alt="Connect Pro Logo" className="h-15 w-15 sm:h-20 sm:w-20" />
+              <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12 sm:h-16 sm:w-16" />
               <div>
                 <CardTitle className="text-xl sm:text-2xl">Connect Pro</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">Partenaires Dashboard</CardDescription>

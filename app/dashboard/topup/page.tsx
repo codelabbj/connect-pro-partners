@@ -354,10 +354,13 @@ import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-displa
 import { useApi } from "@/lib/useApi"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { DateFilter } from "@/components/ui/date-filter"
 
 export default function UserTopupPage() {
 	const [searchTerm, setSearchTerm] = useState("")
 	const [statusFilter, setStatusFilter] = useState("all")
+	const [startDate, setStartDate] = useState("")
+	const [endDate, setEndDate] = useState("")
 	const [currentPage, setCurrentPage] = useState(1)
 	const [topups, setTopups] = useState<any[]>([])
 	const [totalCount, setTotalCount] = useState(0)
@@ -403,6 +406,13 @@ export default function UserTopupPage() {
 				if (statusFilter !== "all") {
 					params.append("status", statusFilter)
 				}
+				// Add date filters
+				if (startDate) {
+					params.append("created_at__gte", startDate)
+				}
+				if (endDate) {
+					params.append("created_at__lte", endDate)
+				}
 				const orderingParam = sortField
 					? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
 					: ""
@@ -423,7 +433,7 @@ export default function UserTopupPage() {
 			}
 		}
 		fetchTopups()
-	}, [searchTerm, currentPage, itemsPerPage, baseUrl, statusFilter, sortField, sortDirection, t, toast, apiFetch])
+	}, [searchTerm, currentPage, itemsPerPage, baseUrl, statusFilter, startDate, endDate, sortField, sortDirection, t, toast, apiFetch])
 
 	const startIndex = (currentPage - 1) * itemsPerPage
 
@@ -434,6 +444,12 @@ export default function UserTopupPage() {
 			setSortField(field)
 			setSortDirection("desc")
 		}
+	}
+
+	const handleClearDates = () => {
+		setStartDate("")
+		setEndDate("")
+		setCurrentPage(1)
 	}
 
 	// Fetch topup details
@@ -549,27 +565,42 @@ export default function UserTopupPage() {
 				</CardHeader>
 				<CardContent>
 					{/* Search & Filter */}
-					<div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
-						<div className="relative flex-1">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-							<Input
-								placeholder={t("topup.search") || "Search by reference or amount"}
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-10"
-							/>
+					<div className="space-y-4 mb-6">
+						<div className="flex flex-col sm:flex-row gap-4 items-center">
+							<div className="relative flex-1">
+								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+								<Input
+									placeholder={t("topup.search") || "Search by reference or amount"}
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									className="pl-10"
+								/>
+							</div>
+							<select
+								value={statusFilter}
+								onChange={(e) => setStatusFilter(e.target.value)}
+								className="w-full sm:w-48 border rounded px-3 py-2 bg-background"
+							>
+								<option value="all">{t("topup.allStatuses") || "All Statuses"}</option>
+								<option value="pending">{t("topup.pending") || "Pending"}</option>
+								<option value="approved">{t("topup.approved") || "Approved"}</option>
+								<option value="rejected">{t("topup.rejected") || "Rejected"}</option>
+								<option value="expired">{t("topup.expired") || "Expired"}</option>
+							</select>
 						</div>
-						<select
-							value={statusFilter}
-							onChange={(e) => setStatusFilter(e.target.value)}
-							className="w-full sm:w-48 border rounded px-3 py-2 bg-background"
-						>
-							<option value="all">{t("topup.allStatuses") || "All Statuses"}</option>
-							<option value="pending">{t("topup.pending") || "Pending"}</option>
-							<option value="approved">{t("topup.approved") || "Approved"}</option>
-							<option value="rejected">{t("topup.rejected") || "Rejected"}</option>
-							<option value="expired">{t("topup.expired") || "Expired"}</option>
-						</select>
+						<DateFilter
+							startDate={startDate}
+							endDate={endDate}
+							onStartDateChange={(date) => {
+								setStartDate(date)
+								setCurrentPage(1)
+							}}
+							onEndDateChange={(date) => {
+								setEndDate(date)
+								setCurrentPage(1)
+							}}
+							onClearDates={handleClearDates}
+						/>
 					</div>
 
 					{/* Table */}

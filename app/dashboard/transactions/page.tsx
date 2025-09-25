@@ -39,6 +39,7 @@ import { useRouter } from "next/navigation"
 import { useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { DateFilter } from "@/components/ui/date-filter"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -52,6 +53,8 @@ export default function UserTransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [typeFilter, setTypeFilter] = useState("all")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [sortField, setSortField] = useState<"amount" | "date" | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
@@ -145,6 +148,14 @@ export default function UserTransactionsPage() {
       // Add type filter  
       if (typeFilter !== "all") {
         params.append("type", typeFilter);
+      }
+
+      // Add date filters
+      if (startDate) {
+        params.append("created_at__gte", startDate);
+      }
+      if (endDate) {
+        params.append("created_at__lte", endDate);
       }
 
       // Add sorting
@@ -250,7 +261,7 @@ export default function UserTransactionsPage() {
 
   useEffect(() => {
     fetchTransactions()
-  }, [currentPage, searchTerm, statusFilter, typeFilter, sortField, sortDirection])
+  }, [currentPage, searchTerm, statusFilter, typeFilter, startDate, endDate, sortField, sortDirection])
 
   const totalPages = Math.ceil(totalCount / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -259,6 +270,12 @@ export default function UserTransactionsPage() {
     setCurrentPage(1)
     setSortDirection((prevDir) => (sortField === field ? (prevDir === "desc" ? "asc" : "desc") : "desc"))
     setSortField(field)
+  }
+
+  const handleClearDates = () => {
+    setStartDate("")
+    setEndDate("")
+    setCurrentPage(1)
   }
 
   // Enhanced status map with more statuses from the API response
@@ -530,6 +547,20 @@ export default function UserTransactionsPage() {
                 <SelectItem value="withdrawal">{t("transactions.withdrawal") || "Withdrawal"}</SelectItem>
               </SelectContent>
             </Select>
+            <DateFilter
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={(date) => {
+                setStartDate(date)
+                setCurrentPage(1)
+              }}
+              onEndDateChange={(date) => {
+                setEndDate(date)
+                setCurrentPage(1)
+              }}
+              onClearDates={handleClearDates}
+              className="w-full lg:w-auto"
+            />
           </div>
 
           {/* Inline error display */}

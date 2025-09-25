@@ -80,8 +80,8 @@ export function Sidebar() {
               <img src="/logo.png" alt="Connect Pro Logo" className="h-12 w-12 sm:h-15 sm:w-15 flex-shrink-0" />
               <span className="text-sm sm:text-base font-bold text-gray-800 dark:text-gray-100 truncate">Connect Pro Partenaires</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="flex-shrink-0">
-              <X className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="flex-shrink-0 bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 p-0">
+              <X className="h-8 w-8 sm:h-6 sm:w-6" />
             </Button>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto min-h-0">

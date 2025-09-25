@@ -14,6 +14,7 @@ import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-displa
 import { useApi } from "@/lib/useApi"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { DateFilter } from "@/components/ui/date-filter"
 
 export default function UserPaymentPage() {
 	// Account data state
@@ -28,6 +29,8 @@ export default function UserPaymentPage() {
 	const [currentPage, setCurrentPage] = useState(1)
 	const [searchTerm, setSearchTerm] = useState("")
 	const [typeFilter, setTypeFilter] = useState("all")
+	const [startDate, setStartDate] = useState("")
+	const [endDate, setEndDate] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 	const [sortField, setSortField] = useState<"amount" | "created_at" | "type" | null>(null)
@@ -90,6 +93,13 @@ export default function UserPaymentPage() {
 			if (typeFilter !== "all") {
 				params.append("type", typeFilter)
 			}
+			// Add date filters
+			if (startDate) {
+				params.append("created_at__gte", startDate)
+			}
+			if (endDate) {
+				params.append("created_at__lte", endDate)
+			}
 			const orderingParam = sortField
 				? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
 				: ""
@@ -112,7 +122,7 @@ export default function UserPaymentPage() {
 
 	useEffect(() => {
 		fetchTransactions()
-	}, [searchTerm, currentPage, itemsPerPage, baseUrl, typeFilter, sortField, sortDirection, t, toast, apiFetch])
+	}, [searchTerm, currentPage, itemsPerPage, baseUrl, typeFilter, startDate, endDate, sortField, sortDirection, t, toast, apiFetch])
 
 	// Fetch networks when create modal opens
 	useEffect(() => {
@@ -142,6 +152,12 @@ export default function UserPaymentPage() {
 			setSortField(field)
 			setSortDirection("desc")
 		}
+	}
+
+	const handleClearDates = () => {
+		setStartDate("")
+		setEndDate("")
+		setCurrentPage(1)
 	}
 
 	const handleCreateTransaction = async () => {
@@ -346,26 +362,41 @@ export default function UserPaymentPage() {
 				</CardHeader>
 				<CardContent>
 					{/* Search & Filter */}
-					<div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
-						<div className="relative flex-1">
-							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-							<Input
-								placeholder={t("payment.searchTransactions") || "Search transactions..."}
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="pl-10"
-							/>
+					<div className="space-y-4 mb-6">
+						<div className="flex flex-col sm:flex-row gap-4 items-center">
+							<div className="relative flex-1">
+								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+								<Input
+									placeholder={t("payment.searchTransactions") || "Search transactions..."}
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									className="pl-10"
+								/>
+							</div>
+							<select
+								value={typeFilter}
+								onChange={(e) => setTypeFilter(e.target.value)}
+								className="w-full sm:w-48 border rounded px-3 py-2 bg-background"
+							>
+								<option value="all">{t("payment.allTypes") || "All Types"}</option>
+								<option value="deposit">{t("payment.deposit") || "Deposit"}</option>
+								<option value="withdraw">{t("payment.withdraw") || "Withdraw"}</option>
+								<option value="recharge">{t("payment.recharge") || "Recharge"}</option>
+							</select>
 						</div>
-						<select
-							value={typeFilter}
-							onChange={(e) => setTypeFilter(e.target.value)}
-							className="w-full sm:w-48 border rounded px-3 py-2 bg-background"
-						>
-							<option value="all">{t("payment.allTypes") || "All Types"}</option>
-							<option value="deposit">{t("payment.deposit") || "Deposit"}</option>
-							<option value="withdraw">{t("payment.withdraw") || "Withdraw"}</option>
-							<option value="recharge">{t("payment.recharge") || "Recharge"}</option>
-						</select>
+						<DateFilter
+							startDate={startDate}
+							endDate={endDate}
+							onStartDateChange={(date) => {
+								setStartDate(date)
+								setCurrentPage(1)
+							}}
+							onEndDateChange={(date) => {
+								setEndDate(date)
+								setCurrentPage(1)
+							}}
+							onClearDates={handleClearDates}
+						/>
 					</div>
 
 					{/* Table */}

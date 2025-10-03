@@ -9,7 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  output: "export", // replaces old "next export"
+  // Removed output: "export" to allow dynamic routes with authentication
 }
 
 module.exports = nextConfig

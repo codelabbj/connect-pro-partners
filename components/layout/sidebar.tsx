@@ -6,7 +6,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/providers/language-provider"
-import { BarChart3, LayoutDashboard, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal, User, ChevronDownCircleIcon, BarChart3Icon } from "lucide-react"
+import { BarChart3, LayoutDashboard, CreditCard, LogOut, Menu, X, Zap, ChevronDown, ChevronUp, Globe, Share2, Phone, Monitor, MessageCircle, Bell, Settings, Terminal, User, ChevronDownCircleIcon, BarChart3Icon, Send, Gamepad2, TrendingUp, DollarSign } from "lucide-react"
 import { clearTokens } from "@/lib/api"
 
 // const navigation = [
@@ -144,6 +144,64 @@ export function Sidebar() {
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">{t("nav.topup")}</span>
             </Link>
+            <Link
+              href="/dashboard/transfer"
+              aria-label="Transferts"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                pathname === "/dashboard/transfer"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Send className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Transferts</span>
+            </Link>
+            
+            <SectionHeader>Plateformes de Paris</SectionHeader>
+            <Link
+              href="/dashboard/betting/platforms"
+              aria-label="Plateformes"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/platforms")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Plateformes</span>
+            </Link>
+            <Link
+              href="/dashboard/betting/transactions"
+              aria-label="Transactions Paris"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/transactions")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Transactions Paris</span>
+            </Link>
+            <Link
+              href="/dashboard/betting/commissions"
+              aria-label="Commissions"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/commissions")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Commissions</span>
+            </Link>
             
             
             
@@ -220,6 +278,60 @@ export function Sidebar() {
             >
               <Zap className="h-5 w-5" />
               {t("nav.topup")}
+            </Link>
+            <Link
+              href="/dashboard/transfer"
+              aria-label="Transferts"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                pathname === "/dashboard/transfer"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <Send className="h-5 w-5" />
+              Transferts
+            </Link>
+
+            <SectionHeader>Plateformes de Paris</SectionHeader>
+            <Link
+              href="/dashboard/betting/platforms"
+              aria-label="Plateformes"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/platforms")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <Gamepad2 className="h-5 w-5" />
+              Plateformes
+            </Link>
+            <Link
+              href="/dashboard/betting/transactions"
+              aria-label="Transactions Paris"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/transactions")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <CreditCard className="h-5 w-5" />
+              Transactions Paris
+            </Link>
+            <Link
+              href="/dashboard/betting/commissions"
+              aria-label="Commissions"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                pathname.startsWith("/dashboard/betting/commissions")
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <DollarSign className="h-5 w-5" />
+              Commissions
             </Link>
 
            

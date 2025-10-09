@@ -1,6 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+
+// Force dynamic rendering to prevent build-time prerendering issues
+export const dynamic = 'force-dynamic'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +23,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
-export default function BettingTransactionsPage() {
+function BettingTransactionsContent() {
   const { t } = useLanguage()
   const apiFetch = useApi()
   const { toast } = useToast()
@@ -448,5 +451,33 @@ export default function BettingTransactionsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function BettingTransactionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded w-64"></div>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-muted rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    }>
+      <BettingTransactionsContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
+
+// Force dynamic rendering to prevent build-time prerendering issues
+export const dynamic = 'force-dynamic'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +23,7 @@ import { useSearchParams } from "next/navigation"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
-export default function CreateTransactionPage() {
+function CreateTransactionContent() {
   const { t } = useLanguage()
   const apiFetch = useApi()
   const { toast } = useToast()
@@ -622,5 +625,30 @@ export default function CreateTransactionPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function CreateTransactionPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-64 mb-4"></div>
+          <div className="h-4 bg-muted rounded w-96 mb-6"></div>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-4 bg-muted rounded w-1/4"></div>
+              <div className="h-10 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded w-1/3"></div>
+              <div className="h-10 bg-muted rounded"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <CreateTransactionContent />
+    </Suspense>
   )
 }

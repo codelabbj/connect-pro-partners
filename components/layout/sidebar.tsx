@@ -144,7 +144,7 @@ export function Sidebar() {
               <Zap className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">{t("nav.topup")}</span>
             </Link>
-            <Link
+            {/* <Link
               href="/dashboard/transfer"
               aria-label="Transferts"
               className={cn(
@@ -201,7 +201,7 @@ export function Sidebar() {
             >
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">Commissions</span>
-            </Link>
+            </Link> */}
             
             
             
@@ -279,7 +279,7 @@ export function Sidebar() {
               <Zap className="h-5 w-5" />
               {t("nav.topup")}
             </Link>
-            <Link
+            {/* <Link
               href="/dashboard/transfer"
               aria-label="Transferts"
               className={cn(
@@ -332,7 +332,7 @@ export function Sidebar() {
             >
               <DollarSign className="h-5 w-5" />
               Commissions
-            </Link>
+            </Link> */}
 
            
             

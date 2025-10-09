@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { useWebSocket } from "@/components/providers/websocket-provider"
+// import { useWebSocket } from "@/components/providers/websocket-provider"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback } from "react"
@@ -325,45 +325,45 @@ export default function UserTransactionsPage() {
   }
 
   // Listen for transaction updates via WebSocket
-  const { lastMessage } = useWebSocket();
-  useEffect(() => {
-    if (!lastMessage) return;
-    try {
-      const data = typeof lastMessage.data === "string" ? JSON.parse(lastMessage.data) : lastMessage.data;
+  // const { lastMessage } = useWebSocket();
+  // useEffect(() => {
+  //   if (!lastMessage) return;
+  //   try {
+  //     const data = typeof lastMessage.data === "string" ? JSON.parse(lastMessage.data) : lastMessage.data;
 
-      // Handle new transaction creation
-      if (data.type === "new_transaction" && data.event === "transaction_created" && data.transaction_data) {
-        const newTx = data.transaction_data;
-        if (currentPage === 1) {
-          setTransactions(prev => [newTx, ...prev].slice(0, itemsPerPage));
-        }
-        setTotalCount(prev => prev + 1);
-        toast({
-          title: t("transactions.created") || "Transaction created",
-          description: data.message || `Transaction ${newTx.reference} created successfully`,
-        });
-        return;
-      }
+  //     // Handle new transaction creation
+  //     if (data.type === "new_transaction" && data.event === "transaction_created" && data.transaction_data) {
+  //       const newTx = data.transaction_data;
+  //       if (currentPage === 1) {
+  //         setTransactions(prev => [newTx, ...prev].slice(0, itemsPerPage));
+  //       }
+  //       setTotalCount(prev => prev + 1);
+  //       toast({
+  //         title: t("transactions.created") || "Transaction created",
+  //         description: data.message || `Transaction ${newTx.reference} created successfully`,
+  //       });
+  //       return;
+  //     }
 
-      // Handle live transaction updates
-      if (data.type === "transaction_update" && data.transaction_uid) {
-        setTransactions((prev) =>
-          prev.map((tx) =>
-            tx.uid === data.transaction_uid
-              ? { ...tx, status: data.status, ...data.data }
-              : tx
-          )
-        );
-        toast({
-          title: t("transactions.liveUpdate") || "Live update",
-          description: `Transaction ${data.transaction_uid} status updated: ${data.status}`,
-        });
-        return;
-      }
-    } catch (err) {
-      // Handle parse errors silently
-    }
-  }, [lastMessage, t, toast, currentPage, itemsPerPage]);
+  //     // Handle live transaction updates
+  //     if (data.type === "transaction_update" && data.transaction_uid) {
+  //       setTransactions((prev) =>
+  //         prev.map((tx) =>
+  //           tx.uid === data.transaction_uid
+  //             ? { ...tx, status: data.status, ...data.data }
+  //             : tx
+  //         )
+  //       );
+  //       toast({
+  //         title: t("transactions.liveUpdate") || "Live update",
+  //         description: `Transaction ${data.transaction_uid} status updated: ${data.status}`,
+  //       });
+  //       return;
+  //     }
+  //   } catch (err) {
+  //     // Handle parse errors silently
+  //   }
+  // }, [lastMessage, t, toast, currentPage, itemsPerPage]);
 
   return (
     <div className="ml-6 space-y-6">

@@ -17,9 +17,11 @@ import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { BettingPlatform, CreateDepositRequest, CreateWithdrawalRequest, CreateTransactionResponse, VerifyUserIdResponse } from "@/lib/types/betting"
+import { BettingPlatform, CreateDepositRequest, CreateWithdrawalRequest, CreateTransactionResponse, VerifyUserIdResponse, ExternalPlatformData } from "@/lib/types/betting"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { getExternalPlatformData, fetchExternalPlatforms, matchExternalPlatform } from "@/lib/utils/externalPlatform"
+import { MapPin } from "lucide-react"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -35,6 +37,8 @@ function CreateTransactionContent() {
   const [error, setError] = useState("")
   const [platforms, setPlatforms] = useState<BettingPlatform[]>([])
   const [selectedPlatform, setSelectedPlatform] = useState<BettingPlatform | null>(null)
+  const [externalData, setExternalData] = useState<ExternalPlatformData | null>(null)
+  const [externalPlatforms, setExternalPlatforms] = useState<ExternalPlatformData[]>([])
   const [activeTab, setActiveTab] = useState("deposit")
 
   // Form states
@@ -78,9 +82,45 @@ function CreateTransactionContent() {
     }
   }
 
+  const fetchExternalPlatformsData = async () => {
+    try {
+      const data = await fetchExternalPlatforms()
+      setExternalPlatforms(data)
+    } catch (err: any) {
+      console.error("Failed to fetch external platforms:", err)
+    }
+  }
+
   useEffect(() => {
-    fetchPlatforms()
+    const fetchAll = async () => {
+      await Promise.all([
+        fetchPlatforms(),
+        fetchExternalPlatformsData()
+      ])
+    }
+    fetchAll()
   }, [])
+
+  const getExternalData = (platform: BettingPlatform): ExternalPlatformData | null => {
+    return matchExternalPlatform(platform.external_id, externalPlatforms)
+  }
+
+  useEffect(() => {
+    const fetchExternalData = async () => {
+      if (selectedPlatform?.external_id) {
+        try {
+          const data = await getExternalPlatformData(selectedPlatform.external_id)
+          setExternalData(data)
+        } catch (err: any) {
+          console.error("Failed to fetch external platform data:", err)
+          setExternalData(null)
+        }
+      } else {
+        setExternalData(null)
+      }
+    }
+    fetchExternalData()
+  }, [selectedPlatform?.external_id])
 
   const verifyUserId = async (platformUid: string, userId: string) => {
     if (!userId || !platformUid) return
@@ -354,29 +394,65 @@ function CreateTransactionContent() {
                 <SelectValue placeholder="Sélectionner une plateforme" />
               </SelectTrigger>
               <SelectContent>
-                {platforms.map((platform) => (
-                  <SelectItem key={platform.uid} value={platform.uid}>
-                    <div className="flex items-center gap-2">
-                      {platform.logo ? (
-                        <img 
-                          src={platform.logo} 
-                          alt={platform.name}
-                          className="h-6 w-6 rounded object-cover"
-                        />
-                      ) : (
-                        <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
-                          <Gamepad2 className="h-3 w-3" />
-                        </div>
-                      )}
-                      <span>{platform.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {platforms.map((platform) => {
+                  const extData = getExternalData(platform)
+                  const displayImage = extData?.image || platform.logo
+                  const displayName = extData?.public_name || platform.name
+                  
+                  return (
+                    <SelectItem key={platform.uid} value={platform.uid}>
+                      <div className="flex items-center gap-2">
+                        {displayImage ? (
+                          <img 
+                            src={displayImage} 
+                            alt={displayName}
+                            className="h-6 w-6 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-6 w-6 rounded bg-muted flex items-center justify-center">
+                            <Gamepad2 className="h-3 w-3" />
+                          </div>
+                        )}
+                        <span>{displayName}</span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
 
             {selectedPlatform && (
               <div className="mt-4 space-y-3">
+                {/* Platform Logo */}
+                <div className="flex items-center justify-center p-4 bg-muted rounded-lg">
+                  {(externalData?.image || selectedPlatform.logo) ? (
+                    <img 
+                      src={externalData?.image || selectedPlatform.logo || ""} 
+                      alt={selectedPlatform.name}
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center">
+                      <Gamepad2 className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Platform Name */}
+                <div className="text-center">
+                  <h3 className="font-semibold text-lg">{externalData?.public_name || selectedPlatform.name}</h3>
+                </div>
+
+                {/* Location Information */}
+                {(externalData?.city || externalData?.street) && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>
+                      {externalData.city}{externalData.street ? `, ${externalData.street}` : ''}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2">
                   <Badge variant={selectedPlatform.is_active ? "default" : "destructive"}>
                     {selectedPlatform.is_active ? "Actif" : "Inactif"}

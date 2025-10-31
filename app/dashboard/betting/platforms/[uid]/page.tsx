@@ -12,10 +12,12 @@ import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { BettingPlatform, PlatformWithStats } from "@/lib/types/betting"
+import { BettingPlatform, PlatformWithStats, ExternalPlatformData } from "@/lib/types/betting"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { StatCard } from "@/components/ui/stat-card"
+import { getExternalPlatformData } from "@/lib/utils/externalPlatform"
+import { MapPin, ExternalLink, BookOpen } from "lucide-react"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -30,6 +32,7 @@ export default function PlatformDetailPage() {
   const [error, setError] = useState("")
   const [platform, setPlatform] = useState<BettingPlatform | null>(null)
   const [platformStats, setPlatformStats] = useState<PlatformWithStats | null>(null)
+  const [externalData, setExternalData] = useState<ExternalPlatformData | null>(null)
 
   const fetchPlatformDetail = async () => {
     setLoading(true)
@@ -69,6 +72,17 @@ export default function PlatformDetailPage() {
     }
   }
 
+  const fetchExternalData = async (externalId: string) => {
+    try {
+      const data = await getExternalPlatformData(externalId)
+      if (data) {
+        setExternalData(data)
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch external platform data:", err)
+    }
+  }
+
   useEffect(() => {
     const fetchAll = async () => {
       await Promise.all([
@@ -78,6 +92,12 @@ export default function PlatformDetailPage() {
     }
     fetchAll()
   }, [platformUid, apiFetch])
+
+  useEffect(() => {
+    if (platform?.external_id) {
+      fetchExternalData(platform.external_id)
+    }
+  }, [platform?.external_id])
 
   const refreshData = async () => {
     await Promise.all([
@@ -181,9 +201,9 @@ export default function PlatformDetailPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-3">
-            {platform.logo ? (
+            {(externalData?.image || platform.logo) ? (
               <img 
-                src={platform.logo} 
+                src={externalData?.image || platform.logo || ""} 
                 alt={platform.name}
                 className="h-12 w-12 rounded-lg object-cover"
               />
@@ -193,7 +213,7 @@ export default function PlatformDetailPage() {
               </div>
             )}
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{platform.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{externalData?.public_name || platform.name}</h1>
               <p className="text-muted-foreground">Détails de la plateforme</p>
             </div>
           </div>
@@ -288,6 +308,19 @@ export default function PlatformDetailPage() {
                 <p className="font-semibold">{formatDate(platform.permission_granted_at)}</p>
               </div>
             )}
+
+            {/* External Platform Location Data */}
+            {(externalData?.city || externalData?.street) && (
+              <div>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Localisation
+                </p>
+                <p className="font-semibold">
+                  {externalData.city}{externalData.street ? `, ${externalData.street}` : ''}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -342,6 +375,97 @@ export default function PlatformDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* External Platform Information */}
+      {externalData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Informations Externes
+            </CardTitle>
+            <CardDescription>Données complémentaires de la plateforme</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {externalData.city && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Ville</p>
+                  <p className="font-semibold">{externalData.city}</p>
+                </div>
+              )}
+              {externalData.street && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Rue</p>
+                  <p className="font-semibold">{externalData.street}</p>
+                </div>
+              )}
+              {externalData.minimun_deposit && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Dépôt minimum (externe)</p>
+                  <p className="font-semibold">{externalData.minimun_deposit.toLocaleString()} FCFA</p>
+                </div>
+              )}
+              {externalData.max_deposit && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Dépôt maximum (externe)</p>
+                  <p className="font-semibold">{externalData.max_deposit.toLocaleString()} FCFA</p>
+                </div>
+              )}
+            </div>
+
+            {/* Tutorial Content */}
+            {externalData.deposit_tuto_content && (
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Guide de Dépôt
+                </h4>
+                <div 
+                  className="text-sm text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: externalData.deposit_tuto_content }}
+                />
+                {externalData.deposit_link && (
+                  <Button asChild variant="outline" size="sm" className="mt-2">
+                    <a href={externalData.deposit_link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Lien de dépôt
+                    </a>
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {externalData.withdrawal_tuto_content && (
+              <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Guide de Retrait
+                </h4>
+                <div 
+                  className="text-sm text-muted-foreground"
+                  dangerouslySetInnerHTML={{ __html: externalData.withdrawal_tuto_content }}
+                />
+                {externalData.withdrawal_link && (
+                  <Button asChild variant="outline" size="sm" className="mt-2">
+                    <a href={externalData.withdrawal_link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Lien de retrait
+                    </a>
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {externalData.why_withdrawal_fail && (
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <h4 className="font-semibold mb-2">Pourquoi les retraits échouent</h4>
+                <p className="text-sm text-muted-foreground">{externalData.why_withdrawal_fail}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Actions */}
       <Card>

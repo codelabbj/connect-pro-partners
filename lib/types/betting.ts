@@ -64,7 +64,7 @@ export interface BettingTransaction {
   platform_name: string;
   transaction_type: 'deposit' | 'withdrawal';
   amount: string;
-  status: 'success' | 'failed' | 'pending' | 'cancelled';
+  status: 'success' | 'pending' | 'failed' | 'cancelled' | 'processing';
   betting_user_id: string;
   withdrawal_code: string | null;
   external_transaction_id: string | null;
@@ -73,35 +73,15 @@ export interface BettingTransaction {
   commission_amount: string;
   commission_paid: boolean;
   created_at: string;
-  external_response: {
-    data?: {
-      id: number;
-      amount: string;
-      betapp: string;
-      status: string;
-      partner: string;
-      user_id: string;
-      reference: string | null;
-      created_at: string;
-      type_trans: string;
-      bet_response: string | null;
-      last_xbet_trans: string;
-      withdriwal_code: string | null;
-    };
-    amount?: string;
-    success?: boolean;
-    reference?: string | null;
-    transaction_id?: number;
-    error?: string;
-    status?: string;
-    error_type?: string;
-    bet_response?: string;
-  };
+  external_response: any;
   cancellation_requested_at: string | null;
   cancelled_at: string | null;
   partner_refunded: boolean;
   partner_balance_before: string;
   partner_balance_after: string;
+  notes?: string;
+  is_cancellable?: boolean;
+  can_request_cancellation?: boolean;
   cancelled_by_uid?: string;
 }
 
@@ -156,6 +136,10 @@ export interface CommissionStats {
   total_commission: string;
   paid_commission: string;
   unpaid_commission: string;
+  payable_commission: string;
+  payable_transaction_count: number;
+  current_month_commission: string;
+  current_month_transaction_count: number;
   by_platform: {
     platform__name: string;
     count: number;
@@ -228,4 +212,158 @@ export interface CommissionFilters {
 
 export interface PaymentHistoryFilters {
   limit?: number;
+}
+
+// Transfer UV Types
+
+export interface Transfer {
+  uid: string;
+  reference: string;
+  sender: number;
+  sender_name: string;
+  sender_email: string;
+  receiver: number;
+  receiver_name: string;
+  receiver_email: string;
+  amount: string;
+  fees: string;
+  status: string; // pending, processing, completed, success, failed, cancelled
+  description: string;
+  sender_balance_before: string;
+  sender_balance_after: string;
+  receiver_balance_before: string;
+  receiver_balance_after: string;
+  completed_at: string | null;
+  failed_reason: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransferRequest {
+  receiver_uid: string;
+  amount: string;
+  description?: string;
+}
+
+export interface TransferResponse {
+  success: boolean;
+  message: string;
+  transfer: Transfer;
+}
+
+export interface TransferHistoryResponse {
+  summary: {
+    total_sent: number;
+    total_received: number;
+    amount_sent: number;
+    amount_received: number;
+  };
+  sent_transfers: Transfer[];
+  received_transfers: Transfer[];
+}
+
+// User Search Types
+
+export interface User {
+  uid: string;
+  display_name: string;
+}
+
+export interface UserSearchResponse {
+  results: User[];
+}
+
+// External Platform Types
+
+export interface ExternalPlatformData {
+  id: string;
+  name: string;
+  image: string;
+  is_active: boolean;
+  order: number | null;
+  city: string;
+  street: string;
+  deposit_tuto_content: string;
+  deposit_link: string | null;
+  withdrawal_tuto_content: string;
+  withdrawal_link: string;
+  public_name: string;
+  minimun_deposit: number;
+  max_deposit: number;
+  minimun_with: number;
+  max_win: number;
+  active_for_deposit: boolean;
+  active_for_with: boolean;
+  why_withdrawal_fail?: string | null;
+  enable?: boolean;
+}
+
+// Transaction Cancellation Types
+
+export interface RequestCancellationRequest {
+  reason: string;
+}
+
+export interface RequestCancellationResponse {
+  success: boolean;
+  message: string;
+  transaction: BettingTransaction;
+}
+
+// USSD Transaction Types
+
+export interface Network {
+  uid: string;
+  nom: string;
+  country_name: string;
+  is_active: boolean;
+}
+
+export interface NetworksResponse {
+  results: Network[];
+}
+
+export interface USSDTransaction {
+  uid: string;
+  reference: string;
+  type: 'deposit' | 'withdrawal';
+  amount: string;
+  recipient_phone: string;
+  network: string;
+  network_name?: string;
+  objet?: string;
+  status: 'pending' | 'sent_to_user' | 'processing' | 'completed' | 'success' | 'failed' | 'cancelled' | 'timeout';
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+  failed_reason?: string | null;
+}
+
+export interface CreateUSSDTransactionRequest {
+  type: 'deposit' | 'withdrawal';
+  amount: number;
+  recipient_phone: string;
+  network: string;
+  objet?: string;
+}
+
+export interface CreateUSSDTransactionResponse {
+  success: boolean;
+  message: string;
+  transaction: USSDTransaction;
+}
+
+export interface USSDTransactionsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: USSDTransaction[];
+}
+
+export interface UserAccount {
+  balance: string;
+  is_active: boolean;
+  is_frozen: boolean;
+  created_at: string;
+  updated_at: string;
 }

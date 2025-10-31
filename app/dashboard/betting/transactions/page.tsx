@@ -105,6 +105,8 @@ function BettingTransactionsContent() {
         return <Badge variant="destructive">Échec</Badge>
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">En attente</Badge>
+      case 'processing':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">En traitement</Badge>
       case 'cancelled':
         return <Badge variant="outline" className="bg-gray-100 text-gray-800">Annulé</Badge>
       default:
@@ -268,6 +270,7 @@ function BettingTransactionsContent() {
                   <SelectItem value="success">Succès</SelectItem>
                   <SelectItem value="failed">Échec</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="processing">En traitement</SelectItem>
                   <SelectItem value="cancelled">Annulé</SelectItem>
                 </SelectContent>
               </Select>

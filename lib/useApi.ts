@@ -39,6 +39,11 @@ export function useApi() {
       return data.access;
     } catch (error) {
       console.log('Refresh token error:', error);
+      // Clear auth and redirect on any refresh error
+      clearAllAuth();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
       throw error;
     }
   }, [baseUrl]);
@@ -48,6 +53,8 @@ export function useApi() {
     // Remove accessToken cookie
     if (typeof document !== 'undefined') {
       document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+      // Clear localStorage authentication flag
+      localStorage.removeItem("isAuthenticated");
     }
   }, []);
 
@@ -87,13 +94,23 @@ export function useApi() {
         if (data?.code === 'token_not_valid' || res.status === 401) {
           console.log('Token refresh failed, logging out...');
           clearAllAuth();
-          router.push('/');
+          // Force redirect to root page on authentication failure
+          if (typeof window !== 'undefined') {
+            window.location.href = '/';
+          } else {
+            router.push('/');
+          }
           throw new Error('Authentication failed after token refresh');
         }
       } catch (refreshErr) {
         console.log('Token refresh error:', refreshErr);
         clearAllAuth();
-        router.push('/');
+        // Force redirect to root page on token refresh failure
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        } else {
+          router.push('/');
+        }
         throw new Error('Token refresh failed');
       }
     }

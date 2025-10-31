@@ -101,19 +101,47 @@ export default function TransferPage() {
 
     setSearchLoading(true)
     try {
-      const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auth/admin/users/partners/`
+      const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auth/users/search/`
       const params = new URLSearchParams({
-        page: "1",
-        page_size: "20",
         search: query.trim()
       })
       
       const data = await apiFetch(`${endpoint}?${params}`)
-      setPartners(data.partners || [])
+      // Convert user search results to partner format for compatibility
+      const userResults = data.results || []
+      const partnerResults = userResults.map((user: any) => ({
+        uid: user.uid,
+        display_name: user.display_name,
+        email: null,
+        phone: null,
+        first_name: user.display_name.split(' ')[0] || '',
+        last_name: user.display_name.split(' ').slice(1).join(' ') || '',
+        is_active: true,
+        is_staff: false,
+        email_verified: false,
+        phone_verified: false,
+        contact_method: '',
+        created_at: '',
+        last_login_at: null,
+        is_partner: true,
+        pending_codes_count: 0,
+        total_reset_attempts: 0,
+        total_transactions: 0,
+        completed_transactions: 0,
+        total_transaction_amount: null,
+        total_commissions_received: null,
+        pending_recharges: 0,
+        account_balance: 0,
+        account_is_active: true,
+        account_is_frozen: false,
+        last_commission_date: null,
+        last_transaction_date: null
+      }))
+      setPartners(partnerResults)
     } catch (err: any) {
       toast({
         title: "Erreur de recherche",
-        description: "Impossible de rechercher les partenaires. Veuillez saisir un nom existant.",
+        description: "Impossible de rechercher les utilisateurs. Veuillez saisir un nom existant.",
         variant: "destructive"
       })
     } finally {

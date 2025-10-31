@@ -68,9 +68,19 @@ export default function CommissionsPage() {
     try {
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/commissions/unpaid_commissions/`
       const data: UnpaidCommissionsResponse = await apiFetch(endpoint)
-      setUnpaidCommissions(data)
+      // Ensure transactions array exists
+      setUnpaidCommissions({
+        ...data,
+        transactions: data.transactions || []
+      })
     } catch (err: any) {
       console.error("Failed to fetch unpaid commissions:", err)
+      // Set empty state on error
+      setUnpaidCommissions({
+        total_unpaid_amount: 0,
+        transaction_count: 0,
+        transactions: []
+      })
     }
   }
 
@@ -342,11 +352,11 @@ export default function CommissionsPage() {
                   Commissions Non Payées
                 </CardTitle>
                 <CardDescription>
-                  Total: {formatAmount(unpaidCommissions.total_unpaid_amount)} ({unpaidCommissions.transaction_count} transactions)
+                  Total: {formatAmount(unpaidCommissions.total_unpaid_amount || 0)} ({unpaidCommissions.transaction_count || 0} transactions)
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {unpaidCommissions.transactions.length === 0 ? (
+                {!unpaidCommissions.transactions || unpaidCommissions.transactions.length === 0 ? (
                   <div className="text-center py-8">
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Aucune commission en attente</h3>
@@ -367,7 +377,7 @@ export default function CommissionsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {unpaidCommissions.transactions.map((transaction) => (
+                        {unpaidCommissions.transactions?.map((transaction) => (
                           <TableRow key={transaction.uid}>
                             <TableCell className="font-mono text-sm">{transaction.reference}</TableCell>
                             <TableCell>{transaction.platform_name}</TableCell>

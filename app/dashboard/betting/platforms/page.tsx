@@ -15,9 +15,10 @@ import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { BettingPlatform, PlatformWithStats, PlatformPermissionsResponse, PlatformStatsResponse } from "@/lib/types/betting"
+import { BettingPlatform, PlatformWithStats, PlatformPermissionsResponse, PlatformStatsResponse, ExternalPlatformData } from "@/lib/types/betting"
 import Link from "next/link"
 import { StatCard } from "@/components/ui/stat-card"
+import { fetchExternalPlatforms, matchExternalPlatform } from "@/lib/utils/externalPlatform"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -31,6 +32,7 @@ export default function BettingPlatformsPage() {
   const [platforms, setPlatforms] = useState<BettingPlatform[]>([])
   const [platformStats, setPlatformStats] = useState<PlatformStatsResponse | null>(null)
   const [permissions, setPermissions] = useState<PlatformPermissionsResponse | null>(null)
+  const [externalPlatforms, setExternalPlatforms] = useState<ExternalPlatformData[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("all")
 
@@ -58,6 +60,15 @@ export default function BettingPlatformsPage() {
     }
   }
 
+  const fetchExternalPlatformsData = async () => {
+    try {
+      const data = await fetchExternalPlatforms()
+      setExternalPlatforms(data)
+    } catch (err: any) {
+      console.error("Failed to fetch external platforms:", err)
+    }
+  }
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true)
@@ -65,7 +76,8 @@ export default function BettingPlatformsPage() {
       try {
         await Promise.all([
           fetchPlatformStats(),
-          fetchPermissions()
+          fetchPermissions(),
+          fetchExternalPlatformsData()
         ])
       } catch (err) {
         // Error handling is done in individual functions
@@ -79,9 +91,14 @@ export default function BettingPlatformsPage() {
   const refreshData = async () => {
     await Promise.all([
       fetchPlatformStats(),
-      fetchPermissions()
+      fetchPermissions(),
+      fetchExternalPlatformsData()
     ])
     toast({ title: "Données actualisées", description: "Les informations des plateformes ont été mises à jour" })
+  }
+
+  const getExternalData = (platform: BettingPlatform): ExternalPlatformData | null => {
+    return matchExternalPlatform(platform.external_id, externalPlatforms)
   }
 
   const filteredPlatforms = platforms.filter(platform =>
@@ -210,9 +227,9 @@ export default function BettingPlatformsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {platform.logo ? (
+                      {(getExternalData(platform)?.image || platform.logo) ? (
                         <img 
-                          src={platform.logo} 
+                          src={getExternalData(platform)?.image || platform.logo || ""} 
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -222,9 +239,9 @@ export default function BettingPlatformsPage() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-lg">{platform.name}</CardTitle>
+                        <CardTitle className="text-lg">{getExternalData(platform)?.public_name || platform.name}</CardTitle>
                         <CardDescription className="text-sm">
-                          ID: {platform.external_id.slice(0, 8)}...
+                          {getExternalData(platform)?.city ? `${getExternalData(platform)?.city}` : `ID: ${platform.external_id.slice(0, 8)}...`}
                         </CardDescription>
                       </div>
                     </div>
@@ -284,9 +301,9 @@ export default function BettingPlatformsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {platform.logo ? (
+                      {(getExternalData(platform)?.image || platform.logo) ? (
                         <img 
-                          src={platform.logo} 
+                          src={getExternalData(platform)?.image || platform.logo || ""} 
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -296,9 +313,9 @@ export default function BettingPlatformsPage() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-lg">{platform.name}</CardTitle>
+                        <CardTitle className="text-lg">{getExternalData(platform)?.public_name || platform.name}</CardTitle>
                         <CardDescription className="text-sm">
-                          Autorisé par {platform.granted_by_name}
+                          {getExternalData(platform)?.city ? `${getExternalData(platform)?.city}` : `Autorisé par ${platform.granted_by_name}`}
                         </CardDescription>
                       </div>
                     </div>
@@ -361,9 +378,9 @@ export default function BettingPlatformsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {platform.logo ? (
+                      {(getExternalData(platform)?.image || platform.logo) ? (
                         <img 
-                          src={platform.logo} 
+                          src={getExternalData(platform)?.image || platform.logo || ""} 
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -373,9 +390,9 @@ export default function BettingPlatformsPage() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-lg">{platform.name}</CardTitle>
+                        <CardTitle className="text-lg">{getExternalData(platform)?.public_name || platform.name}</CardTitle>
                         <CardDescription className="text-sm">
-                          Non autorisé
+                          {getExternalData(platform)?.city ? `${getExternalData(platform)?.city}` : "Non autorisé"}
                         </CardDescription>
                       </div>
                     </div>

@@ -7,14 +7,17 @@ export const dynamic = 'force-dynamic'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, RefreshCw, Calendar, DollarSign, CreditCard, User, ExternalLink, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, RefreshCw, Calendar, DollarSign, CreditCard, User, ExternalLink, AlertCircle, CheckCircle, XCircle, Clock, X } from "lucide-react"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
-import { BettingTransaction } from "@/lib/types/betting"
+import { BettingTransaction, RequestCancellationRequest, RequestCancellationResponse } from "@/lib/types/betting"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -28,6 +31,9 @@ export default function TransactionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [transaction, setTransaction] = useState<BettingTransaction | null>(null)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
+  const [cancelling, setCancelling] = useState(false)
 
   const fetchTransactionDetail = async () => {
     setLoading(true)
@@ -62,6 +68,69 @@ export default function TransactionDetailPage() {
     toast({ title: "Données actualisées", description: "Les informations de la transaction ont été mises à jour" })
   }
 
+  const handleRequestCancellation = async () => {
+    if (!cancelReason.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez fournir une raison pour l'annulation",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (!transaction) return
+
+    setCancelling(true)
+    try {
+      const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/transactions/${transaction.uid}/request_cancellation/`
+      const payload: RequestCancellationRequest = {
+        reason: cancelReason.trim()
+      }
+
+      const data: RequestCancellationResponse = await apiFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      toast({
+        title: "Succès",
+        description: data.message || "Demande d'annulation envoyée avec succès",
+        variant: "default"
+      })
+
+      setShowCancelDialog(false)
+      setCancelReason("")
+      await fetchTransactionDetail()
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err)
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive"
+      })
+    } finally {
+      setCancelling(false)
+    }
+  }
+
+  const isTransactionCancellable = () => {
+    if (!transaction) return false
+    // Transaction must not be already cancelled or failed
+    if (transaction.status === 'cancelled' || transaction.status === 'failed') return false
+    // Cancellation must not have been requested before
+    if (transaction.cancellation_requested_at) return false
+    // Check if transaction is within 25 minutes of creation
+    const createdTime = new Date(transaction.created_at).getTime()
+    const now = Date.now()
+    const twentyFiveMinutes = 25 * 60 * 1000
+    const isWithinTimeWindow = (now - createdTime) < twentyFiveMinutes
+    // Check flags if available
+    const isCancellable = transaction.is_cancellable !== false && transaction.can_request_cancellation !== false
+    
+    return isWithinTimeWindow && isCancellable
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -70,6 +139,8 @@ export default function TransactionDetailPage() {
         return <XCircle className="h-5 w-5 text-red-600" />
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-600" />
+      case 'processing':
+        return <Clock className="h-5 w-5 text-blue-600" />
       case 'cancelled':
         return <XCircle className="h-5 w-5 text-gray-600" />
       default:
@@ -85,6 +156,8 @@ export default function TransactionDetailPage() {
         return <Badge variant="destructive">Échec</Badge>
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">En attente</Badge>
+      case 'processing':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">En traitement</Badge>
       case 'cancelled':
         return <Badge variant="outline" className="bg-gray-100 text-gray-800">Annulé</Badge>
       default:
@@ -202,10 +275,22 @@ export default function TransactionDetailPage() {
             <p className="text-muted-foreground">Référence: {transaction.reference}</p>
           </div>
         </div>
-        <Button onClick={refreshData} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Actualiser
-        </Button>
+        <div className="flex gap-2">
+          {isTransactionCancellable() && (
+            <Button 
+              variant="destructive" 
+              onClick={() => setShowCancelDialog(true)}
+              disabled={loading}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Demander l'annulation
+            </Button>
+          )}
+          <Button onClick={refreshData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       {/* Transaction Overview */}
@@ -335,6 +420,18 @@ export default function TransactionDetailPage() {
         </Card>
       </div>
 
+      {/* Notes */}
+      {transaction.notes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">{transaction.notes}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Timeline */}
       <Card>
         <CardHeader>
@@ -426,6 +523,56 @@ export default function TransactionDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Cancellation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Demander l'annulation</DialogTitle>
+            <DialogDescription>
+              Veuillez fournir une raison pour l'annulation de cette transaction. 
+              La demande d'annulation doit être effectuée dans les 25 minutes suivant la création de la transaction.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancelReason">Raison de l'annulation *</Label>
+              <Textarea
+                id="cancelReason"
+                placeholder="Décrivez la raison de l'annulation..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowCancelDialog(false)
+              setCancelReason("")
+            }}>
+              Annuler
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleRequestCancellation}
+              disabled={cancelling || !cancelReason.trim()}
+            >
+              {cancelling ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Envoi en cours...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Demander l'annulation
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

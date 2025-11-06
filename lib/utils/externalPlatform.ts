@@ -1,6 +1,6 @@
 import { ExternalPlatformData } from "@/lib/types/betting"
 
-const EXTERNAL_API_URL = "https://api.blaffa.net/blaffa/app_name"
+const EXTERNAL_API_URL = "https://api.yapson.net/yapson/app_name?type=yapson"
 
 /**
  * Fetches external platform data from Blaffa API

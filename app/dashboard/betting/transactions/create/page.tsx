@@ -140,7 +140,7 @@ function CreateTransactionContent() {
         body: JSON.stringify(payload)
       })
 
-      if (data.UserId === 0) {
+      if (data.UserId === 0 || data.CurrencyId !== 27) {
         setUserIdValidation({
           loading: false,
           valid: false,
@@ -195,17 +195,55 @@ function CreateTransactionContent() {
         body: JSON.stringify(payload)
       })
 
-      toast({ 
-        title: "Succès", 
-        description: data.message || "Dépôt créé avec succès",
-        variant: "default"
-      })
+      console.log("Deposit response:", data)
 
-      // Reset form
-      setAmount("")
-      setBettingUserId("")
-      setUserIdValidation({ loading: false, valid: null, userInfo: null, error: "" })
-      setFormErrors({})
+      // Check if transaction actually failed despite API success
+      const externalResponse = data.transaction?.external_response
+      const transactionStatus = data.transaction?.status
+      
+      console.log("External response:", externalResponse)
+      console.log("Transaction status:", transactionStatus)
+      
+      const hasExternalError = externalResponse && (
+        externalResponse.success === false || 
+        transactionStatus === 'failed'
+      )
+
+      console.log("Has external error:", hasExternalError)
+
+      if (hasExternalError && externalResponse?.error) {
+        // Transaction failed - show error from external_response
+        console.log("Showing external error:", externalResponse.error)
+        toast({ 
+          title: "Échec", 
+          description: externalResponse.error,
+          variant: "destructive"
+        })
+      } else if (data.success) {
+        // Transaction succeeded
+        console.log("Showing success message")
+        toast({ 
+          title: "Succès", 
+          description: data.message || "Dépôt créé avec succès",
+          variant: "default"
+        })
+      } else {
+        // API returned failure
+        console.log("Showing API error")
+        toast({ 
+          title: "Erreur", 
+          description: data.message || "Échec de la création du dépôt",
+          variant: "destructive"
+        })
+      }
+
+      // Reset form only on success
+      if (data.success && !hasExternalError) {
+        setAmount("")
+        setBettingUserId("")
+        setUserIdValidation({ loading: false, valid: null, userInfo: null, error: "" })
+        setFormErrors({})
+      }
 
     } catch (err: any) {
       setFormErrors({})
@@ -254,17 +292,55 @@ function CreateTransactionContent() {
         body: JSON.stringify(payload)
       })
 
-      toast({ 
-        title: "Succès", 
-        description: data.message || "Retrait créé avec succès",
-        variant: "default"
-      })
+      console.log("Withdrawal response:", data)
 
-      // Reset form
-      setWithdrawalCode("")
-      setBettingUserId("")
-      setUserIdValidation({ loading: false, valid: null, userInfo: null, error: "" })
-      setFormErrors({})
+      // Check if transaction actually failed despite API success
+      const externalResponse = data.transaction?.external_response
+      const transactionStatus = data.transaction?.status
+      
+      console.log("External response:", externalResponse)
+      console.log("Transaction status:", transactionStatus)
+      
+      const hasExternalError = externalResponse && (
+        externalResponse.success === false || 
+        transactionStatus === 'failed'
+      )
+
+      console.log("Has external error:", hasExternalError)
+
+      if (hasExternalError && externalResponse?.error) {
+        // Transaction failed - show error from external_response
+        console.log("Showing external error:", externalResponse.error)
+        toast({ 
+          title: "Échec", 
+          description: externalResponse.error,
+          variant: "destructive"
+        })
+      } else if (data.success) {
+        // Transaction succeeded
+        console.log("Showing success message")
+        toast({ 
+          title: "Succès", 
+          description: data.message || "Retrait créé avec succès",
+          variant: "default"
+        })
+      } else {
+        // API returned failure
+        console.log("Showing API error")
+        toast({ 
+          title: "Erreur", 
+          description: data.message || "Échec de la création du retrait",
+          variant: "destructive"
+        })
+      }
+
+      // Reset form only on success
+      if (data.success && !hasExternalError) {
+        setWithdrawalCode("")
+        setBettingUserId("")
+        setUserIdValidation({ loading: false, valid: null, userInfo: null, error: "" })
+        setFormErrors({})
+      }
 
     } catch (err: any) {
       setFormErrors({})

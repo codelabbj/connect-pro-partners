@@ -347,7 +347,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Copy, Plus, Upload } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Copy, Plus, Upload, Zap, CreditCard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
@@ -379,6 +379,9 @@ export default function UserTopupPage() {
 	const [detailLoading, setDetailLoading] = useState(false)
 	const [detailError, setDetailError] = useState("")
 	
+	// Recharge type toggle (normal vs auto-recharge)
+	const [rechargeType, setRechargeType] = useState<"normal" | "auto">("normal")
+	
 	// Create topup modal state
 	const [createModalOpen, setCreateModalOpen] = useState(false)
 	const [createLoading, setCreateLoading] = useState(false)
@@ -389,6 +392,16 @@ export default function UserTopupPage() {
 		proof_description: "",
 		transaction_date: ""
 	})
+	
+	// Auto-recharge form state
+	const [autoRechargeForm, setAutoRechargeForm] = useState({
+		network: "",
+		phone_number: "",
+		amount: ""
+	})
+	const [autoRechargeNetworks, setAutoRechargeNetworks] = useState<any[]>([])
+	const [autoRechargeLoading, setAutoRechargeLoading] = useState(false)
+	const [autoRechargeSubmitting, setAutoRechargeSubmitting] = useState(false)
 
 	// Fetch topups from API
 	useEffect(() => {
@@ -398,7 +411,6 @@ export default function UserTopupPage() {
 			try {
 				const params = new URLSearchParams({
 					page: currentPage.toString(),
-					page_size: itemsPerPage.toString(),
 				})
 				if (searchTerm.trim() !== "") {
 					params.append("search", searchTerm)
@@ -413,10 +425,24 @@ export default function UserTopupPage() {
 				if (endDate) {
 					params.append("created_at__lte", endDate)
 				}
-				const orderingParam = sortField
-					? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
-					: ""
-				const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/recharges/?${params.toString()}${orderingParam}`
+				
+				// Use different API endpoints based on recharge type
+				let endpoint = ""
+				if (rechargeType === "auto") {
+					// Auto-recharge transactions API
+					const orderingParam = sortField
+						? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField === "amount" ? "amount" : "created_at"}`
+						: ""
+					endpoint = `${baseUrl.replace(/\/$/, "")}/api/auto-recharge/transactions/?${params.toString()}${orderingParam}`
+				} else {
+					// Normal recharge API
+					params.append("page_size", itemsPerPage.toString())
+					const orderingParam = sortField
+						? `&ordering=${(sortDirection === "asc" ? "+" : "-")}${sortField}`
+						: ""
+					endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/recharges/?${params.toString()}${orderingParam}`
+				}
+				
 				const data = await apiFetch(endpoint)
 				setTopups(data.results || [])
 				setTotalCount(data.count || 0)
@@ -433,7 +459,7 @@ export default function UserTopupPage() {
 			}
 		}
 		fetchTopups()
-	}, [searchTerm, currentPage, itemsPerPage, baseUrl, statusFilter, startDate, endDate, sortField, sortDirection, t, toast, apiFetch])
+	}, [searchTerm, currentPage, itemsPerPage, baseUrl, statusFilter, startDate, endDate, sortField, sortDirection, rechargeType, t, toast, apiFetch])
 
 	const startIndex = (currentPage - 1) * itemsPerPage
 
@@ -529,11 +555,16 @@ export default function UserTopupPage() {
 			case "pending":
 				return "outline"
 			case "approved":
+			case "success":
 				return "default"
 			case "rejected":
+			case "failed":
 				return "destructive"
 			case "expired":
+			case "cancelled":
 				return "secondary"
+			case "processing":
+				return "outline"
 			default:
 				return "secondary"
 		}
@@ -547,20 +578,134 @@ export default function UserTopupPage() {
 		return `${hours}h ${minutes}m`
 	}
 
+	// Fetch auto-recharge networks
+	useEffect(() => {
+		if (rechargeType === "auto" && autoRechargeNetworks.length === 0) {
+			const fetchAutoRechargeNetworks = async () => {
+				setAutoRechargeLoading(true)
+				try {
+					const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auto-recharge/available-networks/`
+					const data = await apiFetch(endpoint)
+					setAutoRechargeNetworks(data.networks || [])
+				} catch (err: any) {
+					const errorMessage = extractErrorMessages(err)
+					toast({ title: "Erreur", description: errorMessage, variant: "destructive" })
+				} finally {
+					setAutoRechargeLoading(false)
+				}
+			}
+			fetchAutoRechargeNetworks()
+		}
+	}, [rechargeType, baseUrl, apiFetch, toast])
+
+	// Handle auto-recharge submission
+	const handleAutoRechargeSubmit = async () => {
+		if (!autoRechargeForm.network || !autoRechargeForm.phone_number || !autoRechargeForm.amount) {
+			toast({ 
+				title: t("common.error") || "Error", 
+				description: t("topup.fillAllFields") || "Please fill all fields", 
+				variant: "destructive" 
+			})
+			return
+		}
+
+		setAutoRechargeSubmitting(true)
+		try {
+			const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auto-recharge/initiate/`
+			const payload = {
+				network: autoRechargeForm.network,
+				amount: parseFloat(autoRechargeForm.amount),
+				phone_number: autoRechargeForm.phone_number
+			}
+
+			const data = await apiFetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			})
+
+			// Check if transaction actually failed despite API success
+			const transactionStatus = data.transaction?.status
+			const hasError = transactionStatus === 'failed'
+
+			if (hasError && data.transaction?.failed_reason) {
+				toast({ 
+					title: t("topup.failed") || "Failed", 
+					description: data.transaction.failed_reason,
+					variant: "destructive"
+				})
+			} else if (data.success) {
+				toast({ 
+					title: t("topup.success") || "Success", 
+					description: data.message || (t("topup.createdSuccessfully") || "Recharge initiated successfully"),
+					variant: "default"
+				})
+				
+				// Reset form
+				setAutoRechargeForm({
+					network: "",
+					phone_number: "",
+					amount: ""
+				})
+				
+				// Refresh the list
+				setCurrentPage(1)
+			} else {
+				toast({ 
+					title: t("common.error") || "Error", 
+					description: data.message || (t("topup.createFailed") || "Failed to initiate recharge"),
+					variant: "destructive"
+				})
+			}
+		} catch (err: any) {
+			const errorMessage = extractErrorMessages(err)
+			toast({ title: t("common.error") || "Error", description: errorMessage, variant: "destructive" })
+		} finally {
+			setAutoRechargeSubmitting(false)
+		}
+	}
+
 	return (
 		<div className="container mx-auto p-6">
 			<Card>
 				<CardHeader>
-					<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-						<CardTitle className="text-lg sm:text-xl">{t("topup.title") || "My Top Up Requests"}</CardTitle>
-						<Button 
-							onClick={() => setCreateModalOpen(true)}
-							size="sm"
-							className="w-full sm:w-auto"
-						>
-							<Plus className="h-4 w-4 mr-2" />
-							{t("topup.createNew") || "Create New Request"}
-						</Button>
+					<div className="flex flex-col gap-4">
+						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+							<CardTitle className="text-lg sm:text-xl">{t("topup.title") || "My Top Up Requests"}</CardTitle>
+							<Button 
+								onClick={() => setCreateModalOpen(true)}
+								size="sm"
+								className="w-full sm:w-auto"
+							>
+								<Plus className="h-4 w-4 mr-2" />
+								{rechargeType === "normal" 
+									? (t("topup.createNew") || "Create New Request")
+									: (t("topup.createAutoRecharge") || "Create Auto-Recharge")
+								}
+							</Button>
+						</div>
+						
+						{/* Recharge Type Toggle */}
+						<div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+							<Button
+								variant={rechargeType === "normal" ? "default" : "ghost"}
+								size="sm"
+								onClick={() => setRechargeType("normal")}
+								className="flex items-center gap-2"
+							>
+								<CreditCard className="h-4 w-4" />
+								{t("topup.normalRecharge") || "Normal Recharge"}
+							</Button>
+							<Button
+								variant={rechargeType === "auto" ? "default" : "ghost"}
+								size="sm"
+								onClick={() => setRechargeType("auto")}
+								className="flex items-center gap-2"
+							>
+								<Zap className="h-4 w-4" />
+								{t("topup.autoRecharge") || "Auto-Recharge"}
+							</Button>
+						</div>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -583,9 +728,20 @@ export default function UserTopupPage() {
 							>
 								<option value="all">{t("topup.allStatuses") || "All Statuses"}</option>
 								<option value="pending">{t("topup.pending") || "Pending"}</option>
-								<option value="approved">{t("topup.approved") || "Approved"}</option>
-								<option value="rejected">{t("topup.rejected") || "Rejected"}</option>
-								<option value="expired">{t("topup.expired") || "Expired"}</option>
+								{rechargeType === "normal" ? (
+									<>
+										<option value="approved">{t("topup.approved") || "Approved"}</option>
+										<option value="rejected">{t("topup.rejected") || "Rejected"}</option>
+										<option value="expired">{t("topup.expired") || "Expired"}</option>
+									</>
+								) : (
+									<>
+										<option value="processing">{t("topup.processing") || "Processing"}</option>
+										<option value="success">{t("topup.success") || "Success"}</option>
+										<option value="failed">{t("topup.failed") || "Failed"}</option>
+										<option value="cancelled">{t("topup.cancelled") || "Cancelled"}</option>
+									</>
+								)}
 							</select>
 						</div>
 						<DateFilter
@@ -622,6 +778,12 @@ export default function UserTopupPage() {
 								<TableHeader>
 									<TableRow>
 										<TableHead>{t("topup.reference") || "Reference"}</TableHead>
+									{rechargeType === "auto" && (
+										<>
+											<TableHead>{t("topup.network") || "Network"}</TableHead>
+											<TableHead>{t("topup.phoneNumber") || "Phone Number"}</TableHead>
+										</>
+									)}
 										<TableHead>
 											<Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
 												{t("topup.amount") || "Amount"}
@@ -640,15 +802,19 @@ export default function UserTopupPage() {
 												<ArrowUpDown className="ml-2 h-4 w-4" />
 											</Button>
 										</TableHead>
-										<TableHead>{t("topup.expiresAt") || "Expires At"}</TableHead>
-										<TableHead>{t("topup.timeRemaining") || "Time Remaining"}</TableHead>
+										{rechargeType === "normal" && (
+											<>
+												<TableHead>{t("topup.expiresAt") || "Expires At"}</TableHead>
+												<TableHead>{t("topup.timeRemaining") || "Time Remaining"}</TableHead>
+											</>
+										)}
 										<TableHead>{t("common.actions") || "Actions"}</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{topups.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+											<TableCell colSpan={rechargeType === "auto" ? 6 : 7} className="text-center py-8 text-muted-foreground">
 												{t("topup.noRequests") || "No top-up requests found"}
 											</TableCell>
 										</TableRow>
@@ -656,28 +822,54 @@ export default function UserTopupPage() {
 										topups.map((topup) => (
 											<TableRow key={topup.uid}>
 												<TableCell className="font-mono text-sm">{topup.reference}</TableCell>
-												<TableCell className="font-semibold">{topup.formatted_amount}</TableCell>
+												{rechargeType === "auto" && (
+													<>
+														<TableCell>
+															{topup.network_name || topup.network_code || topup.network || 'N/A'}
+														</TableCell>
+														<TableCell className="font-mono">
+															{topup.phone_number || '-'}
+														</TableCell>
+													</>
+												)}
+												<TableCell className="font-semibold">
+													{rechargeType === "auto" 
+														? (topup.amount ? `${parseFloat(topup.amount).toLocaleString()} FCFA` : '-')
+														: (topup.formatted_amount || '-')
+													}
+												</TableCell>
 												<TableCell>
 													<Badge variant={getStatusBadgeVariant(topup.status)}>
 														{topup.status_display || topup.status}
 													</Badge>
 												</TableCell>
 												<TableCell>{topup.created_at ? new Date(topup.created_at).toLocaleDateString() : "-"}</TableCell>
-												<TableCell>{topup.expires_at ? new Date(topup.expires_at).toLocaleDateString() : "-"}</TableCell>
-												<TableCell>
-													{topup.is_expired ? (
-														<Badge variant="destructive">{t("topup.expired") || "Expired"}</Badge>
-													) : (
-														<span className="text-sm text-muted-foreground">
-															{formatTimeRemaining(topup.time_remaining)}
-														</span>
-													)}
-												</TableCell>
+												{rechargeType === "normal" && (
+													<>
+														<TableCell>{topup.expires_at ? new Date(topup.expires_at).toLocaleDateString() : "-"}</TableCell>
+														<TableCell>
+															{topup.is_expired ? (
+																<Badge variant="destructive">{t("topup.expired") || "Expired"}</Badge>
+															) : (
+																<span className="text-sm text-muted-foreground">
+																	{formatTimeRemaining(topup.time_remaining)}
+																</span>
+															)}
+														</TableCell>
+													</>
+												)}
 												<TableCell>
 													<Button 
 														size="sm" 
 														variant="outline" 
-														onClick={() => handleOpenDetail(topup.uid)}
+														onClick={() => {
+															if (rechargeType === "auto") {
+																// Navigate to auto-recharge detail page
+																window.location.href = `/dashboard/auto-recharge/${topup.uid}`
+															} else {
+																handleOpenDetail(topup.uid)
+															}
+														}}
 													>
 														{t("topup.viewDetails") || "View Details"}
 													</Button>
@@ -729,17 +921,30 @@ export default function UserTopupPage() {
 				if (!open) {
 					setCreateModalOpen(false)
 					setCreateError("")
-					setFormData({
-						amount: "",
-						proof_image: null,
-						proof_description: "",
-						transaction_date: ""
-					})
+					if (rechargeType === "normal") {
+						setFormData({
+							amount: "",
+							proof_image: null,
+							proof_description: "",
+							transaction_date: ""
+						})
+					} else {
+						setAutoRechargeForm({
+							network: "",
+							phone_number: "",
+							amount: ""
+						})
+					}
 				}
 			}}>
 				<DialogContent className="sm:max-w-[500px]">
 					<DialogHeader>
-						<DialogTitle>{t("topup.createNew") || "Create New Top-Up Request"}</DialogTitle>
+						<DialogTitle>
+							{rechargeType === "normal" 
+								? (t("topup.createNew") || "Create New Top-Up Request")
+								: (t("topup.createAutoRecharge") || "Create Auto-Recharge")
+							}
+						</DialogTitle>
 					</DialogHeader>
 					
 					{createError && (
@@ -751,70 +956,146 @@ export default function UserTopupPage() {
 						/>
 					)}
 
-					<div className="space-y-4">
-						<div>
-							<Label htmlFor="amount">{t("topup.amount") || "Amount"} *</Label>
-							<Input
-								id="amount"
-								type="number"
-								placeholder="Enter amount (e.g., 50000)"
-								value={formData.amount}
-								onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-								required
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="proof_image">{t("topup.proofImage") || "Proof Image"}</Label>
-							<div className="flex items-center gap-2">
+					{rechargeType === "normal" ? (
+						// Normal Recharge Form
+						<div className="space-y-4">
+							<div>
+								<Label htmlFor="amount">{t("topup.amount") || "Amount"} *</Label>
 								<Input
-									id="proof_image"
-									type="file"
-									accept="image/*"
-									onChange={handleFileChange}
-									className="flex-1"
+									id="amount"
+									type="number"
+									placeholder="Enter amount (e.g., 50000)"
+									value={formData.amount}
+									onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+									required
 								/>
-								{formData.proof_image && (
-									<Badge variant="outline">{formData.proof_image.name}</Badge>
-								)}
+							</div>
+
+							<div>
+								<Label htmlFor="proof_image">{t("topup.proofImage") || "Proof Image"}</Label>
+								<div className="flex items-center gap-2">
+									<Input
+										id="proof_image"
+										type="file"
+										accept="image/*"
+										onChange={handleFileChange}
+										className="flex-1"
+									/>
+									{formData.proof_image && (
+										<Badge variant="outline">{formData.proof_image.name}</Badge>
+									)}
+								</div>
+							</div>
+
+							<div>
+								<Label htmlFor="proof_description">{t("topup.proofDescription") || "Proof Description"}</Label>
+								<Textarea
+									id="proof_description"
+									placeholder="Describe your payment proof..."
+									value={formData.proof_description}
+									onChange={(e) => setFormData(prev => ({ ...prev, proof_description: e.target.value }))}
+									rows={3}
+								/>
+							</div>
+
+							<div>
+								<Label htmlFor="transaction_date">{t("topup.transactionDate") || "Transaction Date"}</Label>
+								<Input
+									id="transaction_date"
+									type="date"
+									value={formData.transaction_date}
+									onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
+								/>
+							</div>
+
+							<div className="flex justify-end gap-2 mt-6">
+								<DialogClose asChild>
+									<Button variant="outline" disabled={createLoading}>
+										{t("common.cancel") || "Cancel"}
+									</Button>
+								</DialogClose>
+								<Button 
+									onClick={handleCreateTopup} 
+									disabled={createLoading || !formData.amount}
+								>
+									{createLoading ? t("common.creating") || "Creating..." : t("common.create") || "Create"}
+								</Button>
 							</div>
 						</div>
+					) : (
+						// Auto-Recharge Form
+						<div className="space-y-4">
+							{autoRechargeLoading ? (
+								<div className="p-4 text-center text-muted-foreground">{t("common.loading") || "Loading networks..."}</div>
+							) : (
+								<>
+									<div>
+										<Label htmlFor="auto_network">{t("topup.network") || "Network"} *</Label>
+										<select
+											id="auto_network"
+											value={autoRechargeForm.network}
+											onChange={(e) => setAutoRechargeForm(prev => ({ ...prev, network: e.target.value }))}
+											className="w-full border rounded px-3 py-2 bg-background"
+											required
+										>
+											<option value="">{t("topup.selectNetwork") || "Select Network"}</option>
+											{autoRechargeNetworks.map((network) => (
+												<option key={network.network.uid} value={network.network.uid}>
+													{network.network.nom} ({network.network.country_name})
+												</option>
+											))}
+										</select>
+									</div>
 
-						<div>
-							<Label htmlFor="proof_description">{t("topup.proofDescription") || "Proof Description"}</Label>
-							<Textarea
-								id="proof_description"
-								placeholder="Describe your payment proof..."
-								value={formData.proof_description}
-								onChange={(e) => setFormData(prev => ({ ...prev, proof_description: e.target.value }))}
-								rows={3}
-							/>
+									<div>
+										<Label htmlFor="auto_phone">{t("topup.phoneNumber") || "Phone Number"} *</Label>
+										<Input
+											id="auto_phone"
+											type="tel"
+											placeholder="Ex: 0708958408"
+											value={autoRechargeForm.phone_number}
+											onChange={(e) => setAutoRechargeForm(prev => ({ ...prev, phone_number: e.target.value }))}
+											required
+										/>
+									</div>
+
+									<div>
+										<Label htmlFor="auto_amount">{t("topup.amount") || "Amount"} (FCFA) *</Label>
+										<Input
+											id="auto_amount"
+											type="number"
+											placeholder={t("topup.amount") || "Enter amount"}
+											value={autoRechargeForm.amount}
+											onChange={(e) => setAutoRechargeForm(prev => ({ ...prev, amount: e.target.value }))}
+											min={autoRechargeNetworks.find(n => n.network.uid === autoRechargeForm.network)?.min_amount || "0"}
+											max={autoRechargeNetworks.find(n => n.network.uid === autoRechargeForm.network)?.max_amount || "1000000"}
+											step="0.01"
+											required
+										/>
+										{autoRechargeForm.network && (
+											<p className="text-sm text-muted-foreground mt-1">
+												{t("topup.limit") || "Limit"}: {parseFloat(autoRechargeNetworks.find(n => n.network.uid === autoRechargeForm.network)?.min_amount || "0").toLocaleString()} - {parseFloat(autoRechargeNetworks.find(n => n.network.uid === autoRechargeForm.network)?.max_amount || "0").toLocaleString()} FCFA
+											</p>
+										)}
+									</div>
+
+									<div className="flex justify-end gap-2 mt-6">
+										<DialogClose asChild>
+											<Button variant="outline" disabled={autoRechargeSubmitting}>
+												{t("common.cancel") || "Cancel"}
+											</Button>
+										</DialogClose>
+										<Button 
+											onClick={handleAutoRechargeSubmit} 
+											disabled={autoRechargeSubmitting || !autoRechargeForm.network || !autoRechargeForm.phone_number || !autoRechargeForm.amount}
+										>
+											{autoRechargeSubmitting ? t("common.creating") || "Creating..." : t("common.create") || "Create"}
+										</Button>
+									</div>
+								</>
+							)}
 						</div>
-
-						<div>
-							<Label htmlFor="transaction_date">{t("topup.transactionDate") || "Transaction Date"}</Label>
-							<Input
-								id="transaction_date"
-								type="date"
-								value={formData.transaction_date}
-								onChange={(e) => setFormData(prev => ({ ...prev, transaction_date: e.target.value }))}
-							/>
-						</div>
-					</div>
-
-					<div className="flex justify-end gap-2 mt-6">
-						<DialogClose asChild>
-							<Button variant="outline" disabled={createLoading}>
-								{t("common.cancel") || "Cancel"}
-							</Button>
-						</DialogClose>
-						<Button 
-							onClick={handleCreateTopup} 
-							disabled={createLoading || !formData.amount}
-						>
-							{createLoading ? t("common.creating") || "Creating..." : t("common.create") || "Create"}
-						</Button>
-					</div>
+					)}
 				</DialogContent>
 			</Dialog>
 

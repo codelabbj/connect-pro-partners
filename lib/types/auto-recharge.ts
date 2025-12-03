@@ -41,7 +41,7 @@ export interface AvailableNetworksResponse {
 export interface AutoRechargeTransaction {
   uid: string;
   reference: string;
-  network: string;
+  network?: any;
   network_name?: string;
   network_code?: string;
   amount: string;

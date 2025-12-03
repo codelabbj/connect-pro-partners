@@ -403,6 +403,11 @@ export default function UserTopupPage() {
 	const [autoRechargeLoading, setAutoRechargeLoading] = useState(false)
 	const [autoRechargeSubmitting, setAutoRechargeSubmitting] = useState(false)
 
+	// Payment link modal state
+	const [paymentLinkModalOpen, setPaymentLinkModalOpen] = useState(false)
+	const [paymentLink, setPaymentLink] = useState<string | null>(null)
+	const [paymentUssd, setPaymentUssd] = useState<string | null>(null)
+
 	// Fetch topups from API
 	useEffect(() => {
 		const fetchTopups = async () => {
@@ -444,7 +449,36 @@ export default function UserTopupPage() {
 				}
 				
 				const data = await apiFetch(endpoint)
-				setTopups(data.results || [])
+
+				// Safely process the results to ensure no objects are rendered directly
+				const safeResults = (data.results || []).map((item: any) => {
+					console.log('Processing item:', item.uid, 'Network:', item.network, 'Network type:', typeof item.network);
+					return {
+					...item,
+					reference: typeof item.reference === 'string' ? item.reference : String(item.reference || ''),
+					amount: typeof item.amount === 'string' || typeof item.amount === 'number' ? item.amount : 0,
+					formatted_amount: typeof item.formatted_amount === 'string' ? item.formatted_amount : '',
+					status: typeof item.status === 'string' ? item.status : 'unknown',
+					status_display: typeof item.status_display === 'string' ? item.status_display : '',
+					phone_number: typeof item.phone_number === 'string' ? item.phone_number : '',
+					network_name: typeof item.network_name === 'string' ? item.network_name : '',
+					network_code: typeof item.network_code === 'string' ? item.network_code : '',
+					network: typeof item.network === 'object' ? item.network : null,
+					created_at: typeof item.created_at === 'string' ? item.created_at : '',
+					expires_at: typeof item.expires_at === 'string' ? item.expires_at : '',
+					time_remaining: typeof item.time_remaining === 'string' ? item.time_remaining : '',
+					is_expired: typeof item.is_expired === 'boolean' ? item.is_expired : false,
+					can_submit_proof: typeof item.can_submit_proof === 'boolean' ? item.can_submit_proof : false,
+					reviewed_at: typeof item.reviewed_at === 'string' ? item.reviewed_at : '',
+					processed_at: typeof item.processed_at === 'string' ? item.processed_at : '',
+					proof_description: typeof item.proof_description === 'string' ? item.proof_description : '',
+					rejection_reason: typeof item.rejection_reason === 'string' ? item.rejection_reason : '',
+					admin_notes: typeof item.admin_notes === 'string' ? item.admin_notes : '',
+					transaction_date: typeof item.transaction_date === 'string' ? item.transaction_date : '',
+				}
+				})
+
+				setTopups(safeResults)
 				setTotalCount(data.count || 0)
 				setTotalPages(Math.ceil((data.count || 0) / itemsPerPage))
 			} catch (err: any) {
@@ -487,8 +521,24 @@ export default function UserTopupPage() {
 		try {
 			// For demo, just find in topups
 			const found = topups.find((t) => t.uid === uid)
-			setDetailTopup(found)
-			toast({ title: t("topup.detailLoaded"), description: t("topup.detailLoadedSuccessfully") })
+			// Ensure the found item is safe (should already be safe from preprocessing, but double-check)
+			if (found) {
+				setDetailTopup({
+					...found,
+					reference: typeof found.reference === 'string' ? found.reference : 'N/A',
+					formatted_amount: typeof found.formatted_amount === 'string' ? found.formatted_amount : 'N/A',
+					status_display: typeof found.status_display === 'string' ? found.status_display : '',
+					status: typeof found.status === 'string' ? found.status : 'unknown',
+				})
+			} else {
+				setDetailTopup(null)
+			}
+			toast({
+				title: t("topup.detailLoaded"),
+				description: t("topup.detailLoadedSuccessfully"),
+				variant: "default",
+				className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+			})
 		} catch (err: any) {
 			setDetailError(extractErrorMessages(err))
 			toast({ title: t("topup.detailFailed"), description: extractErrorMessages(err), variant: "destructive" })
@@ -524,7 +574,12 @@ export default function UserTopupPage() {
 				body: formDataPayload
 			})
 			
-			toast({ title: t("topup.success"), description: t("topup.createdSuccessfully") })
+			toast({
+				title: t("topup.success"),
+				description: t("topup.createdSuccessfully"),
+				variant: "default",
+				className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+			})
 			setCreateModalOpen(false)
 			setFormData({
 				amount: "",
@@ -555,6 +610,7 @@ export default function UserTopupPage() {
 			case "pending":
 				return "outline"
 			case "approved":
+			case "completed":
 			case "success":
 				return "default"
 			case "rejected":
@@ -564,6 +620,7 @@ export default function UserTopupPage() {
 			case "cancelled":
 				return "secondary"
 			case "processing":
+			case "initiated":
 				return "outline"
 			default:
 				return "secondary"
@@ -576,6 +633,46 @@ export default function UserTopupPage() {
 		const hours = Math.floor(seconds / 3600)
 		const minutes = Math.floor((seconds % 3600) / 60)
 		return `${hours}h ${minutes}m`
+	}
+
+	const getNetworkDisplayName = (topup: any) => {
+		console.log('getNetworkDisplayName called for:', topup.uid, 'network:', topup.network, 'network_name:', topup.network_name, 'network_code:', topup.network_code)
+
+		// Check top-level network_name first
+		if (topup.network_name && typeof topup.network_name === 'string') {
+			console.log('Returning network_name:', topup.network_name)
+			return topup.network_name
+		}
+
+		// Check top-level network_code
+		if (topup.network_code && typeof topup.network_code === 'string') {
+			console.log('Returning network_code:', topup.network_code)
+			return topup.network_code
+		}
+
+		// Check network object
+		if (topup.network && typeof topup.network === 'object') {
+			const networkObj = topup.network as any
+			console.log('Network object found:', networkObj)
+
+			// Try to get name with country
+			if (networkObj.nom) {
+				const name = String(networkObj.nom)
+				const country = networkObj.country_name ? String(networkObj.country_name) : null
+				const result = country ? `${name} (${country})` : name
+				console.log('Returning network nom:', result)
+				return result
+			}
+
+			// Fallback to network code
+			if (networkObj.code) {
+				console.log('Returning network code:', networkObj.code)
+				return String(networkObj.code)
+			}
+		}
+
+		console.log('Returning N/A')
+		return 'N/A'
 	}
 
 	// Fetch auto-recharge networks
@@ -628,32 +725,109 @@ export default function UserTopupPage() {
 			const transactionStatus = data.transaction?.status
 			const hasError = transactionStatus === 'failed'
 
-			if (hasError && data.transaction?.failed_reason) {
-				toast({ 
-					title: t("topup.failed") || "Failed", 
-					description: data.transaction.failed_reason,
+			if (hasError && data.transaction?.error_message) {
+				toast({
+					title: t("topup.failed") || "Failed",
+					description: data.transaction.error_message,
 					variant: "destructive"
 				})
-			} else if (data.success) {
-				toast({ 
-					title: t("topup.success") || "Success", 
-					description: data.message || (t("topup.createdSuccessfully") || "Recharge initiated successfully"),
-					variant: "default"
+			} else if (data.transaction && transactionStatus) {
+				// Transaction was created successfully
+				toast({
+					title: t("topup.success") || "Success",
+					description: typeof data.message === 'string' ? data.message : (t("topup.createdSuccessfully") || "Recharge initiated successfully"),
+					variant: "default",
+					className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
 				})
-				
+
+				// Check for payment link or USSD (transaction level first, then network level)
+				const paymentLink = data.transaction.payment_link || (data.transaction.network?.payment_link && data.transaction.network.payment_link.trim() !== '' ? data.transaction.network.payment_link : null)
+				const paymentUssd = data.transaction.payment_ussd || (data.transaction.network?.payment_ussd && data.transaction.network.payment_ussd.trim() !== '' ? data.transaction.network.payment_ussd : null)
+
+				if (paymentLink) {
+					setPaymentLink(paymentLink)
+					setPaymentUssd(null)
+					setPaymentLinkModalOpen(true)
+				} else if (paymentUssd) {
+					setPaymentUssd(paymentUssd)
+					setPaymentLink(null)
+					// Try to open phone dialer
+					try {
+						window.location.href = `tel:${paymentUssd}`
+						// Show modal as fallback after 2 seconds in case dialer doesn't work
+						setTimeout(() => {
+							if (!paymentLinkModalOpen) {
+								setPaymentLinkModalOpen(true)
+							}
+						}, 2000)
+					} catch (error) {
+						// If dialer fails immediately, show modal
+						setPaymentLinkModalOpen(true)
+					}
+				}
+
+				// Close modal
+				setCreateModalOpen(false)
+
 				// Reset form
 				setAutoRechargeForm({
 					network: "",
 					phone_number: "",
 					amount: ""
 				})
-				
+
+				// Refresh the list
+				setCurrentPage(1)
+			} else if (data.success) {
+				toast({
+					title: t("topup.success") || "Success",
+					description: typeof data.message === 'string' ? data.message : (t("topup.createdSuccessfully") || "Recharge initiated successfully"),
+					variant: "default",
+					className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+				})
+
+				// Check for payment link or USSD in transaction (transaction level first, then network level)
+				const paymentLink = data.transaction?.payment_link || (data.transaction?.network?.payment_link && data.transaction.network.payment_link.trim() !== '' ? data.transaction.network.payment_link : null)
+				const paymentUssd = data.transaction?.payment_ussd || (data.transaction?.network?.payment_ussd && data.transaction.network.payment_ussd.trim() !== '' ? data.transaction.network.payment_ussd : null)
+
+				if (paymentLink) {
+					setPaymentLink(paymentLink)
+					setPaymentUssd(null)
+					setPaymentLinkModalOpen(true)
+				} else if (paymentUssd) {
+					setPaymentUssd(paymentUssd)
+					setPaymentLink(null)
+					// Try to open phone dialer
+					try {
+						window.location.href = `tel:${paymentUssd}`
+						// Show modal as fallback after 2 seconds in case dialer doesn't work
+						setTimeout(() => {
+							if (!paymentLinkModalOpen) {
+								setPaymentLinkModalOpen(true)
+							}
+						}, 2000)
+					} catch (error) {
+						// If dialer fails immediately, show modal
+						setPaymentLinkModalOpen(true)
+					}
+				}
+
+				// Close modal
+				setCreateModalOpen(false)
+
+				// Reset form
+				setAutoRechargeForm({
+					network: "",
+					phone_number: "",
+					amount: ""
+				})
+
 				// Refresh the list
 				setCurrentPage(1)
 			} else {
-				toast({ 
-					title: t("common.error") || "Error", 
-					description: data.message || (t("topup.createFailed") || "Failed to initiate recharge"),
+				toast({
+					title: t("common.error") || "Error",
+					description: typeof data.message === 'string' ? data.message : (t("topup.createFailed") || "Failed to initiate recharge"),
 					variant: "destructive"
 				})
 			}
@@ -814,33 +988,34 @@ export default function UserTopupPage() {
 								<TableBody>
 									{topups.length === 0 ? (
 										<TableRow>
-											<TableCell colSpan={rechargeType === "auto" ? 6 : 7} className="text-center py-8 text-muted-foreground">
+											<TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
 												{t("topup.noRequests") || "No top-up requests found"}
 											</TableCell>
 										</TableRow>
 									) : (
 										topups.map((topup) => (
 											<TableRow key={topup.uid}>
-												<TableCell className="font-mono text-sm">{topup.reference}</TableCell>
+												<TableCell className="font-mono text-sm">{typeof topup.reference === 'string' ? topup.reference : 'N/A'}</TableCell>
 												{rechargeType === "auto" && (
 													<>
 														<TableCell>
-															{topup.network_name || topup.network_code || topup.network || 'N/A'}
+															{getNetworkDisplayName(topup)}
 														</TableCell>
 														<TableCell className="font-mono">
-															{topup.phone_number || '-'}
+															{typeof topup.phone_number === 'string' ? topup.phone_number : '-'}
 														</TableCell>
 													</>
 												)}
 												<TableCell className="font-semibold">
-													{rechargeType === "auto" 
-														? (topup.amount ? `${parseFloat(topup.amount).toLocaleString()} FCFA` : '-')
-														: (topup.formatted_amount || '-')
+													{rechargeType === "auto"
+														? (typeof topup.amount === 'string' || typeof topup.amount === 'number' ? `${parseFloat(String(topup.amount)).toLocaleString()} FCFA` : '-')
+														: (typeof topup.formatted_amount === 'string' ? topup.formatted_amount : '-')
 													}
 												</TableCell>
 												<TableCell>
 													<Badge variant={getStatusBadgeVariant(topup.status)}>
-														{topup.status_display || topup.status}
+														{typeof topup.status_display === 'string' ? topup.status_display :
+														 typeof topup.status === 'string' ? topup.status : 'Unknown'}
 													</Badge>
 												</TableCell>
 												<TableCell>{topup.created_at ? new Date(topup.created_at).toLocaleDateString() : "-"}</TableCell>
@@ -1121,14 +1296,19 @@ export default function UserTopupPage() {
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.reference") || "Reference"}</Label>
 										<div className="flex items-center gap-2">
-											<span className="font-mono text-sm">{detailTopup.reference}</span>
+											<span className="font-mono text-sm">{typeof detailTopup.reference === 'string' ? detailTopup.reference : 'N/A'}</span>
 											<Button
 												variant="ghost"
 												size="icon"
 												className="h-5 w-5"
 												onClick={() => {
-													navigator.clipboard.writeText(detailTopup.reference)
-													toast({ title: t("topup.copiedReference") || "Reference copied!" })
+													const ref = typeof detailTopup.reference === 'string' ? detailTopup.reference : 'N/A'
+													navigator.clipboard.writeText(ref)
+													toast({
+														title: t("topup.copiedReference") || "Reference copied!",
+														variant: "default",
+														className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+													})
 												}}
 											>
 												<Copy className="h-3 w-3" />
@@ -1138,14 +1318,15 @@ export default function UserTopupPage() {
 									
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.amount") || "Amount"}</Label>
-										<p className="text-lg font-semibold">{detailTopup.formatted_amount}</p>
+										<p className="text-lg font-semibold">{typeof detailTopup.formatted_amount === 'string' ? detailTopup.formatted_amount : 'N/A'}</p>
 									</div>
 									
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.status") || "Status"}</Label>
 										<div>
 											<Badge variant={getStatusBadgeVariant(detailTopup.status)}>
-												{detailTopup.status_display || detailTopup.status}
+												{typeof detailTopup.status_display === 'string' ? detailTopup.status_display :
+												 typeof detailTopup.status === 'string' ? detailTopup.status : 'Unknown'}
 											</Badge>
 										</div>
 									</div>
@@ -1220,6 +1401,94 @@ export default function UserTopupPage() {
 					<DialogClose asChild>
 						<Button className="mt-4 w-full">{t("common.close") || "Close"}</Button>
 					</DialogClose>
+				</DialogContent>
+			</Dialog>
+
+			{/* Payment Link/USSD Modal */}
+			<Dialog open={paymentLinkModalOpen} onOpenChange={(open) => {
+				if (!open) {
+					setPaymentLinkModalOpen(false)
+					setPaymentLink(null)
+					setPaymentUssd(null)
+				}
+			}}>
+				<DialogContent className="sm:max-w-[400px]">
+					<DialogHeader>
+						<DialogTitle className="text-center">
+							{paymentLink ? "Continuer la Transaction" : "Code USSD"}
+						</DialogTitle>
+					</DialogHeader>
+					<div className="text-center space-y-4">
+						{paymentLink ? (
+							<>
+								<p className="text-muted-foreground">
+									Cliquez sur le bouton ci-dessous pour continuer votre transaction de recharge.
+								</p>
+								<Button
+									onClick={() => {
+										if (paymentLink) {
+											window.open(paymentLink, '_blank')
+											setPaymentLinkModalOpen(false)
+											setPaymentLink(null)
+											setPaymentUssd(null)
+										}
+									}}
+									className="w-full"
+									size="lg"
+								>
+									Continuer la Transaction
+								</Button>
+							</>
+						) : paymentUssd ? (
+							<>
+								<p className="text-muted-foreground mb-4">
+									Copiez et collez ce code dans votre application de téléphone pour continuer la transaction.
+								</p>
+								<div className="bg-muted p-4 rounded-lg">
+									<code className="text-lg font-mono font-bold text-primary">
+										{paymentUssd}
+									</code>
+								</div>
+								<div className="flex gap-2 mt-4">
+									<Button
+										onClick={() => {
+											if (paymentUssd) {
+												navigator.clipboard.writeText(paymentUssd)
+												toast({
+													title: "Copié!",
+													description: "Le code USSD a été copié dans le presse-papiers",
+													variant: "default",
+													className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+												})
+											}
+										}}
+										className="flex-1"
+										variant="outline"
+									>
+										Copier
+									</Button>
+									<Button
+										onClick={() => {
+											if (paymentUssd) {
+												try {
+													window.location.href = `tel:${paymentUssd}`
+												} catch (error) {
+													toast({
+														title: "Erreur",
+														description: "Impossible d'ouvrir l'application téléphone",
+														variant: "destructive"
+													})
+												}
+											}
+										}}
+										className="flex-1"
+									>
+										Appeler
+									</Button>
+								</div>
+							</>
+						) : null}
+					</div>
 				</DialogContent>
 			</Dialog>
 		</div>

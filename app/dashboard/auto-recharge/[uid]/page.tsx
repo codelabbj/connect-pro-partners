@@ -35,8 +35,9 @@ export default function AutoRechargeTransactionDetailPage() {
     setError("")
     try {
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auto-recharge/transactions/${transactionUid}/`
-      const data: AutoRechargeTransaction = await apiFetch(endpoint)
-      setTransaction(data)
+      const data = await apiFetch(endpoint)
+      const safeData = safeProcessTransaction(data)
+      setTransaction(safeData)
     } catch (err: any) {
       const errorMessage = extractErrorMessages(err)
       setError(errorMessage)
@@ -56,17 +57,19 @@ export default function AutoRechargeTransactionDetailPage() {
       
       // Update transaction with new status
       if (transaction) {
-        setTransaction({
+        const updatedTransaction = {
           ...transaction,
-          status: data.status,
-          updated_at: data.updated_at || transaction.updated_at
-        })
+          status: typeof data.status === 'string' ? data.status : transaction.status,
+          updated_at: typeof data.updated_at === 'string' ? data.updated_at : transaction.updated_at
+        }
+        setTransaction(updatedTransaction)
       }
       
       toast({
         title: "Statut vérifié",
         description: data.message || "Le statut de la transaction a été mis à jour",
-        variant: "default"
+        variant: "default",
+        className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
       })
     } catch (err: any) {
       const errorMessage = extractErrorMessages(err)
@@ -84,21 +87,30 @@ export default function AutoRechargeTransactionDetailPage() {
 
   const refreshData = async () => {
     await fetchTransactionDetail()
-    toast({ title: "Données actualisées", description: "Les informations de la transaction ont été mises à jour" })
+    toast({
+      title: "Données actualisées",
+      description: "Les informations de la transaction ont été mises à jour",
+      variant: "default",
+      className: "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900 dark:text-green-200"
+    })
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'success':
+      case 'completed':
         return <Badge variant="default" className="bg-green-100 text-green-800">Succès</Badge>
       case 'failed':
-        return <Badge variant="destructive">Échec</Badge>
+        return <Badge variant="destructive">Échouée</Badge>
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">En attente</Badge>
+      case 'initiated':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Initiée</Badge>
       case 'processing':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">En traitement</Badge>
+        return <Badge variant="secondary" className="bg-purple-100 text-purple-800">En traitement</Badge>
       case 'cancelled':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800">Annulé</Badge>
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800">Annulée</Badge>
+      case 'expired':
+        return <Badge variant="outline" className="bg-orange-100 text-orange-800">Expirée</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
@@ -106,16 +118,20 @@ export default function AutoRechargeTransactionDetailPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success':
+      case 'completed':
         return <CheckCircle className="h-5 w-5 text-green-600" />
       case 'failed':
         return <XCircle className="h-5 w-5 text-red-600" />
       case 'pending':
         return <Clock className="h-5 w-5 text-yellow-600" />
+      case 'initiated':
+        return <AlertCircle className="h-5 w-5 text-blue-600" />
       case 'processing':
-        return <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+        return <Loader2 className="h-5 w-5 text-purple-600 animate-spin" />
       case 'cancelled':
         return <XCircle className="h-5 w-5 text-gray-600" />
+      case 'expired':
+        return <Clock className="h-5 w-5 text-orange-600" />
       default:
         return <AlertCircle className="h-5 w-5 text-gray-600" />
     }
@@ -136,12 +152,64 @@ export default function AutoRechargeTransactionDetailPage() {
     })
   }
 
+  const safeProcessTransaction = (data: any): AutoRechargeTransaction => {
+    return {
+      ...data,
+      reference: typeof data.reference === 'string' ? data.reference : '',
+      amount: typeof data.amount === 'string' || typeof data.amount === 'number' ? data.amount : 0,
+      fees: typeof data.fees === 'string' || typeof data.fees === 'number' ? data.fees : undefined,
+      total_amount: typeof data.total_amount === 'string' || typeof data.total_amount === 'number' ? data.total_amount : undefined,
+      status: typeof data.status === 'string' ? data.status : 'unknown',
+      phone_number: typeof data.phone_number === 'string' ? data.phone_number : '',
+      network_name: typeof data.network_name === 'string' ? data.network_name : '',
+      network_code: typeof data.network_code === 'string' ? data.network_code : '',
+      network: typeof data.network === 'object' ? data.network : null,
+      aggregator_name: typeof data.aggregator_name === 'string' ? data.aggregator_name : '',
+      external_transaction_id: typeof data.external_transaction_id === 'string' ? data.external_transaction_id : '',
+      failed_reason: typeof data.failed_reason === 'string' ? data.failed_reason : '',
+      created_at: typeof data.created_at === 'string' ? data.created_at : '',
+      updated_at: typeof data.updated_at === 'string' ? data.updated_at : '',
+      completed_at: typeof data.completed_at === 'string' ? data.completed_at : '',
+    }
+  }
+
+  const getNetworkDisplayName = (transaction: AutoRechargeTransaction) => {
+    // Check if network_name exists and is not empty
+    if (transaction.network_name && typeof transaction.network_name === 'string') {
+      return transaction.network_name
+    }
+
+    // Check if network_code exists and is not empty
+    if (transaction.network_code && typeof transaction.network_code === 'string') {
+      return transaction.network_code
+    }
+
+    // Check the network object
+    if (transaction.network && typeof transaction.network === 'object') {
+      const networkObj = transaction.network as any
+
+      // First try to get name with country
+      if (networkObj.nom) {
+        const name = String(networkObj.nom)
+        const country = networkObj.country_name ? String(networkObj.country_name) : null
+        return country ? `${name} (${country})` : name
+      }
+
+      // Fallback to network code
+      if (networkObj.code) {
+        return String(networkObj.code)
+      }
+    }
+
+    return 'N/A'
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/auto-recharge">
+            <Link href="/dashboard/topup">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Link>
@@ -168,7 +236,7 @@ export default function AutoRechargeTransactionDetailPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/auto-recharge">
+            <Link href="/dashboard/topup">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Link>
@@ -184,7 +252,7 @@ export default function AutoRechargeTransactionDetailPage() {
       <div className="container mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/auto-recharge">
+            <Link href="/dashboard/topup">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Link>
@@ -196,7 +264,7 @@ export default function AutoRechargeTransactionDetailPage() {
             <h3 className="text-lg font-semibold mb-2">Transaction non trouvée</h3>
             <p className="text-muted-foreground mb-4">La transaction demandée n'existe pas ou a été supprimée.</p>
             <Button asChild>
-              <Link href="/dashboard/auto-recharge">Retour à la liste</Link>
+              <Link href="/dashboard/topup">Retour à la liste</Link>
             </Button>
           </CardContent>
         </Card>
@@ -210,7 +278,7 @@ export default function AutoRechargeTransactionDetailPage() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/auto-recharge">
+            <Link href="/dashboard/topup">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Link>
@@ -301,7 +369,7 @@ export default function AutoRechargeTransactionDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Réseau</p>
-              <p className="font-semibold">{transaction.network_name || transaction.network_code || transaction.network || 'N/A'}</p>
+              <p className="font-semibold">{getNetworkDisplayName(transaction)}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">Numéro de téléphone</p>

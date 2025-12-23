@@ -68,10 +68,11 @@ export default function CommissionsPage() {
     try {
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/commissions/unpaid_commissions/`
       const data: UnpaidCommissionsResponse = await apiFetch(endpoint)
-      // Ensure transactions array exists
+      // Ensure arrays exist
       setUnpaidCommissions({
         ...data,
-        transactions: data.transactions || []
+        payable_transactions: data.payable_transactions || [],
+        current_month_transactions: data.current_month_transactions || []
       })
     } catch (err: any) {
       console.error("Failed to fetch unpaid commissions:", err)
@@ -79,7 +80,14 @@ export default function CommissionsPage() {
       setUnpaidCommissions({
         total_unpaid_amount: 0,
         transaction_count: 0,
-        transactions: []
+        payable_amount: 0,
+        payable_transaction_count: 0,
+        payable_transactions: [],
+        current_month_amount: 0,
+        current_month_transaction_count: 0,
+        current_month_transactions: [],
+        note: '',
+        current_month_start: ''
       })
     }
   }
@@ -352,11 +360,16 @@ export default function CommissionsPage() {
                   Commissions Non Payées
                 </CardTitle>
                 <CardDescription>
-                  Total: {formatAmount(unpaidCommissions.total_unpaid_amount || 0)} ({unpaidCommissions.transaction_count || 0} transactions)
+                  Payable maintenant: {formatAmount(unpaidCommissions.payable_amount || 0)} ({unpaidCommissions.payable_transaction_count || 0} transactions)
+                  {unpaidCommissions.note && (
+                    <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+                      <strong>Note:</strong> {unpaidCommissions.note}
+                    </div>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {!unpaidCommissions.transactions || unpaidCommissions.transactions.length === 0 ? (
+                {!unpaidCommissions.payable_transactions || unpaidCommissions.payable_transactions.length === 0 ? (
                   <div className="text-center py-8">
                     <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Aucune commission en attente</h3>
@@ -377,7 +390,7 @@ export default function CommissionsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {unpaidCommissions.transactions?.map((transaction) => (
+                        {unpaidCommissions.payable_transactions?.map((transaction) => (
                           <TableRow key={transaction.uid}>
                             <TableCell className="font-mono text-sm">{transaction.reference}</TableCell>
                             <TableCell>{transaction.platform_name}</TableCell>
@@ -401,6 +414,61 @@ export default function CommissionsPage() {
                       </TableBody>
                     </Table>
                   </div>
+                )}
+
+                {/* Current Month Commissions (Not yet payable) */}
+                {unpaidCommissions.current_month_transactions && unpaidCommissions.current_month_transactions.length > 0 && (
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-500" />
+                        Commissions du Mois en Cours
+                      </CardTitle>
+                      <CardDescription>
+                        Total: {formatAmount(unpaidCommissions.current_month_amount || 0)} ({unpaidCommissions.current_month_transaction_count || 0} transactions) - Payable le mois prochain
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Référence</TableHead>
+                              <TableHead>Plateforme</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Montant</TableHead>
+                              <TableHead>Commission</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {unpaidCommissions.current_month_transactions.map((transaction) => (
+                              <TableRow key={transaction.uid}>
+                                <TableCell className="font-mono text-sm">{transaction.reference}</TableCell>
+                                <TableCell>{transaction.platform_name}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline">
+                                    {transaction.transaction_type === 'deposit' ? 'Dépôt' : 'Retrait'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-semibold">{formatAmount(transaction.amount)}</TableCell>
+                                <TableCell className="font-semibold text-blue-600">{formatAmount(transaction.commission_amount)}</TableCell>
+                                <TableCell className="text-sm">{formatDate(transaction.created_at)}</TableCell>
+                                <TableCell>
+                                  <Button asChild variant="outline" size="sm">
+                                    <Link href={`/dashboard/betting/transactions/${transaction.uid}`}>
+                                      <Eye className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
               </CardContent>
             </Card>

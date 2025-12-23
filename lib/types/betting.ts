@@ -156,15 +156,33 @@ export interface UnpaidCommission {
   transaction_type: string;
   amount: string;
   status: string;
+  betting_user_id: string;
+  withdrawal_code: string | null;
+  external_transaction_id: string;
+  commission_rate: string;
+  commission_paid_at: string | null;
   commission_amount: string;
   commission_paid: boolean;
   created_at: string;
+  external_response: any;
+  cancellation_requested_at: string | null;
+  cancelled_at: string | null;
+  partner_refunded: boolean;
+  partner_balance_before: string;
+  partner_balance_after: string;
 }
 
 export interface UnpaidCommissionsResponse {
   total_unpaid_amount: number;
   transaction_count: number;
-  transactions: UnpaidCommission[];
+  payable_amount: number;
+  payable_transaction_count: number;
+  payable_transactions: UnpaidCommission[];
+  current_month_amount: number;
+  current_month_transaction_count: number;
+  current_month_transactions: UnpaidCommission[];
+  note: string;
+  current_month_start: string;
 }
 
 export interface CommissionRates {

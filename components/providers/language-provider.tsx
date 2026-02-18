@@ -56,6 +56,7 @@ const translations = {
     "nav.partner": "Partners",
     "nav.accountTransaction": "Account Balance History",
     "nav.topup": "Top Up",
+    "nav.bulkPayment": "Bulk Payment",
 
     // Dashboard
     "dashboard": "Dashboard",
@@ -206,6 +207,33 @@ const translations = {
 
     "payment.showingResults": "Showing start to end of total results",
     "payment.pageOf": "Page current of total",
+
+    // Bulk Payment
+    "bulkPayment.title": "Bulk Payments",
+    "bulkPayment.subtitle": "Manage your bulk payment requests",
+    "bulkPayment.list": "Bulk Payment List",
+    "bulkPayment.create": "Create Bulk Payment",
+    "bulkPayment.details": "Bulk Payment Details",
+    "bulkPayment.downloadTemplate": "Download Template",
+    "bulkPayment.confirmTitle": "Confirm Bulk Payment",
+    "bulkPayment.confirmDescription": "Check the information below before sending the bulk payment request.",
+    "bulkPayment.status": "Status",
+    "bulkPayment.totalAmount": "Total Amount",
+    "bulkPayment.totalCount": "Total Count",
+    "bulkPayment.createdAt": "Created At",
+    "bulkPayment.reference": "Reference",
+    "bulkPayment.actions": "Actions",
+    "bulkPayment.viewDetails": "View Details",
+    "bulkPayment.noTransactions": "No bulk transactions found.",
+    "bulkPayment.recipientPhone": "Recipient Phone",
+    "bulkPayment.amount": "Amount",
+    "bulkPayment.objet": "Object",
+    "bulkPayment.network": "Network",
+    "bulkPayment.externalId": "External ID",
+    "bulkPayment.addRow": "Add Row",
+    "bulkPayment.submit": "Submit Bulk Payment",
+    "bulkPayment.processing": "Processing bulk payment...",
+    "bulkPayment.success": "Bulk payment request accepted!",
 
     // Users
     "users.title": "Users",
@@ -409,7 +437,7 @@ const translations = {
     "partners.createdAt": "Created At",
     "partners.details": "Details",
     "partners.status": "Status",
-   
+
     "partner.actions": "Actions",
     "partners.active": "Active",
     "partners.inactive": "Inactive",
@@ -732,7 +760,7 @@ const translations = {
     "common.failedToCreate": "Failed to create",
     "common.failedToUpdate": "Failed to update",
     "common.failedToDelete": "Failed to delete",
-    
+
     // Date Filter
     "common.dateFilter": "Date Filter",
     "common.startDate": "Start Date",
@@ -777,6 +805,7 @@ const translations = {
     "nav.partner": "Partenaires",
     "nav.accountTransaction": "Historique du solde du compte",
     "nav.topup": "Recharger",
+    "nav.bulkPayment": "Paiement de masse",
 
     // Dashboard
     "dashboard": "Tableau de bord",
@@ -928,8 +957,35 @@ const translations = {
     "payment.showingResults": "Affichage du début à la fin des résultats totaux",
     "payment.pageOf": "Page actuelle du total",
 
+    // Bulk Payment
+    "bulkPayment.title": "Paiements de masse",
+    "bulkPayment.subtitle": "Gérez vos requêtes de paiement en masse",
+    "bulkPayment.list": "Liste des paiements de masse",
+    "bulkPayment.create": "Créer un paiement de masse",
+    "bulkPayment.details": "Détails du paiement de masse",
+    "bulkPayment.downloadTemplate": "Télécharger le modèle",
+    "bulkPayment.confirmTitle": "Confirmer le paiement de masse",
+    "bulkPayment.confirmDescription": "Vérifiez les informations ci-dessous avant d'envoyer la requête de paiement en masse.",
+    "bulkPayment.status": "Statut",
+    "bulkPayment.totalAmount": "Montant Total",
+    "bulkPayment.totalCount": "Nombre Total",
+    "bulkPayment.createdAt": "Créé le",
+    "bulkPayment.reference": "Référence",
+    "bulkPayment.actions": "Actions",
+    "bulkPayment.viewDetails": "Voir les détails",
+    "bulkPayment.noTransactions": "Aucune transaction de masse trouvée.",
+    "bulkPayment.recipientPhone": "Numéro du destinataire",
+    "bulkPayment.amount": "Montant",
+    "bulkPayment.objet": "Objet",
+    "bulkPayment.network": "Réseau",
+    "bulkPayment.externalId": "ID Externe",
+    "bulkPayment.addRow": "Ajouter une ligne",
+    "bulkPayment.submit": "Envoyer le paiement de masse",
+    "bulkPayment.processing": "Traitement du paiement en masse...",
+    "bulkPayment.success": "Requête de dépôt en masse acceptée !",
 
-    
+
+
 
     // Users
     "users.title": "Utilisateurs",
@@ -970,7 +1026,7 @@ const translations = {
     "users.enterPhone": "Entrez le numéro de téléphone",
     "users.sending": "Envoi...",
     "users.verifying": "Vérification...",
-    
+
 
     // Activation/Deactivation
     "users.activate": "Activer",
@@ -1456,7 +1512,7 @@ const translations = {
     "common.failedToCreate": "Échec de la création",
     "common.failedToUpdate": "Échec de la mise à jour",
     "common.failedToDelete": "Échec de la suppression",
-    
+
     // Date Filter
     "common.dateFilter": "Filtre de Date",
     "common.startDate": "Date de Début",

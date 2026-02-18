@@ -46,6 +46,7 @@ export function Sidebar() {
   const isNetworkConfigActive = pathname.startsWith("/dashboard/network-config")
   const isNetworkConfigListActive = pathname === "/dashboard/network-config/list"
   const isNetworkConfigCreateActive = pathname === "/dashboard/network-config/create"
+  const isBulkPaymentActive = pathname.startsWith("/dashboard/bulk-payment")
 
   const handleLogout = () => {
     clearTokens();
@@ -100,7 +101,7 @@ export function Sidebar() {
               <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">{t("nav.dashboard")}</span>
             </Link>
-            
+
             <SectionHeader>Gestion des transactions</SectionHeader>
             <Link
               href="/dashboard/transactions"
@@ -158,7 +159,21 @@ export function Sidebar() {
               <Send className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">Transferts UV</span>
             </Link>
-            
+            <Link
+              href="/dashboard/bulk-payment"
+              aria-label="Bulk Payment"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                isBulkPaymentActive
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">{t("nav.bulkPayment")}</span>
+            </Link>
+
             <SectionHeader>Plateformes de Paris</SectionHeader>
             <Link
               href="/dashboard/betting/platforms"
@@ -202,10 +217,10 @@ export function Sidebar() {
               <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">Commissions</span>
             </Link>
-            
-            
-            
-           
+
+
+
+
           </nav>
           <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-800">
             <Button variant="ghost" className="w-full justify-start text-sm sm:text-base" onClick={handleLogout}>
@@ -238,7 +253,7 @@ export function Sidebar() {
               <BarChart3 className="h-5 w-5" />
               {t("nav.dashboard")}
             </Link>
-            
+
             <SectionHeader>Gestion des transactions</SectionHeader>
             <Link
               href="/dashboard/transactions"
@@ -292,6 +307,19 @@ export function Sidebar() {
               <Send className="h-5 w-5" />
               Transferts UV
             </Link>
+            <Link
+              href="/dashboard/bulk-payment"
+              aria-label="Bulk Payment"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                isBulkPaymentActive
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <CreditCard className="h-5 w-5" />
+              {t("nav.bulkPayment")}
+            </Link>
 
             <SectionHeader>Plateformes de Paris</SectionHeader>
             <Link
@@ -334,9 +362,9 @@ export function Sidebar() {
               Commissions
             </Link>
 
-           
-            
-           
+
+
+
           </nav>
           <div className="p-4 border-t border-gray-200 dark:border-gray-800">
             <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>

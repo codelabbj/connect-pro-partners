@@ -23,6 +23,7 @@ export default function BulkPaymentDetailsPage() {
     const uid = params.uid as string
 
     const [deposit, setDeposit] = useState<any>(null)
+    const [transactions, setTransactions] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState("")
 
@@ -30,9 +31,17 @@ export default function BulkPaymentDetailsPage() {
         setLoading(true)
         setError("")
         try {
-            const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/${uid}/`
-            const data = await apiFetch(endpoint)
-            setDeposit(data)
+            const baseUrlClean = baseUrl.replace(/\/$/, "")
+            const depositEndpoint = `${baseUrlClean}/api/payments/user/transactions/bulk-deposit/${uid}/`
+            const transactionsEndpoint = `${baseUrlClean}/api/payments/user/transactions/bulk-deposit/${uid}/transactions/`
+
+            const [depositData, transactionsData] = await Promise.all([
+                apiFetch(depositEndpoint),
+                apiFetch(transactionsEndpoint)
+            ])
+
+            setDeposit(depositData)
+            setTransactions(transactionsData.results || transactionsData || [])
         } catch (err: any) {
             setError(extractErrorMessages(err))
         } finally {
@@ -134,6 +143,16 @@ export default function BulkPaymentDetailsPage() {
                             <RefreshCw className="h-4 w-4 mr-2" />
                             {t("common.refresh")}
                         </Button>
+                        <Button variant="outline" className="w-full" asChild>
+                            <a
+                                href={`${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/${uid}/transactions/`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <FileText className="h-4 w-4 mr-2" />
+                                {t("bulkPayment.viewTransactions") || "View Transactions"}
+                            </a>
+                        </Button>
                         {deposit.tracking_url && (
                             <p className="text-xs text-muted-foreground break-all">
                                 Tracking: {deposit.tracking_url}
@@ -143,7 +162,7 @@ export default function BulkPaymentDetailsPage() {
                 </Card>
             </div>
 
-            {deposit.transactions && deposit.transactions.length > 0 && (
+            {transactions && transactions.length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle>{t("transactions.title")}</CardTitle>
@@ -160,7 +179,7 @@ export default function BulkPaymentDetailsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {deposit.transactions.map((tx: any, idx: number) => (
+                                    {transactions.map((tx: any, idx: number) => (
                                         <TableRow key={tx.uid || idx}>
                                             <TableCell>{tx.recipient_phone}</TableCell>
                                             <TableCell>{parseFloat(tx.amount).toLocaleString()} FCFA</TableCell>

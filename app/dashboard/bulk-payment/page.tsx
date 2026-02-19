@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
-import { Search, ChevronLeft, ChevronRight, Plus, Download, Eye, RefreshCw, Filter } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Download, Eye, RefreshCw, Filter, FileText } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { useRouter } from "next/navigation"
@@ -66,7 +66,7 @@ export default function BulkPaymentListPage() {
             if (startDate) params.append("date_from", startDate)
             if (endDate) params.append("date_to", endDate)
 
-            const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/transactions/?${params.toString()}`
+            const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/list/?${params.toString()}`
             const data = await apiFetch(endpoint)
 
             setBulkDeposits(data.results || [])
@@ -74,11 +74,6 @@ export default function BulkPaymentListPage() {
         } catch (err: any) {
             const errorMessage = extractErrorMessages(err) || t("bulkPayment.failedToLoad") || "Failed to load bulk payments"
             setError(errorMessage)
-            toast({
-                title: t("common.error"),
-                description: errorMessage,
-                variant: "destructive",
-            })
         } finally {
             setLoading(false)
         }
@@ -213,8 +208,9 @@ export default function BulkPaymentListPage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>{t("bulkPayment.reference")}</TableHead>
-                                        <TableHead>{t("bulkPayment.totalAmount")}</TableHead>
-                                        <TableHead>{t("bulkPayment.totalCount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.amount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.recipientPhone")}</TableHead>
+                                        <TableHead>{t("bulkPayment.network")}</TableHead>
                                         <TableHead>{t("bulkPayment.createdAt")}</TableHead>
                                         <TableHead>{t("bulkPayment.status")}</TableHead>
                                         <TableHead className="text-right">{t("bulkPayment.actions")}</TableHead>
@@ -223,16 +219,17 @@ export default function BulkPaymentListPage() {
                                 <TableBody>
                                     {bulkDeposits.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                                 {t("bulkPayment.noTransactions")}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         bulkDeposits.map((deposit) => (
                                             <TableRow key={deposit.uid} className="hover:bg-muted/50">
-                                                <TableCell className="font-mono text-sm">{deposit.bulk_deposit_uid?.slice(0, 8) || deposit.uid?.slice(0, 8)}</TableCell>
-                                                <TableCell className="font-semibold">{parseFloat(deposit.total_amount).toLocaleString()} FCFA</TableCell>
-                                                <TableCell>{deposit.total_count}</TableCell>
+                                                <TableCell className="font-mono text-sm">{deposit.reference || deposit.uid?.slice(0, 8)}</TableCell>
+                                                <TableCell className="font-semibold">{parseFloat(deposit.amount).toLocaleString()} FCFA</TableCell>
+                                                <TableCell>{deposit.recipient_phone}</TableCell>
+                                                <TableCell>{deposit.network?.nom || "-"}</TableCell>
                                                 <TableCell>{deposit.created_at ? new Date(deposit.created_at).toLocaleString() : "-"}</TableCell>
                                                 <TableCell>{getStatusBadge(deposit.status)}</TableCell>
                                                 <TableCell className="text-right">
@@ -243,6 +240,20 @@ export default function BulkPaymentListPage() {
                                                     >
                                                         <Eye className="h-4 w-4 mr-2" />
                                                         {t("bulkPayment.viewDetails")}
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        asChild
+                                                    >
+                                                        <a
+                                                            href={`${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/${deposit.bulk_deposit_uid || deposit.uid}/transactions/`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                        >
+                                                            <FileText className="h-4 w-4 mr-2" />
+                                                            {t("bulkPayment.transactions") || "Transactions"}
+                                                        </a>
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>

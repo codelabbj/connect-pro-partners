@@ -115,13 +115,12 @@ export default function CreateBulkPaymentPage() {
             }))
 
             const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/`
-            const response = await apiFetch(endpoint, {
+            await apiFetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             })
 
-            toast({ title: t("bulkPayment.success"), description: response.message })
             router.push("/dashboard/bulk-payment")
         } catch (err: any) {
             setError(extractErrorMessages(err))

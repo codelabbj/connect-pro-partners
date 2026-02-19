@@ -234,6 +234,8 @@ const translations = {
     "bulkPayment.submit": "Submit Bulk Payment",
     "bulkPayment.processing": "Processing bulk payment...",
     "bulkPayment.success": "Bulk payment request accepted!",
+    "bulkPayment.transactions": "Transactions",
+    "bulkPayment.viewTransactions": "View Transactions",
 
     // Users
     "users.title": "Users",
@@ -983,6 +985,8 @@ const translations = {
     "bulkPayment.submit": "Envoyer le paiement de masse",
     "bulkPayment.processing": "Traitement du paiement en masse...",
     "bulkPayment.success": "Requête de dépôt en masse acceptée !",
+    "bulkPayment.transactions": "Transactions",
+    "bulkPayment.viewTransactions": "Voir les transactions",
 
 
 

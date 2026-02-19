@@ -95,7 +95,7 @@ export default function BulkPaymentDetailsPage() {
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold">{t("bulkPayment.details")}</h1>
-                    <p className="text-muted-foreground">{deposit.bulk_deposit_uid || deposit.uid}</p>
+                    <p className="text-muted-foreground">{deposit.uid || deposit.bulk_deposit_uid}</p>
                 </div>
             </div>
 
@@ -111,23 +111,23 @@ export default function BulkPaymentDetailsPage() {
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">{t("bulkPayment.reference")}</p>
-                            <p className="font-mono mt-1">{deposit.bulk_deposit_uid}</p>
+                            <p className="font-mono mt-1">{deposit.bulk_deposit_uid || deposit.uid || "-"}</p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">{t("bulkPayment.totalAmount")}</p>
-                            <p className="text-lg font-bold mt-1 text-blue-600">{parseFloat(deposit.total_amount).toLocaleString()} FCFA</p>
+                            <p className="text-lg font-bold mt-1 text-blue-600">{deposit.total_amount ? parseFloat(deposit.total_amount).toLocaleString() : "-"} FCFA</p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">{t("bulkPayment.totalCount")}</p>
-                            <p className="text-lg font-bold mt-1">{deposit.total_count}</p>
+                            <p className="text-lg font-bold mt-1">{deposit.total_count ?? "-"}</p>
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">{t("bulkPayment.createdAt")}</p>
-                            <p className="mt-1">{new Date(deposit.created_at).toLocaleString()}</p>
+                            <p className="mt-1">{deposit.created_at ? new Date(deposit.created_at).toLocaleString() : "-"}</p>
                         </div>
-                        {deposit.status === 'completed' && deposit.completed_at && (
+                        {deposit.completed_at && (
                             <div>
-                                <p className="text-sm text-muted-foreground">{t("transactions.completedAt")}</p>
+                                <p className="text-sm text-muted-foreground">{t("transactions.completedAt") || t("bulkPayment.completedAt")}</p>
                                 <p className="mt-1">{new Date(deposit.completed_at).toLocaleString()}</p>
                             </div>
                         )}
@@ -143,15 +143,9 @@ export default function BulkPaymentDetailsPage() {
                             <RefreshCw className="h-4 w-4 mr-2" />
                             {t("common.refresh")}
                         </Button>
-                        <Button variant="outline" className="w-full" asChild>
-                            <a
-                                href={`${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/${uid}/transactions/`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <FileText className="h-4 w-4 mr-2" />
-                                {t("bulkPayment.viewTransactions") || "View Transactions"}
-                            </a>
+                        <Button variant="outline" className="w-full" onClick={() => router.push(`/dashboard/bulk-payment/${uid}/transactions`)}>
+                            <FileText className="h-4 w-4 mr-2" />
+                            {t("bulkPayment.viewTransactions") || "View Transactions"}
                         </Button>
                         {deposit.tracking_url && (
                             <p className="text-xs text-muted-foreground break-all">
@@ -183,7 +177,7 @@ export default function BulkPaymentDetailsPage() {
                                         <TableRow key={tx.uid || idx}>
                                             <TableCell>{tx.recipient_phone}</TableCell>
                                             <TableCell>{parseFloat(tx.amount).toLocaleString()} FCFA</TableCell>
-                                            <TableCell>{tx.network_name || tx.network}</TableCell>
+                                            <TableCell>{tx.network?.nom || tx.network_name || "-"}</TableCell>
                                             <TableCell>
                                                 <Badge variant={tx.status === 'success' ? 'default' : 'secondary'}>
                                                     {tx.status}

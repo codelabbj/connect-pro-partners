@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
-import { Search, ChevronLeft, ChevronRight, Plus, Download, Eye, RefreshCw, Filter, FileText } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Plus, Download, Eye, RefreshCw, Filter, FileText, MoreVertical } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { useRouter } from "next/navigation"
@@ -207,54 +213,68 @@ export default function BulkPaymentListPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>{t("bulkPayment.reference")}</TableHead>
-                                        <TableHead>{t("bulkPayment.amount")}</TableHead>
-                                        <TableHead>{t("bulkPayment.recipientPhone")}</TableHead>
-                                        <TableHead>{t("bulkPayment.network")}</TableHead>
-                                        <TableHead>{t("bulkPayment.createdAt")}</TableHead>
                                         <TableHead>{t("bulkPayment.status")}</TableHead>
+                                        <TableHead>{t("bulkPayment.progress")}</TableHead>
+                                        <TableHead>{t("bulkPayment.totalCount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.succeededCount")} / {t("bulkPayment.failedCount")} / {t("bulkPayment.processedCount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.totalAmount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.succeededAmount")}</TableHead>
+                                        <TableHead>{t("bulkPayment.createdAt")}</TableHead>
                                         <TableHead className="text-right">{t("bulkPayment.actions")}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {bulkDeposits.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                                                 {t("bulkPayment.noTransactions")}
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         bulkDeposits.map((deposit) => (
                                             <TableRow key={deposit.uid} className="hover:bg-muted/50">
-                                                <TableCell className="font-mono text-sm">{deposit.reference || deposit.uid?.slice(0, 8)}</TableCell>
-                                                <TableCell className="font-semibold">{parseFloat(deposit.amount).toLocaleString()} FCFA</TableCell>
-                                                <TableCell>{deposit.recipient_phone}</TableCell>
-                                                <TableCell>{deposit.network?.nom || "-"}</TableCell>
-                                                <TableCell>{deposit.created_at ? new Date(deposit.created_at).toLocaleString() : "-"}</TableCell>
                                                 <TableCell>{getStatusBadge(deposit.status)}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-16 bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                                                            <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${deposit.progress_percent}%` }}></div>
+                                                        </div>
+                                                        <span className="text-xs font-medium">{Math.round(deposit.progress_percent)}%</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="font-medium">{deposit.total_count}</TableCell>
+                                                <TableCell className="text-sm">
+                                                    <span className="text-green-600 font-medium">{deposit.succeeded_count}</span> /
+                                                    <span className="text-red-600 font-medium"> {deposit.failed_count}</span> /
+                                                    <span className="text-muted-foreground"> {deposit.processed_count}</span>
+                                                </TableCell>
+                                                <TableCell className="font-semibold whitespace-nowrap">{parseFloat(deposit.total_amount).toLocaleString()} FCFA</TableCell>
+                                                <TableCell className="text-green-600 font-semibold whitespace-nowrap">{parseFloat(deposit.succeeded_amount).toLocaleString()} FCFA</TableCell>
+                                                <TableCell className="text-xs whitespace-nowrap">
+                                                    <div>{new Date(deposit.created_at).toLocaleString()}</div>
+                                                    {deposit.completed_at && (
+                                                        <div className="text-muted-foreground mt-0.5">{t("bulkPayment.completedAt")}: {new Date(deposit.completed_at).toLocaleString()}</div>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => router.push(`/dashboard/bulk-payment/${deposit.uid}`)}
-                                                    >
-                                                        <Eye className="h-4 w-4 mr-2" />
-                                                        {t("bulkPayment.viewDetails")}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        asChild
-                                                    >
-                                                        <a
-                                                            href={`${baseUrl.replace(/\/$/, "")}/api/payments/user/transactions/bulk-deposit/${deposit.bulk_deposit_uid || deposit.uid}/transactions/`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            <FileText className="h-4 w-4 mr-2" />
-                                                            {t("bulkPayment.transactions") || "Transactions"}
-                                                        </a>
-                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                                <span className="sr-only">Open menu</span>
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem onClick={() => router.push(`/dashboard/bulk-payment/${deposit.uid}`)}>
+                                                                <Eye className="h-4 w-4 mr-2" />
+                                                                {t("bulkPayment.viewDetails")}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => router.push(`/dashboard/bulk-payment/${deposit.uid}/transactions`)}>
+                                                                <FileText className="h-4 w-4 mr-2" />
+                                                                {t("bulkPayment.transactions") || "Transactions"}
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </TableCell>
                                             </TableRow>
                                         ))

@@ -236,6 +236,17 @@ const translations = {
     "bulkPayment.success": "Bulk payment request accepted!",
     "bulkPayment.transactions": "Transactions",
     "bulkPayment.viewTransactions": "View Transactions",
+    "bulkPayment.progress": "Progress",
+    "bulkPayment.succeededCount": "Succeeded",
+    "bulkPayment.failedCount": "Failed",
+    "bulkPayment.processedCount": "Processed",
+    "bulkPayment.succeededAmount": "Succeeded Amount",
+    "bulkPayment.startedAt": "Started At",
+    "bulkPayment.completedAt": "Completed At",
+    "bulkPayment.processedByName": "Processed By",
+    "bulkPayment.type": "Type",
+    "bulkPayment.retryCount": "Retry Count",
+    "bulkPayment.errorMessage": "Error Message",
 
     // Users
     "users.title": "Users",
@@ -987,6 +998,17 @@ const translations = {
     "bulkPayment.success": "Requête de dépôt en masse acceptée !",
     "bulkPayment.transactions": "Transactions",
     "bulkPayment.viewTransactions": "Voir les transactions",
+    "bulkPayment.progress": "Progression",
+    "bulkPayment.succeededCount": "Réussis",
+    "bulkPayment.failedCount": "Échoués",
+    "bulkPayment.processedCount": "Traités",
+    "bulkPayment.succeededAmount": "Montant Réussi",
+    "bulkPayment.startedAt": "Démarré le",
+    "bulkPayment.completedAt": "Terminé le",
+    "bulkPayment.processedByName": "Traité par",
+    "bulkPayment.type": "Type",
+    "bulkPayment.retryCount": "Tentatives",
+    "bulkPayment.errorMessage": "Message d'erreur",
 
 
 

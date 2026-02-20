@@ -20,6 +20,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { StatCard } from "@/components/ui/stat-card"
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { DateFilter } from "@/components/ui/date-filter"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -52,16 +53,22 @@ function BettingTransactionsContent() {
     try {
       const currentFilters = newFilters || filters
       const params = new URLSearchParams()
-      
+
       Object.entries(currentFilters).forEach(([key, value]) => {
         if (value && value !== '' && value !== 'all') {
-          params.append(key, value.toString())
+          if (key === 'start_date') {
+            params.append('created_at__gte', value.toString())
+          } else if (key === 'end_date') {
+            params.append('created_at__lte', value.toString())
+          } else {
+            params.append(key, value.toString())
+          }
         }
       })
 
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/transactions/my_transactions/?${params.toString()}`
       const data: BettingTransactionsResponse = await apiFetch(endpoint)
-      
+
       setTransactions(data.results || [])
       setTotalCount(data.count || 0)
       setNextPage(data.next)
@@ -257,7 +264,7 @@ function BettingTransactionsContent() {
             Filtres
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Statut</label>
@@ -314,6 +321,17 @@ function BettingTransactionsContent() {
               </Select>
             </div>
           </div>
+          <DateFilter
+            startDate={filters.start_date || ""}
+            endDate={filters.end_date || ""}
+            onStartDateChange={(date) => handleFilterChange('start_date', date)}
+            onEndDateChange={(date) => handleFilterChange('end_date', date)}
+            onClearDates={() => {
+              const newFilters = { ...filters, start_date: '', end_date: '', page: 1 }
+              setFilters(newFilters)
+              fetchTransactions(newFilters)
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -329,8 +347,8 @@ function BettingTransactionsContent() {
               <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Aucune transaction trouvée</h3>
               <p className="text-muted-foreground mb-4">
-                {Object.values(filters).some(f => f && f !== '') 
-                  ? "Aucune transaction ne correspond à vos filtres." 
+                {Object.values(filters).some(f => f && f !== '')
+                  ? "Aucune transaction ne correspond à vos filtres."
                   : "Vous n'avez pas encore effectué de transactions."}
               </p>
               <Button asChild>
@@ -407,7 +425,7 @@ function BettingTransactionsContent() {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           href="#"
                           onClick={(e) => {
                             e.preventDefault()
@@ -416,7 +434,7 @@ function BettingTransactionsContent() {
                           className={!previousPage ? "pointer-events-none opacity-50" : ""}
                         />
                       </PaginationItem>
-                      
+
                       {Array.from({ length: Math.min(5, Math.ceil(totalCount / 20)) }, (_, i) => {
                         const page = i + 1
                         return (
@@ -434,9 +452,9 @@ function BettingTransactionsContent() {
                           </PaginationItem>
                         )
                       })}
-                      
+
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           href="#"
                           onClick={(e) => {
                             e.preventDefault()

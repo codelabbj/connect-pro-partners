@@ -80,10 +80,10 @@ export default function CreateBulkPaymentPage() {
     const validateRow = (row: BulkRow, updatedNetworks: any[] = networks) => {
         const errors: Record<string, string> = {}
 
-        // Phone validation: numeric and max 11 digits
+        // Phone validation: numeric and exactly 10 digits
         if (!row.recipient_phone) {
             errors.recipient_phone = t("common.required") || "Required"
-        } else if (!/^\d+$/.test(row.recipient_phone) || row.recipient_phone.length > 10) {
+        } else if (!/^\d+$/.test(row.recipient_phone) || row.recipient_phone.length !== 10) {
             errors.recipient_phone = t("bulkPayment.invalidPhone")
         }
 
@@ -315,8 +315,8 @@ export default function CreateBulkPaymentPage() {
                             ref={fileInputRef}
                             onChange={handleFileUpload}
                         />
-                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="border-green-600 text-green-600 hover:bg-green-50">
-                            <Upload className="h-4 w-4 mr-2" />
+                        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="h-4 w-4 mr-2 text-green-600" />
                             {t("bulkPayment.uploadExcel")}
                         </Button>
                         <Button variant="outline" size="sm" onClick={addRow}>

@@ -9,8 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Edit, Save, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Edit, Save, X, Lock, ShieldCheck } from 'lucide-react';
+import { useLanguage } from '@/components/providers/language-provider';
+import { ErrorDisplay, extractErrorMessages } from '@/components/ui/error-display';
+import { useApi } from '@/lib/useApi';
 
 interface UserProfile {
   uid: string;
@@ -36,7 +39,17 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<UserProfile>>({});
+  const { t } = useLanguage();
   const { toast } = useToast();
+  const apiFetch = useApi();
+
+  const [passwordData, setPasswordData] = useState({
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Get token from localStorage (same as sign-in-form and dashboard layout)
   let token = "";
@@ -125,6 +138,44 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setPasswordError(t("register.passwordsNoMatch"));
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const endpoint = `${baseUrl}api/auth/password-update/`;
+      await apiFetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          old_password: passwordData.old_password,
+          new_password: passwordData.new_password,
+        }),
+      });
+
+      toast({
+        title: t("common.success"),
+        description: t("auth.updateSuccess"),
+      });
+
+      setPasswordData({
+        old_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
+    } catch (err: any) {
+      const errorMessage = extractErrorMessages(err);
+      setPasswordError(errorMessage);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   if (loading && !profile) {
     return (
       <div className="container mx-auto py-8">
@@ -165,16 +216,16 @@ export default function ProfilePage() {
           </Button>
         ) : (
           <div className="space-x-2">
-            <Button 
-              onClick={() => setEditing(false)} 
-              variant="outline" 
+            <Button
+              onClick={() => setEditing(false)}
+              variant="outline"
               disabled={loading}
             >
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
-            <Button 
-              onClick={handleSubmit} 
+            <Button
+              onClick={handleSubmit}
               disabled={loading}
             >
               {loading ? (
@@ -316,6 +367,67 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5 text-blue-600" />
+            {t("auth.updatePassword")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordUpdate} className="space-y-4 max-w-md">
+            <div className="space-y-2">
+              <Label htmlFor="old_password">{t("auth.oldPassword")}</Label>
+              <Input
+                id="old_password"
+                type="password"
+                value={passwordData.old_password}
+                onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new_password">{t("auth.newPassword")}</Label>
+              <Input
+                id="new_password"
+                type="password"
+                value={passwordData.new_password}
+                onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm_password">{t("auth.confirmNewPassword")}</Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                value={passwordData.confirm_password}
+                onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                required
+              />
+            </div>
+
+            {passwordError && (
+              <ErrorDisplay
+                error={passwordError}
+                variant="inline"
+                showDismiss={true}
+                onDismiss={() => setPasswordError(null)}
+              />
+            )}
+
+            <Button type="submit" disabled={passwordLoading} className="gap-2">
+              {passwordLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="h-4 w-4" />
+              )}
+              {t("auth.updatePassword")}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

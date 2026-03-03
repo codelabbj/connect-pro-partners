@@ -173,6 +173,20 @@ export function Sidebar() {
               <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
               <span className="truncate">{t("nav.bulkPayment")}</span>
             </Link>
+            <Link
+              href="/dashboard/api-keys"
+              aria-label="API Keys"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm sm:text-base rounded-lg font-medium transition-colors",
+                pathname === "/dashboard/api-keys"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Terminal className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">{t("nav.apiKeys")}</span>
+            </Link>
 
             <SectionHeader>Plateformes de Paris</SectionHeader>
             <Link
@@ -319,6 +333,19 @@ export function Sidebar() {
             >
               <CreditCard className="h-5 w-5" />
               {t("nav.bulkPayment")}
+            </Link>
+            <Link
+              href="/dashboard/api-keys"
+              aria-label="API Keys"
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-base rounded-lg font-medium transition-colors",
+                pathname === "/dashboard/api-keys"
+                  ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow"
+                  : "text-gray-700 hover:bg-blue-50 hover:text-blue-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+              )}
+            >
+              <Terminal className="h-5 w-5" />
+              {t("nav.apiKeys")}
             </Link>
 
             <SectionHeader>Plateformes de Paris</SectionHeader>

@@ -29,6 +29,22 @@ const translations = {
     "auth.loggingIn": "Logging in...",
     "auth.loginFailed": "Login failed.",
     "auth.notAllowed": "You are not allowed to access this page.",
+    "auth.updatePassword": "Update Password",
+    "auth.oldPassword": "Current Password",
+    "auth.newPassword": "New Password",
+    "auth.confirmNewPassword": "Confirm New Password",
+    "auth.forgotPasswordTitle": "Forgot Password",
+    "auth.forgotPasswordSubtitle": "Enter your email to receive a reset code",
+    "auth.resetPasswordTitle": "Reset Password",
+    "auth.resetPasswordSubtitle": "Enter the code and your new password",
+    "auth.identifierLabel": "Email or Username",
+    "auth.resetCode": "Verification Code",
+    "auth.sendCode": "Send Code",
+    "auth.confirmReset": "Reset Password",
+    "auth.updateSuccess": "Password updated successfully",
+    "auth.resetInitiated": "Verification code has been sent",
+    "auth.resetSuccess": "Password reset successfully",
+    "auth.backToLogin": "Back to login",
 
     // Navigation
     "nav.dashboard": "Dashboard",
@@ -57,6 +73,7 @@ const translations = {
     "nav.accountTransaction": "Account Balance History",
     "nav.topup": "Top Up",
     "nav.bulkPayment": "Bulk Payment",
+    "nav.apiKeys": "API Keys",
 
     // Dashboard
     "dashboard": "Dashboard",
@@ -588,6 +605,8 @@ const translations = {
     "common.errorOccurred": "An error occurred",
     "common.required": "Required",
     "common.error": "Error",
+    "common.success": "Success",
+    "common.operationSuccessful": "Operation completed successfully",
     "common.retry": "Retry",
     "common.retrying": "Retrying...",
     "common.dismiss": "Dismiss",
@@ -784,9 +803,20 @@ const translations = {
     "common.failedToDelete": "Failed to delete",
 
     // Date Filter
-    "common.dateFilter": "Date Filter",
-    "common.startDate": "Start Date",
     "common.endDate": "End Date",
+
+    // API Keys
+    "apiKeys.title": "API Key Management",
+    "apiKeys.subtitle": "Generate and manage your API keys for integration",
+    "apiKeys.generateNew": "Generate New API Key",
+    "apiKeys.warning": "IMPORTANT: Keep this information safe. The Secret Key will only be displayed once.",
+    "apiKeys.revokeWarning": "Generating a new pair will revoke the old one.",
+    "apiKeys.keyLabel": "API Key",
+    "apiKeys.secretLabel": "API Secret",
+    "apiKeys.createdAt": "Created At",
+    "apiKeys.copySuccess": "Copied to clipboard",
+    "apiKeys.generateSuccess": "New API Key pair generated successfully",
+    "apiKeys.noKeys": "No API keys found. Click the button below to generate your first key.",
   },
   fr: {
     // Auth
@@ -800,6 +830,22 @@ const translations = {
     "auth.loggingIn": "Connexion...",
     "auth.loginFailed": "Échec de la connexion.",
     "auth.notAllowed": "Vous n'êtes pas autorisé à accéder à cette page.",
+    "auth.updatePassword": "Mettre à jour le mot de passe",
+    "auth.oldPassword": "Mot de passe actuel",
+    "auth.newPassword": "Nouveau mot de passe",
+    "auth.confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "auth.forgotPasswordTitle": "Mot de passe oublié",
+    "auth.forgotPasswordSubtitle": "Entrez votre email pour recevoir un code de réinitialisation",
+    "auth.resetPasswordTitle": "Réinitialiser le mot de passe",
+    "auth.resetPasswordSubtitle": "Entrez le code et votre nouveau mot de passe",
+    "auth.identifierLabel": "Email ou nom d'utilisateur",
+    "auth.resetCode": "Code de vérification",
+    "auth.sendCode": "Envoyer le code",
+    "auth.confirmReset": "Réinitialiser le mot de passe",
+    "auth.updateSuccess": "Mot de passe mis à jour avec succès",
+    "auth.resetInitiated": "Le code de vérification a été envoyé",
+    "auth.resetSuccess": "Mot de passe réinitialisé avec succès",
+    "auth.backToLogin": "Retour à la connexion",
 
     // Navigation
     "nav.dashboard": "Tableau de bord",
@@ -828,6 +874,7 @@ const translations = {
     "nav.accountTransaction": "Historique du solde du compte",
     "nav.topup": "Recharger",
     "nav.bulkPayment": "Paiement de masse",
+    "nav.apiKeys": "Clés API",
 
     // Dashboard
     "dashboard": "Tableau de bord",
@@ -1362,6 +1409,8 @@ const translations = {
     "common.errorOccurred": "Une erreur s'est produite",
     "common.required": "Requis",
     "common.error": "Erreur",
+    "common.success": "Succès",
+    "common.operationSuccessful": "Opération terminée avec succès",
     "common.retry": "Réessayer",
     "common.retrying": "Nouvelle tentative...",
     "common.dismiss": "Fermer",
@@ -1558,9 +1607,20 @@ const translations = {
     "common.failedToDelete": "Échec de la suppression",
 
     // Date Filter
-    "common.dateFilter": "Filtre de Date",
-    "common.startDate": "Date de Début",
     "common.endDate": "Date de Fin",
+
+    // API Keys
+    "apiKeys.title": "Gestion des Clés API",
+    "apiKeys.subtitle": "Générez et gérez vos clés API pour l'intégration",
+    "apiKeys.generateNew": "Générer une nouvelle clé API",
+    "apiKeys.warning": "IMPORTANT : Conservez ces informations en toute sécurité. La Clé Secrète ne sera affichée qu'une seule fois.",
+    "apiKeys.revokeWarning": "La génération d'une nouvelle paire révoquera l'ancienne.",
+    "apiKeys.keyLabel": "Clé API",
+    "apiKeys.secretLabel": "Secret API",
+    "apiKeys.createdAt": "Créé le",
+    "apiKeys.copySuccess": "Copié dans le presse-papier",
+    "apiKeys.generateSuccess": "Nouvelle paire de clés API générée avec succès",
+    "apiKeys.noKeys": "Aucune clé API trouvée. Cliquez sur le bouton ci-dessous pour générer votre première clé.",
   },
 }
 

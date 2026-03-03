@@ -164,15 +164,25 @@ export function SignInForm() {
                 </Button>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <Label htmlFor="rememberMe" className="text-xs sm:text-sm">
-                {t("auth.rememberMe")}
-              </Label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
+                <Label htmlFor="rememberMe" className="text-xs sm:text-sm">
+                  {t("auth.rememberMe")}
+                </Label>
+              </div>
+              <Button
+                variant="link"
+                className="px-0 font-normal text-xs sm:text-sm"
+                onClick={() => router.push("/forgot-password")}
+                type="button"
+              >
+                {t("auth.forgotPassword")}
+              </Button>
             </div>
             {error && (
               <ErrorDisplay
@@ -183,7 +193,7 @@ export function SignInForm() {
               />
             )}
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ?t("auth.loggingIn") : t("auth.signIn")}
+              {loading ? t("auth.loggingIn") : t("auth.signIn")}
             </Button>
           </form>
         </CardContent>

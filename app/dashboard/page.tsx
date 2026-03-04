@@ -48,7 +48,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null)
   const [userStats, setUserStats] = useState<any>(null)
   const [rechargeStats, setRechargeStats] = useState<any>(null)
-  
+
   // Account data state (from UserPaymentPage)
   const [accountData, setAccountData] = useState<any>(null)
   const [accountLoading, setAccountLoading] = useState(true)
@@ -147,7 +147,7 @@ export default function DashboardPage() {
   const totalRecharged = parseFloat(stats?.account?.total_recharged ?? "0")
 
   // Create charts data from API responses
-  
+
   // Transaction comparison chart data
   const transactionComparisonData = [
     {
@@ -157,7 +157,7 @@ export default function DashboardPage() {
       completed: userStats?.deposits?.completed_count ?? 0,
     },
     {
-      name: "Retraits", 
+      name: "Retraits",
       count: userStats?.withdrawals?.count ?? 0,
       amount: userStats?.withdrawals?.total_amount ?? 0,
       completed: userStats?.withdrawals?.completed_count ?? 0,
@@ -196,9 +196,9 @@ export default function DashboardPage() {
     recipient_phone: string;
     recipient_name?: string;
     display_recipient_name?: string;
-    network?: { 
+    network?: {
       uid: string;
-      nom: string; 
+      nom: string;
       code: string;
       country_name: string;
       country_code: string;
@@ -227,14 +227,14 @@ export default function DashboardPage() {
       txn.type === "deposit"
         ? "Dépôt effectué"
         : txn.type === "withdrawal"
-        ? "Retrait effectué"
-        : "Transaction",
+          ? "Retrait effectué"
+          : "Transaction",
     user: stats.account.user_name,
-    time: new Date(txn.created_at).toLocaleString("fr-FR", { 
+    time: new Date(txn.created_at).toLocaleString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
-      hour: "2-digit", 
-      minute: "2-digit" 
+      hour: "2-digit",
+      minute: "2-digit"
     }),
     networkInfo: txn.network,
   })) ?? []
@@ -357,12 +357,12 @@ export default function DashboardPage() {
           title="Total Demandes Recharge"
           value={rechargeStats?.total_requests?.toLocaleString() ?? "0"}
           icon={DollarSign}
-          trend={{ 
-            value: `${(rechargeStats?.month_stats?.approval_rate ?? 0).toFixed(2)}% approuvé`, 
-            isPositive: rechargeStats?.month_stats?.approval_rate > 50 
+          trend={{
+            value: `${(rechargeStats?.month_stats?.approval_rate ?? 0).toFixed(2)}% approuvé`,
+            isPositive: rechargeStats?.month_stats?.approval_rate > 50
           }}
         />
-       
+
         <StatCard
           title="Total Rechargé"
           value={totalRecharged.toLocaleString() + " FCFA"}
@@ -385,15 +385,15 @@ export default function DashboardPage() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar 
-                  dataKey="count" 
-                  fill={chartConfig.deposits.color} 
-                  name="Total transactions" 
+                <Bar
+                  dataKey="count"
+                  fill={chartConfig.deposits.color}
+                  name="Total transactions"
                 />
-                <Bar 
-                  dataKey="completed" 
-                  fill={chartConfig.approved.color} 
-                  name="Transactions terminées" 
+                <Bar
+                  dataKey="completed"
+                  fill={chartConfig.approved.color}
+                  name="Transactions terminées"
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -424,9 +424,9 @@ export default function DashboardPage() {
                     {transactionStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={
                         entry.key === 'completed' || entry.key === 'success' ? chartConfig.approved.color :
-                        entry.key === 'failed' || entry.key === 'cancelled' ? chartConfig.rejected.color :
-                        entry.key === 'pending' ? chartConfig.pending.color :
-                        NETWORK_COLORS[index % NETWORK_COLORS.length]
+                          entry.key === 'failed' || entry.key === 'cancelled' ? chartConfig.rejected.color :
+                            entry.key === 'pending' ? chartConfig.pending.color :
+                              NETWORK_COLORS[index % NETWORK_COLORS.length]
                       } />
                     ))}
                   </Pie>
@@ -497,8 +497,8 @@ export default function DashboardPage() {
                     {rechargeStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={
                         entry.key === 'approved' ? chartConfig.approved.color :
-                        entry.key === 'rejected' ? chartConfig.rejected.color :
-                        chartConfig.pending.color
+                          entry.key === 'rejected' ? chartConfig.rejected.color :
+                            chartConfig.pending.color
                       } />
                     ))}
                   </Pie>
@@ -558,13 +558,12 @@ export default function DashboardPage() {
                 <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-4">
                     <div
-                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        activity.type === "deposit"
+                      className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === "deposit"
                           ? "bg-green-500"
                           : activity.type === "withdrawal"
-                          ? "bg-orange-500"
-                          : "bg-blue-500"
-                      }`}
+                            ? "bg-orange-500"
+                            : "bg-blue-500"
+                        }`}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-none truncate">
@@ -575,13 +574,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-2 sm:gap-4 ml-4 sm:ml-0">
                     <div className="text-xs sm:text-sm text-muted-foreground">{activity.time}</div>
-                    <div className={`text-xs px-2 py-1 rounded ${
-                      activity.status_display === "En attente" ? "bg-yellow-100 text-yellow-800" :
-                      activity.status_display === "Terminée" ? "bg-green-100 text-green-800" :
-                      activity.status_display === "Succès" ? "bg-blue-100 text-blue-800" :
-                      activity.status_display === "Annulée" ? "bg-red-100 text-red-800" :
-                      "bg-muted"
-                    }`}>
+                    <div className={`text-xs px-2 py-1 rounded ${activity.status_display === "En attente" ? "bg-yellow-100 text-yellow-800" :
+                        activity.status_display === "Terminée" ? "bg-green-100 text-green-800" :
+                          activity.status_display === "Succès" ? "bg-blue-100 text-blue-800" :
+                            activity.status_display === "Annulée" ? "bg-red-100 text-red-800" :
+                              "bg-muted"
+                      }`}>
                       {activity.status_display}
                     </div>
                   </div>
@@ -614,7 +612,7 @@ export default function DashboardPage() {
             <CardTitle className="text-base sm:text-lg">Statistiques Mensuelles</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{(rechargeStats?.month_stats?.approval_rate ?? 0) .toFixed(2)}%</div>
+            <div className="text-xl sm:text-2xl font-bold">{(rechargeStats?.month_stats?.approval_rate ?? 0).toFixed(2)}%</div>
             <p className="text-xs sm:text-sm text-muted-foreground">
               Taux d'approbation des recharges
             </p>
@@ -649,14 +647,12 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className={`inline-flex px-2 py-1 rounded text-xs ${
-                stats?.account?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
+              <div className={`inline-flex px-2 py-1 rounded text-xs ${stats?.account?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
                 {stats?.account?.is_active ? 'Actif' : 'Inactif'}
               </div>
-              <div className={`inline-flex px-2 py-1 rounded text-xs ml-2 ${
-                !stats?.account?.is_frozen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
+              <div className={`inline-flex px-2 py-1 rounded text-xs ml-2 ${!stats?.account?.is_frozen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
                 {stats?.account?.is_frozen ? 'Gelé' : 'Normal'}
               </div>
             </div>
@@ -664,7 +660,7 @@ export default function DashboardPage() {
               Taux d'utilisation: {stats?.account?.utilization_rate ?? 0}%
             </p>
             <p className="text-xs text-muted-foreground">
-              Dernière transaction: {stats?.account?.last_transaction_at ? 
+              Dernière transaction: {stats?.account?.last_transaction_at ?
                 new Date(stats.account.last_transaction_at).toLocaleDateString('fr-FR') : 'N/A'}
             </p>
           </CardContent>
@@ -730,7 +726,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Detailed Status Breakdown */}
             <div className="mt-4 sm:mt-6">
               <h5 className="font-semibold mb-3 text-sm sm:text-base">Répartition détaillée par statut:</h5>

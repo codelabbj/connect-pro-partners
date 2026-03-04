@@ -40,6 +40,7 @@ import { useCallback } from "react"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DateFilter } from "@/components/ui/date-filter"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -66,7 +67,7 @@ export default function UserTransactionsPage() {
   // Networks state
   const [networks, setNetworks] = useState<any[]>([])
   const [networksLoading, setNetworksLoading] = useState(false)
-  
+
   // Transaction creation state
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
@@ -85,6 +86,7 @@ export default function UserTransactionsPage() {
   const { toast } = useToast()
   const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
+  const { canMomo } = usePermissions()
 
   // Fetch account data
   useEffect(() => {
@@ -167,10 +169,10 @@ export default function UserTransactionsPage() {
 
       const endpoint = `${baseUrl}api/payments/user/transactions/?${params.toString()}`;
       const data = await apiFetch(endpoint)
-      
+
       setTransactions(data.results || [])
       setTotalCount(data.count || 0)
-      
+
     } catch (err: any) {
       const errorMessage = extractErrorMessages(err) || t("transactions.failedToLoad") || "Failed to load transactions"
       setError(errorMessage)
@@ -187,7 +189,7 @@ export default function UserTransactionsPage() {
     }
   }
 
-  
+
 
   // Manual refresh function
   const handleRefresh = async () => {
@@ -233,9 +235,9 @@ export default function UserTransactionsPage() {
         },
         body: JSON.stringify(payload)
       })
-      
-      toast({ 
-        title: t("payment.success"), 
+
+      toast({
+        title: t("payment.success"),
         description: t(`payment.${transactionForm.type}CreatedSuccessfully`) || `${transactionForm.type} created successfully!`
       })
       setCreateModalOpen(false)
@@ -373,7 +375,7 @@ export default function UserTransactionsPage() {
           <h1 className="text-2xl font-bold">{t("transactions.title") || "My Transactions"}</h1>
           <p className="text-muted-foreground">{t("transactions.subtitle") || "Manage your transactions"}</p>
         </div>
-        
+
       </div>
 
       {/* Account Overview */}
@@ -480,9 +482,9 @@ export default function UserTransactionsPage() {
               </span> */}
             </CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                onClick={handleRefresh} 
-                variant="outline" 
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
                 size="sm"
                 disabled={refreshing}
                 className="w-full sm:w-auto"
@@ -490,16 +492,27 @@ export default function UserTransactionsPage() {
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                 {/* {t("common.refresh") || "Refresh"} */}
               </Button>
-            
-              <Button 
-                onClick={() => router.push('/dashboard/transactions/create')}
-                size="sm"
-                className="w-full sm:w-auto text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
-              >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                {t("payment.newTransaction") || "New Transaction"}
-              </Button>
-            </div> 
+
+              {canMomo ? (
+                <Button
+                  onClick={() => router.push('/dashboard/transactions/create')}
+                  size="sm"
+                  className="w-full sm:w-auto text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  {t("payment.newTransaction") || "New Transaction"}
+                </Button>
+              ) : (
+                <Button
+                  disabled
+                  size="sm"
+                  className="w-full sm:w-auto text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  {t("payment.newTransaction") || "New Transaction"}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -588,10 +601,10 @@ export default function UserTransactionsPage() {
                   <TableRow>
                     <TableHead>{t("transactions.reference") || "Reference"}</TableHead>
                     <TableHead>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        onClick={() => handleSort("amount")} 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => handleSort("amount")}
                         className="h-auto p-0 font-semibold hover:bg-transparent"
                       >
                         {t("transactions.amount") || "Amount"}
@@ -600,10 +613,10 @@ export default function UserTransactionsPage() {
                     </TableHead>
                     <TableHead>{t("transactions.recipientInfo") || "Recipient"}</TableHead>
                     <TableHead>
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        onClick={() => handleSort("date")} 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => handleSort("date")}
                         className="h-auto p-0 font-semibold hover:bg-transparent"
                       >
                         {t("transactions.date") || "Date"}
@@ -737,7 +750,7 @@ export default function UserTransactionsPage() {
       </Card>
 
       {/* Create Transaction Modal */}
-      <Dialog open={createModalOpen} onOpenChange={(open) => { 
+      <Dialog open={createModalOpen} onOpenChange={(open) => {
         if (!open) {
           setCreateModalOpen(false)
           setCreateError("")
@@ -754,7 +767,7 @@ export default function UserTransactionsPage() {
           <DialogHeader>
             <DialogTitle>{t("payment.newTransaction") || "Create New Transaction"}</DialogTitle>
           </DialogHeader>
-          
+
           {createError && (
             <ErrorDisplay
               error={createError}
@@ -841,8 +854,8 @@ export default function UserTransactionsPage() {
                 {t("common.cancel") || "Cancel"}
               </Button>
             </DialogClose>
-            <Button 
-              onClick={handleCreateTransaction} 
+            <Button
+              onClick={handleCreateTransaction}
               disabled={createLoading || !transactionForm.amount || !transactionForm.recipient_phone || !transactionForm.network}
             >
               {createLoading ? (t("common.processing") || "Processing...") : (t("common.create") || "Create")}

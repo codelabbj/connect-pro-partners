@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -39,7 +40,14 @@ export default function CreateBulkPaymentPage() {
     const apiFetch = useApi()
     const { toast } = useToast()
     const router = useRouter()
+    const { canBulk } = usePermissions()
     const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        if (!canBulk) {
+            router.push("/dashboard/bulk-payment")
+        }
+    }, [canBulk, router])
 
     const [networks, setNetworks] = useState<any[]>([])
     const [loadingNetworks, setLoadingNetworks] = useState(true)
@@ -287,6 +295,8 @@ export default function CreateBulkPaymentPage() {
     const totalPages = Math.ceil(rows.length / rowsPerPage)
     const startIndex = (currentPage - 1) * rowsPerPage
     const paginatedRows = rows.slice(startIndex, startIndex + rowsPerPage)
+
+    if (!canBulk) return null;
 
     return (
         <div className="ml-6 space-y-6">

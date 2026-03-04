@@ -19,9 +19,10 @@ import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { BettingPlatform, CreateDepositRequest, CreateWithdrawalRequest, CreateTransactionResponse, VerifyUserIdResponse, ExternalPlatformData } from "@/lib/types/betting"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { getExternalPlatformData, fetchExternalPlatforms, matchExternalPlatform } from "@/lib/utils/externalPlatform"
 import { MapPin } from "lucide-react"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -31,6 +32,14 @@ function CreateTransactionContent() {
   const { toast } = useToast()
   const searchParams = useSearchParams()
   const selectedPlatformUid = searchParams.get('platform')
+  const router = useRouter()
+  const { canMobcash } = usePermissions()
+
+  useEffect(() => {
+    if (!canMobcash) {
+      router.push("/dashboard/betting/transactions")
+    }
+  }, [canMobcash, router])
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -56,7 +65,7 @@ function CreateTransactionContent() {
     userInfo: null,
     error: ""
   })
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
 
   const fetchPlatforms = async () => {
     setLoading(true)
@@ -65,7 +74,7 @@ function CreateTransactionContent() {
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/platforms/platforms_with_permissions/`
       const data = await apiFetch(endpoint)
       setPlatforms(data.authorized_platforms || [])
-      
+
       // Set selected platform if provided in URL
       if (selectedPlatformUid) {
         const platform = data.authorized_platforms?.find((p: BettingPlatform) => p.uid === selectedPlatformUid)
@@ -126,14 +135,14 @@ function CreateTransactionContent() {
     if (!userId || !platformUid) return
 
     setUserIdValidation({ loading: true, valid: null, userInfo: null, error: "" })
-    
+
     try {
       const endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/transactions/verify_user_id/`
       const payload = {
         platform_uid: platformUid,
         betting_user_id: parseInt(userId)
       }
-      
+
       const data: VerifyUserIdResponse = await apiFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -200,12 +209,12 @@ function CreateTransactionContent() {
       // Check if transaction actually failed despite API success
       const externalResponse = data.transaction?.external_response
       const transactionStatus = data.transaction?.status
-      
+
       console.log("External response:", externalResponse)
       console.log("Transaction status:", transactionStatus)
-      
+
       const hasExternalError = externalResponse && (
-        externalResponse.success === false || 
+        externalResponse.success === false ||
         transactionStatus === 'failed'
       )
 
@@ -214,24 +223,24 @@ function CreateTransactionContent() {
       if (hasExternalError && externalResponse?.error) {
         // Transaction failed - show error from external_response
         console.log("Showing external error:", externalResponse.error)
-        toast({ 
-          title: "Échec", 
+        toast({
+          title: "Échec",
           description: externalResponse.error,
           variant: "destructive"
         })
       } else if (data.success) {
         // Transaction succeeded
         console.log("Showing success message")
-        toast({ 
-          title: "Succès", 
+        toast({
+          title: "Succès",
           description: data.message || "Dépôt créé avec succès",
           variant: "default"
         })
       } else {
         // API returned failure
         console.log("Showing API error")
-        toast({ 
-          title: "Erreur", 
+        toast({
+          title: "Erreur",
           description: data.message || "Échec de la création du dépôt",
           variant: "destructive"
         })
@@ -249,7 +258,7 @@ function CreateTransactionContent() {
       setFormErrors({})
       if (err && typeof err === 'object') {
         // Handle field-specific validation errors
-        const fieldErrors: {[key: string]: string} = {}
+        const fieldErrors: { [key: string]: string } = {}
         Object.keys(err).forEach(key => {
           if (Array.isArray(err[key])) {
             fieldErrors[key] = err[key][0] // Take first error message
@@ -257,7 +266,7 @@ function CreateTransactionContent() {
             fieldErrors[key] = err[key]
           }
         })
-        
+
         if (Object.keys(fieldErrors).length > 0) {
           setFormErrors(fieldErrors)
         } else {
@@ -297,12 +306,12 @@ function CreateTransactionContent() {
       // Check if transaction actually failed despite API success
       const externalResponse = data.transaction?.external_response
       const transactionStatus = data.transaction?.status
-      
+
       console.log("External response:", externalResponse)
       console.log("Transaction status:", transactionStatus)
-      
+
       const hasExternalError = externalResponse && (
-        externalResponse.success === false || 
+        externalResponse.success === false ||
         transactionStatus === 'failed'
       )
 
@@ -311,24 +320,24 @@ function CreateTransactionContent() {
       if (hasExternalError && externalResponse?.error) {
         // Transaction failed - show error from external_response
         console.log("Showing external error:", externalResponse.error)
-        toast({ 
-          title: "Échec", 
+        toast({
+          title: "Échec",
           description: externalResponse.error,
           variant: "destructive"
         })
       } else if (data.success) {
         // Transaction succeeded
         console.log("Showing success message")
-        toast({ 
-          title: "Succès", 
+        toast({
+          title: "Succès",
           description: data.message || "Retrait créé avec succès",
           variant: "default"
         })
       } else {
         // API returned failure
         console.log("Showing API error")
-        toast({ 
-          title: "Erreur", 
+        toast({
+          title: "Erreur",
           description: data.message || "Échec de la création du retrait",
           variant: "destructive"
         })
@@ -346,7 +355,7 @@ function CreateTransactionContent() {
       setFormErrors({})
       if (err && typeof err === 'object') {
         // Handle field-specific validation errors
-        const fieldErrors: {[key: string]: string} = {}
+        const fieldErrors: { [key: string]: string } = {}
         Object.keys(err).forEach(key => {
           if (Array.isArray(err[key])) {
             fieldErrors[key] = err[key][0] // Take first error message
@@ -354,7 +363,7 @@ function CreateTransactionContent() {
             fieldErrors[key] = err[key]
           }
         })
-        
+
         if (Object.keys(fieldErrors).length > 0) {
           setFormErrors(fieldErrors)
         } else {
@@ -375,10 +384,10 @@ function CreateTransactionContent() {
   }
 
   const isFormValid = () => {
-    return selectedPlatform && 
-           bettingUserId && 
-           userIdValidation.valid && 
-           ((activeTab === "deposit" && amount) || (activeTab === "withdrawal" && withdrawalCode))
+    return selectedPlatform &&
+      bettingUserId &&
+      userIdValidation.valid &&
+      ((activeTab === "deposit" && amount) || (activeTab === "withdrawal" && withdrawalCode))
   }
 
   if (loading) {
@@ -427,6 +436,8 @@ function CreateTransactionContent() {
     )
   }
 
+  if (!canMobcash) return null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -474,13 +485,13 @@ function CreateTransactionContent() {
                   const extData = getExternalData(platform)
                   const displayImage = extData?.image || platform.logo
                   const displayName = extData?.public_name || platform.name
-                  
+
                   return (
                     <SelectItem key={platform.uid} value={platform.uid}>
                       <div className="flex items-center gap-2">
                         {displayImage ? (
-                          <img 
-                            src={displayImage} 
+                          <img
+                            src={displayImage}
                             alt={displayName}
                             className="h-6 w-6 rounded object-cover"
                           />
@@ -502,8 +513,8 @@ function CreateTransactionContent() {
                 {/* Platform Logo */}
                 <div className="flex items-center justify-center p-4 bg-muted rounded-lg">
                   {(externalData?.image || selectedPlatform.logo) ? (
-                    <img 
-                      src={externalData?.image || selectedPlatform.logo || ""} 
+                    <img
+                      src={externalData?.image || selectedPlatform.logo || ""}
                       alt={selectedPlatform.name}
                       className="h-20 w-20 rounded-lg object-cover"
                     />
@@ -663,8 +674,8 @@ function CreateTransactionContent() {
                       </p>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={!isFormValid() || submitting}
                       className="w-full"
                     >
@@ -752,8 +763,8 @@ function CreateTransactionContent() {
                       </p>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={!isFormValid() || submitting}
                       className="w-full"
                     >

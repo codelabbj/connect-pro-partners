@@ -18,6 +18,7 @@ import { useParams } from "next/navigation"
 import { StatCard } from "@/components/ui/stat-card"
 import { getExternalPlatformData } from "@/lib/utils/externalPlatform"
 import { MapPin, ExternalLink, BookOpen } from "lucide-react"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -27,6 +28,7 @@ export default function PlatformDetailPage() {
   const { toast } = useToast()
   const params = useParams()
   const platformUid = params.uid as string
+  const { canMobcash } = usePermissions()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -41,10 +43,10 @@ export default function PlatformDetailPage() {
       // First try to get platform from permissions API
       const permissionsEndpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/platforms/platforms_with_permissions/`
       const permissionsData = await apiFetch(permissionsEndpoint)
-      
+
       // Find the platform by uid in all_platforms
       const foundPlatform = permissionsData.all_platforms?.find((p: BettingPlatform) => p.uid === platformUid)
-      
+
       if (foundPlatform) {
         setPlatform(foundPlatform)
       } else {
@@ -202,8 +204,8 @@ export default function PlatformDetailPage() {
           </Button>
           <div className="flex items-center gap-3">
             {(externalData?.image || platform.logo) ? (
-              <img 
-                src={externalData?.image || platform.logo || ""} 
+              <img
+                src={externalData?.image || platform.logo || ""}
                 alt={platform.name}
                 className="h-12 w-12 rounded-lg object-cover"
               />
@@ -421,7 +423,7 @@ export default function PlatformDetailPage() {
                   <BookOpen className="h-4 w-4" />
                   Guide de Dépôt
                 </h4>
-                <div 
+                <div
                   className="text-sm text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: externalData.deposit_tuto_content }}
                 />
@@ -442,7 +444,7 @@ export default function PlatformDetailPage() {
                   <BookOpen className="h-4 w-4" />
                   Guide de Retrait
                 </h4>
-                <div 
+                <div
                   className="text-sm text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: externalData.withdrawal_tuto_content }}
                 />
@@ -482,12 +484,19 @@ export default function PlatformDetailPage() {
               </Link>
             </Button>
             {platform.permission_is_active && (
-              <Button asChild variant="outline" className="flex-1">
-                <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+              canMobcash ? (
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle Transaction
+                  </Link>
+                </Button>
+              ) : (
+                <Button disabled variant="outline" className="flex-1">
                   <Plus className="h-4 w-4 mr-2" />
                   Nouvelle Transaction
-                </Link>
-              </Button>
+                </Button>
+              )
             )}
             <Button asChild variant="outline" className="flex-1">
               <Link href={`/dashboard/betting/commissions?platform=${platform.uid}`}>

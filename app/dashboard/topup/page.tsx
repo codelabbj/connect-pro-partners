@@ -34,7 +34,7 @@
 // 	const [detailTopup, setDetailTopup] = useState<any | null>(null)
 // 	const [detailLoading, setDetailLoading] = useState(false)
 // 	const [detailError, setDetailError] = useState("")
-	
+
 // 	// Approve/Reject modal state
 // 	const [actionModalOpen, setActionModalOpen] = useState(false);
 // 	const [actionType, setActionType] = useState<"approve"|"reject"|null>(null);
@@ -341,6 +341,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -374,14 +375,16 @@ export default function UserTopupPage() {
 	const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 	const { toast } = useToast()
 	const apiFetch = useApi();
+	const router = useRouter()
 	const [detailModalOpen, setDetailModalOpen] = useState(false)
 	const [detailTopup, setDetailTopup] = useState<any | null>(null)
 	const [detailLoading, setDetailLoading] = useState(false)
 	const [detailError, setDetailError] = useState("")
-	
+
+
 	// Recharge type toggle (normal vs auto-recharge)
 	const [rechargeType, setRechargeType] = useState<"normal" | "auto">("normal")
-	
+
 	// Create topup modal state
 	const [createModalOpen, setCreateModalOpen] = useState(false)
 	const [createLoading, setCreateLoading] = useState(false)
@@ -392,7 +395,7 @@ export default function UserTopupPage() {
 		proof_description: "",
 		transaction_date: ""
 	})
-	
+
 	// Auto-recharge form state
 	const [autoRechargeForm, setAutoRechargeForm] = useState({
 		network: "",
@@ -430,7 +433,7 @@ export default function UserTopupPage() {
 				if (endDate) {
 					params.append("created_at__lte", endDate)
 				}
-				
+
 				// Use different API endpoints based on recharge type
 				let endpoint = ""
 				if (rechargeType === "auto") {
@@ -447,35 +450,35 @@ export default function UserTopupPage() {
 						: ""
 					endpoint = `${baseUrl.replace(/\/$/, "")}/api/payments/user/recharges/?${params.toString()}${orderingParam}`
 				}
-				
+
 				const data = await apiFetch(endpoint)
 
 				// Safely process the results to ensure no objects are rendered directly
 				const safeResults = (data.results || []).map((item: any) => {
 					console.log('Processing item:', item.uid, 'Network:', item.network, 'Network type:', typeof item.network);
 					return {
-					...item,
-					reference: typeof item.reference === 'string' ? item.reference : String(item.reference || ''),
-					amount: typeof item.amount === 'string' || typeof item.amount === 'number' ? item.amount : 0,
-					formatted_amount: typeof item.formatted_amount === 'string' ? item.formatted_amount : '',
-					status: typeof item.status === 'string' ? item.status : 'unknown',
-					status_display: typeof item.status_display === 'string' ? item.status_display : '',
-					phone_number: typeof item.phone_number === 'string' ? item.phone_number : '',
-					network_name: typeof item.network_name === 'string' ? item.network_name : '',
-					network_code: typeof item.network_code === 'string' ? item.network_code : '',
-					network: typeof item.network === 'object' ? item.network : null,
-					created_at: typeof item.created_at === 'string' ? item.created_at : '',
-					expires_at: typeof item.expires_at === 'string' ? item.expires_at : '',
-					time_remaining: typeof item.time_remaining === 'string' ? item.time_remaining : '',
-					is_expired: typeof item.is_expired === 'boolean' ? item.is_expired : false,
-					can_submit_proof: typeof item.can_submit_proof === 'boolean' ? item.can_submit_proof : false,
-					reviewed_at: typeof item.reviewed_at === 'string' ? item.reviewed_at : '',
-					processed_at: typeof item.processed_at === 'string' ? item.processed_at : '',
-					proof_description: typeof item.proof_description === 'string' ? item.proof_description : '',
-					rejection_reason: typeof item.rejection_reason === 'string' ? item.rejection_reason : '',
-					admin_notes: typeof item.admin_notes === 'string' ? item.admin_notes : '',
-					transaction_date: typeof item.transaction_date === 'string' ? item.transaction_date : '',
-				}
+						...item,
+						reference: typeof item.reference === 'string' ? item.reference : String(item.reference || ''),
+						amount: typeof item.amount === 'string' || typeof item.amount === 'number' ? item.amount : 0,
+						formatted_amount: typeof item.formatted_amount === 'string' ? item.formatted_amount : '',
+						status: typeof item.status === 'string' ? item.status : 'unknown',
+						status_display: typeof item.status_display === 'string' ? item.status_display : '',
+						phone_number: typeof item.phone_number === 'string' ? item.phone_number : '',
+						network_name: typeof item.network_name === 'string' ? item.network_name : '',
+						network_code: typeof item.network_code === 'string' ? item.network_code : '',
+						network: typeof item.network === 'object' ? item.network : null,
+						created_at: typeof item.created_at === 'string' ? item.created_at : '',
+						expires_at: typeof item.expires_at === 'string' ? item.expires_at : '',
+						time_remaining: typeof item.time_remaining === 'string' ? item.time_remaining : '',
+						is_expired: typeof item.is_expired === 'boolean' ? item.is_expired : false,
+						can_submit_proof: typeof item.can_submit_proof === 'boolean' ? item.can_submit_proof : false,
+						reviewed_at: typeof item.reviewed_at === 'string' ? item.reviewed_at : '',
+						processed_at: typeof item.processed_at === 'string' ? item.processed_at : '',
+						proof_description: typeof item.proof_description === 'string' ? item.proof_description : '',
+						rejection_reason: typeof item.rejection_reason === 'string' ? item.rejection_reason : '',
+						admin_notes: typeof item.admin_notes === 'string' ? item.admin_notes : '',
+						transaction_date: typeof item.transaction_date === 'string' ? item.transaction_date : '',
+					}
 				})
 
 				setTopups(safeResults)
@@ -573,7 +576,7 @@ export default function UserTopupPage() {
 				method: "POST",
 				body: formDataPayload
 			})
-			
+
 			toast({
 				title: t("topup.success"),
 				description: t("topup.createdSuccessfully"),
@@ -698,10 +701,10 @@ export default function UserTopupPage() {
 	// Handle auto-recharge submission
 	const handleAutoRechargeSubmit = async () => {
 		if (!autoRechargeForm.network || !autoRechargeForm.phone_number || !autoRechargeForm.amount) {
-			toast({ 
-				title: t("common.error") || "Error", 
-				description: t("topup.fillAllFields") || "Please fill all fields", 
-				variant: "destructive" 
+			toast({
+				title: t("common.error") || "Error",
+				description: t("topup.fillAllFields") || "Please fill all fields",
+				variant: "destructive"
 			})
 			return
 		}
@@ -846,19 +849,19 @@ export default function UserTopupPage() {
 					<div className="flex flex-col gap-4">
 						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
 							<CardTitle className="text-lg sm:text-xl">{t("topup.title") || "My Top Up Requests"}</CardTitle>
-							<Button 
+							<Button
 								onClick={() => setCreateModalOpen(true)}
 								size="sm"
 								className="w-full sm:w-auto"
 							>
 								<Plus className="h-4 w-4 mr-2" />
-								{rechargeType === "normal" 
+								{rechargeType === "normal"
 									? (t("topup.createNew") || "Create New Request")
 									: (t("topup.createAutoRecharge") || "Create Auto-Recharge")
 								}
 							</Button>
 						</div>
-						
+
 						{/* Recharge Type Toggle */}
 						<div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
 							<Button
@@ -952,12 +955,12 @@ export default function UserTopupPage() {
 								<TableHeader>
 									<TableRow>
 										<TableHead>{t("topup.reference") || "Reference"}</TableHead>
-									{rechargeType === "auto" && (
-										<>
-											<TableHead>{t("topup.network") || "Network"}</TableHead>
-											<TableHead>{t("topup.phoneNumber") || "Phone Number"}</TableHead>
-										</>
-									)}
+										{rechargeType === "auto" && (
+											<>
+												<TableHead>{t("topup.network") || "Network"}</TableHead>
+												<TableHead>{t("topup.phoneNumber") || "Phone Number"}</TableHead>
+											</>
+										)}
 										<TableHead>
 											<Button variant="ghost" onClick={() => handleSort("amount")} className="h-auto p-0 font-semibold">
 												{t("topup.amount") || "Amount"}
@@ -1015,7 +1018,7 @@ export default function UserTopupPage() {
 												<TableCell>
 													<Badge variant={getStatusBadgeVariant(topup.status)}>
 														{typeof topup.status_display === 'string' ? topup.status_display :
-														 typeof topup.status === 'string' ? topup.status : 'Unknown'}
+															typeof topup.status === 'string' ? topup.status : 'Unknown'}
 													</Badge>
 												</TableCell>
 												<TableCell>{topup.created_at ? new Date(topup.created_at).toLocaleDateString() : "-"}</TableCell>
@@ -1034,9 +1037,9 @@ export default function UserTopupPage() {
 													</>
 												)}
 												<TableCell>
-													<Button 
-														size="sm" 
-														variant="outline" 
+													<Button
+														size="sm"
+														variant="outline"
 														onClick={() => {
 															if (rechargeType === "auto") {
 																// Navigate to auto-recharge detail page
@@ -1092,7 +1095,7 @@ export default function UserTopupPage() {
 			</Card>
 
 			{/* Create Topup Modal */}
-			<Dialog open={createModalOpen} onOpenChange={(open) => { 
+			<Dialog open={createModalOpen} onOpenChange={(open) => {
 				if (!open) {
 					setCreateModalOpen(false)
 					setCreateError("")
@@ -1115,13 +1118,13 @@ export default function UserTopupPage() {
 				<DialogContent className="sm:max-w-[500px]">
 					<DialogHeader>
 						<DialogTitle>
-							{rechargeType === "normal" 
+							{rechargeType === "normal"
 								? (t("topup.createNew") || "Create New Top-Up Request")
 								: (t("topup.createAutoRecharge") || "Create Auto-Recharge")
 							}
 						</DialogTitle>
 					</DialogHeader>
-					
+
 					{createError && (
 						<ErrorDisplay
 							error={createError}
@@ -1189,8 +1192,8 @@ export default function UserTopupPage() {
 										{t("common.cancel") || "Cancel"}
 									</Button>
 								</DialogClose>
-								<Button 
-									onClick={handleCreateTopup} 
+								<Button
+									onClick={handleCreateTopup}
 									disabled={createLoading || !formData.amount}
 								>
 									{createLoading ? t("common.creating") || "Creating..." : t("common.create") || "Create"}
@@ -1260,8 +1263,8 @@ export default function UserTopupPage() {
 												{t("common.cancel") || "Cancel"}
 											</Button>
 										</DialogClose>
-										<Button 
-											onClick={handleAutoRechargeSubmit} 
+										<Button
+											onClick={handleAutoRechargeSubmit}
 											disabled={autoRechargeSubmitting || !autoRechargeForm.network || !autoRechargeForm.phone_number || !autoRechargeForm.amount}
 										>
 											{autoRechargeSubmitting ? t("common.creating") || "Creating..." : t("common.create") || "Create"}
@@ -1315,18 +1318,18 @@ export default function UserTopupPage() {
 											</Button>
 										</div>
 									</div>
-									
+
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.amount") || "Amount"}</Label>
 										<p className="text-lg font-semibold">{typeof detailTopup.formatted_amount === 'string' ? detailTopup.formatted_amount : 'N/A'}</p>
 									</div>
-									
+
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.status") || "Status"}</Label>
 										<div>
 											<Badge variant={getStatusBadgeVariant(detailTopup.status)}>
 												{typeof detailTopup.status_display === 'string' ? detailTopup.status_display :
-												 typeof detailTopup.status === 'string' ? detailTopup.status : 'Unknown'}
+													typeof detailTopup.status === 'string' ? detailTopup.status : 'Unknown'}
 											</Badge>
 										</div>
 									</div>

@@ -105,7 +105,7 @@ export default function TransferPage() {
       const params = new URLSearchParams({
         search: query.trim()
       })
-      
+
       const data = await apiFetch(`${endpoint}?${params}`)
       // Convert user search results to partner format for compatibility
       const userResults = data.results || []
@@ -182,7 +182,7 @@ export default function TransferPage() {
         apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/transfers/?type=sent&status=completed&ordering=-created_at&date_from=2025-01-01&date_to=${new Date().toISOString().split('T')[0]}`),
         apiFetch(`${baseUrl.replace(/\/$/, "")}/api/payments/betting/user/transfers/my_transfers`)
       ])
-      
+
       setTransfers(transfersRes.transfers || [])
       setTransferStats(statsRes)
     } catch (err: any) {
@@ -288,7 +288,7 @@ export default function TransferPage() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total reçu</CardTitle>
@@ -344,7 +344,7 @@ export default function TransferPage() {
             {searchLoading && (
               <div className="text-sm text-muted-foreground">Recherche en cours...</div>
             )}
-            
+
             {partners.length > 0 && !searchLoading && (
               <div className="space-y-2 max-h-48 overflow-y-auto border rounded p-2">
                 {partners.map((partner) => (
@@ -426,8 +426,8 @@ export default function TransferPage() {
           </div>
 
           {/* Submit Button */}
-          <Button 
-            onClick={handleTransfer} 
+          <Button
+            onClick={handleTransfer}
             disabled={loading || !receiverUid || !amount || !description}
             className="w-full"
           >
@@ -480,8 +480,8 @@ export default function TransferPage() {
                     <div className="font-bold text-lg">{parseFloat(transfer.amount).toLocaleString()} FCFA</div>
                     <Badge variant={transfer.status === 'completed' ? 'default' : 'destructive'}>
                       {
-                        transfer.status === 'completed' ? 'Terminé' : 
-                        transfer.status === 'pending' ? 'En attente' : 'Échoué'
+                        transfer.status === 'completed' ? 'Terminé' :
+                          transfer.status === 'pending' ? 'En attente' : 'Échoué'
                       }
                     </Badge>
                     <div className="text-xs text-muted-foreground mt-1">

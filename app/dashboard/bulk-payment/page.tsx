@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { useRouter } from "next/navigation"
 import { DateFilter } from "@/components/ui/date-filter"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -41,6 +42,7 @@ export default function BulkPaymentListPage() {
     const apiFetch = useApi()
     const { toast } = useToast()
     const router = useRouter()
+    const { canBulk } = usePermissions()
 
     // Fetch networks for filter
     useEffect(() => {
@@ -126,10 +128,17 @@ export default function BulkPaymentListPage() {
                             {t("bulkPayment.downloadTemplate")}
                         </a>
                     </Button>
-                    <Button onClick={() => router.push("/dashboard/bulk-payment/create")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        {t("bulkPayment.create")}
-                    </Button>
+                    {canBulk ? (
+                        <Button onClick={() => router.push("/dashboard/bulk-payment/create")}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            {t("bulkPayment.create")}
+                        </Button>
+                    ) : (
+                        <Button disabled>
+                            <Plus className="h-4 w-4 mr-2" />
+                            {t("bulkPayment.create")}
+                        </Button>
+                    )}
                 </div>
             </div>
 

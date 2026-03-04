@@ -21,6 +21,7 @@ import { useSearchParams } from "next/navigation"
 import { StatCard } from "@/components/ui/stat-card"
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { DateFilter } from "@/components/ui/date-filter"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -29,6 +30,7 @@ function BettingTransactionsContent() {
   const apiFetch = useApi()
   const { toast } = useToast()
   const searchParams = useSearchParams()
+  const { canMobcash } = usePermissions()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -219,12 +221,19 @@ function BettingTransactionsContent() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
-          <Button asChild>
-            <Link href="/dashboard/betting/transactions/create">
+          {canMobcash ? (
+            <Button asChild>
+              <Link href="/dashboard/betting/transactions/create">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle Transaction
+              </Link>
+            </Button>
+          ) : (
+            <Button disabled>
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle Transaction
-            </Link>
-          </Button>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -351,12 +360,19 @@ function BettingTransactionsContent() {
                   ? "Aucune transaction ne correspond à vos filtres."
                   : "Vous n'avez pas encore effectué de transactions."}
               </p>
-              <Button asChild>
-                <Link href="/dashboard/betting/transactions/create">
+              {canMobcash ? (
+                <Button asChild>
+                  <Link href="/dashboard/betting/transactions/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Créer une transaction
+                  </Link>
+                </Button>
+              ) : (
+                <Button disabled>
                   <Plus className="h-4 w-4 mr-2" />
                   Créer une transaction
-                </Link>
-              </Button>
+                </Button>
+              )}
             </div>
           ) : (
             <>

@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
 import { useRouter } from "next/navigation"
 import { Label } from "@/components/ui/label"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -27,14 +28,14 @@ export default function CreateTransactionPage() {
   const [networks, setNetworks] = useState<any[]>([])
   const [networksLoading, setNetworksLoading] = useState(true)
   const [networksError, setNetworksError] = useState("")
-  
+
   const [transactionForm, setTransactionForm] = useState({
     type: "" as "deposit" | "withdrawal" | "",
     amount: "",
     recipient_phone: "",
     network: "" as any,
   })
-  
+
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
@@ -43,6 +44,13 @@ export default function CreateTransactionPage() {
   const apiFetch = useApi()
   const { toast } = useToast()
   const router = useRouter()
+  const { canMomo } = usePermissions()
+
+  useEffect(() => {
+    if (!canMomo) {
+      router.push("/dashboard/transactions")
+    }
+  }, [canMomo, router])
 
   // Fetch networks on component mount
   useEffect(() => {
@@ -98,15 +106,15 @@ export default function CreateTransactionPage() {
         },
         body: JSON.stringify(payload)
       })
-      
-      toast({ 
-        title: t("payment.success"), 
+
+      toast({
+        title: t("payment.success"),
         description: t(`payment.${transactionForm.type}CreatedSuccessfully`) || `${transactionForm.type} created successfully!`
       })
-      
+
       // Redirect back to transactions page
       router.push("/dashboard/transactions") // Adjust the path as needed
-      
+
     } catch (err: any) {
       const errorMessage = extractErrorMessages(err)
       setSubmitError(errorMessage)
@@ -118,13 +126,15 @@ export default function CreateTransactionPage() {
 
   const isFormValid = transactionForm.type && transactionForm.network && transactionForm.amount && transactionForm.recipient_phone
 
+  if (!canMomo) return null;
+
   return (
     <div className="ml-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.back()}
           className="flex items-center gap-2"
         >
@@ -144,12 +154,11 @@ export default function CreateTransactionPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div 
-              className={`p-6 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                transactionForm.type === "deposit" 
-                  ? "border-green-500 bg-green-50 dark:bg-green-900/20" 
-                  : "border-gray-200 hover:border-green-300"
-              }`}
+            <div
+              className={`p-6 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${transactionForm.type === "deposit"
+                ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                : "border-gray-200 hover:border-green-300"
+                }`}
               onClick={() => handleTransactionTypeSelect("deposit")}
             >
               <div className="flex items-center justify-between">
@@ -168,12 +177,11 @@ export default function CreateTransactionPage() {
               </div>
             </div>
 
-            <div 
-              className={`p-6 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                transactionForm.type === "withdrawal" 
-                  ? "border-red-500 bg-red-50 dark:bg-red-900/20" 
-                  : "border-gray-200 hover:border-red-300"
-              }`}
+            <div
+              className={`p-6 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${transactionForm.type === "withdrawal"
+                ? "border-red-500 bg-red-50 dark:bg-red-900/20"
+                : "border-gray-200 hover:border-red-300"
+                }`}
               onClick={() => handleTransactionTypeSelect("withdrawal")}
             >
               <div className="flex items-center justify-between">
@@ -219,11 +227,10 @@ export default function CreateTransactionPage() {
                 {networks.map((network) => (
                   <div
                     key={network.uid}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                      transactionForm.network?.uid === network.uid
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 hover:border-blue-300"
-                    }`}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${transactionForm.network?.uid === network.uid
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:border-blue-300"
+                      }`}
                     onClick={() => handleNetworkSelect(network)}
                   >
                     <div className="flex items-center justify-between">
@@ -309,7 +316,7 @@ export default function CreateTransactionPage() {
               </div>
             </div>
 
-            <Button 
+            <Button
               onClick={handleCreateClick}
               disabled={!isFormValid}
               className="w-full mt-6"
@@ -372,14 +379,14 @@ export default function CreateTransactionPage() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setConfirmModalOpen(false)}
               disabled={submitting}
             >
               {t("common.cancel") || "Cancel"}
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmTransaction}
               disabled={submitting}
             >

@@ -19,6 +19,7 @@ import { BettingPlatform, PlatformWithStats, PlatformPermissionsResponse, Platfo
 import Link from "next/link"
 import { StatCard } from "@/components/ui/stat-card"
 import { fetchExternalPlatforms, matchExternalPlatform } from "@/lib/utils/externalPlatform"
+import { usePermissions } from "@/hooks/usePermissions"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
@@ -26,6 +27,7 @@ export default function BettingPlatformsPage() {
   const { t } = useLanguage()
   const apiFetch = useApi()
   const { toast } = useToast()
+  const { canMobcash } = usePermissions()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -228,8 +230,8 @@ export default function BettingPlatformsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {(getExternalData(platform)?.image || platform.logo) ? (
-                        <img 
-                          src={getExternalData(platform)?.image || platform.logo || ""} 
+                        <img
+                          src={getExternalData(platform)?.image || platform.logo || ""}
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -267,7 +269,7 @@ export default function BettingPlatformsPage() {
                       <p className="font-semibold">{formatAmount(platform.max_withdrawal_amount)}</p>
                     </div>
                   </div>
-                  
+
                   {platform.description && (
                     <p className="text-sm text-muted-foreground">{platform.description}</p>
                   )}
@@ -280,12 +282,19 @@ export default function BettingPlatformsPage() {
                       </Link>
                     </Button>
                     {platform.permission_is_active && (
-                      <Button asChild size="sm" className="flex-1">
-                        <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+                      canMobcash ? (
+                        <Button asChild size="sm" className="flex-1">
+                          <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Transaction
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button disabled size="sm" className="flex-1">
                           <Plus className="h-4 w-4 mr-2" />
                           Transaction
-                        </Link>
-                      </Button>
+                        </Button>
+                      )
                     )}
                   </div>
                 </CardContent>
@@ -302,8 +311,8 @@ export default function BettingPlatformsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {(getExternalData(platform)?.image || platform.logo) ? (
-                        <img 
-                          src={getExternalData(platform)?.image || platform.logo || ""} 
+                        <img
+                          src={getExternalData(platform)?.image || platform.logo || ""}
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -350,7 +359,7 @@ export default function BettingPlatformsPage() {
                       Retraits: {platform.can_withdraw ? 'Oui' : 'Non'}
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button asChild variant="outline" size="sm" className="flex-1">
                       <Link href={`/dashboard/betting/platforms/${platform.uid}`}>
@@ -358,12 +367,19 @@ export default function BettingPlatformsPage() {
                         Voir détails
                       </Link>
                     </Button>
-                    <Button asChild size="sm" className="flex-1">
-                      <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+                    {canMobcash ? (
+                      <Button asChild size="sm" className="flex-1">
+                        <Link href={`/dashboard/betting/transactions/create?platform=${platform.uid}`}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Transaction
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button disabled size="sm" className="flex-1">
                         <Plus className="h-4 w-4 mr-2" />
                         Transaction
-                      </Link>
-                    </Button>
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -379,8 +395,8 @@ export default function BettingPlatformsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {(getExternalData(platform)?.image || platform.logo) ? (
-                        <img 
-                          src={getExternalData(platform)?.image || platform.logo || ""} 
+                        <img
+                          src={getExternalData(platform)?.image || platform.logo || ""}
                           alt={platform.name}
                           className="h-10 w-10 rounded-lg object-cover"
                         />
@@ -424,7 +440,7 @@ export default function BettingPlatformsPage() {
                       Cette plateforme n'est pas autorisée pour votre compte. Contactez l'administration pour obtenir l'autorisation.
                     </p>
                   </div>
-                  
+
                   <Button asChild variant="outline" size="sm" className="w-full">
                     <Link href={`/dashboard/betting/platforms/${platform.uid}`}>
                       <Eye className="h-4 w-4 mr-2" />

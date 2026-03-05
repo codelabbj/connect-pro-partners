@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/components/providers/language-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Download } from "lucide-react"
 
 const pageNames: Record<string, string> = {
   "/dashboard": "dashboard.title",
@@ -29,6 +30,16 @@ export function Header() {
             </h1>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4 ml-4">
+            {/* Download App Button */}
+            <a
+              href="/connectpropartner-v1.1.1.apk"
+              download
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors"
+            >
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Télécharger l&apos;app</span>
+            </a>
+
             <div className="hidden sm:flex items-center space-x-2">
               <ThemeToggle />
               <LanguageSwitcher />

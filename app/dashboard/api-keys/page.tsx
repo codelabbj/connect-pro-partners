@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useApi } from "@/lib/useApi"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useToast } from "@/hooks/use-toast"
-import { Copy, Key, RefreshCw, AlertCircle, CheckCircle2, ShieldAlert, Terminal, Plus } from "lucide-react"
+import { Copy, Key, RefreshCw, CheckCircle2, Terminal, Plus, Eye, EyeOff } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
@@ -27,21 +27,22 @@ export default function ApiKeysPage() {
     const [loading, setLoading] = useState(false)
     const [data, setData] = useState<ApiKeyResponse | null>(null)
     const [error, setError] = useState<string | null>(null)
-    const [isNew, setIsNew] = useState(false)
+    const [showApiKey, setShowApiKey] = useState(false)
+    const [showApiSecret, setShowApiSecret] = useState(false)
 
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
     const generateKeys = async () => {
         setLoading(true)
         setError(null)
-        setIsNew(false)
+        setShowApiKey(false)
+        setShowApiSecret(false)
         try {
             const endpoint = `${baseUrl.replace(/\/$/, "")}/api/auth/api-key/`
             const response = await apiFetch(endpoint, {
                 method: "GET",
             })
             setData(response)
-            setIsNew(true)
             toast({
                 title: t("apiKeys.generateSuccess"),
                 variant: "default",
@@ -114,17 +115,27 @@ export default function ApiKeysPage() {
                         </div>
                     ) : data ? (
                         <>
-
                             <div className="grid gap-4">
+                                {/* API Key */}
                                 <div className="space-y-2">
                                     <Label htmlFor="api-key" className="text-sm font-semibold">{t("apiKeys.keyLabel")}</Label>
                                     <div className="flex gap-2">
                                         <Input
                                             id="api-key"
+                                            type={showApiKey ? "text" : "password"}
                                             value={data.api_key}
                                             readOnly
                                             className="font-mono bg-muted focus-visible:ring-0"
                                         />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => setShowApiKey((v) => !v)}
+                                            title={showApiKey ? "Masquer" : "Afficher"}
+                                            className="shrink-0"
+                                        >
+                                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </Button>
                                         <Button
                                             variant="outline"
                                             size="icon"
@@ -137,16 +148,26 @@ export default function ApiKeysPage() {
                                     </div>
                                 </div>
 
+                                {/* API Secret */}
                                 <div className="space-y-2">
                                     <Label htmlFor="api-secret" className="text-sm font-semibold">{t("apiKeys.secretLabel")}</Label>
                                     <div className="flex gap-2">
                                         <Input
                                             id="api-secret"
-                                            type={isNew ? "text" : "password"}
+                                            type={showApiSecret ? "text" : "password"}
                                             value={data.api_secret}
                                             readOnly
                                             className="font-mono bg-muted focus-visible:ring-0"
                                         />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => setShowApiSecret((v) => !v)}
+                                            title={showApiSecret ? "Masquer" : "Afficher"}
+                                            className="shrink-0"
+                                        >
+                                            {showApiSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </Button>
                                         <Button
                                             variant="outline"
                                             size="icon"
@@ -182,7 +203,6 @@ export default function ApiKeysPage() {
                     )}
                 </CardContent>
             </Card>
-
         </div>
     )
 }

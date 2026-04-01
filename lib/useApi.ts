@@ -71,7 +71,8 @@ export function useApi() {
     if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
 
     // Automatically set Content-Type for JSON bodies if not specified
-    if (init.body && !headers.has('Content-Type')) {
+    // But don't set it for FormData as the browser needs to set the multipart boundary
+    if (init.body && !headers.has('Content-Type') && !(init.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
     }
 

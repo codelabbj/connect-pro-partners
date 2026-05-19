@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Copy, Plus, TrendingUp, TrendingDown, Wallet, RefreshCw } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Copy, Plus, TrendingUp, TrendingDown, Wallet, RefreshCw, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { ErrorDisplay, extractErrorMessages } from "@/components/ui/error-display"
@@ -35,6 +35,10 @@ export default function UserPaymentPage() {
 	const [error, setError] = useState("")
 	const [sortField, setSortField] = useState<"amount" | "created_at" | "type" | null>(null)
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+
+	// Transaction details state
+	const [detailModalOpen, setDetailModalOpen] = useState(false)
+	const [selectedTxn, setSelectedTxn] = useState<any>(null)
 	
 	// Networks state
 	const [networks, setNetworks] = useState<any[]>([])
@@ -440,12 +444,13 @@ export default function UserPaymentPage() {
 													<ArrowUpDown className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
 												</Button>
 											</TableHead>
+											<TableHead className="text-xs sm:text-sm text-right">{t("common.actions") || "Actions"}</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
 										{transactions.length === 0 ? (
 											<TableRow>
-												<TableCell colSpan={7} className="text-center py-6 sm:py-8 text-muted-foreground text-sm">
+												<TableCell colSpan={8} className="text-center py-6 sm:py-8 text-muted-foreground text-sm">
 													{t("payment.noTransactions") || "No transactions found"}
 												</TableCell>
 											</TableRow>
@@ -485,6 +490,20 @@ export default function UserPaymentPage() {
 														{transaction.description}
 													</TableCell>
 													<TableCell className="text-xs sm:text-sm">{new Date(transaction.created_at).toLocaleDateString()}</TableCell>
+													<TableCell className="text-xs sm:text-sm text-right">
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() => {
+																setSelectedTxn(transaction)
+																setDetailModalOpen(true)
+															}}
+															className="h-8 px-2 flex items-center gap-1 ml-auto"
+														>
+															<Eye className="h-3.5 w-3.5" />
+															<span className="hidden sm:inline">{t("payment.details") || "Détails"}</span>
+														</Button>
+													</TableCell>
 												</TableRow>
 											))
 										)}
@@ -643,6 +662,154 @@ export default function UserPaymentPage() {
 						>
 							{createLoading ? (t("common.processing") || "Processing...") : (t("common.create") || "Create")}
 						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Account Transaction Details Modal */}
+			<Dialog open={detailModalOpen} onOpenChange={(open) => { if (!open) { setDetailModalOpen(false); setSelectedTxn(null); } }}>
+				<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2 text-xl font-bold">
+							<Eye className="h-5 w-5 text-primary" />
+							{t("payment.detailsTitle") || "Détails du Mouvement de Compte"}
+						</DialogTitle>
+					</DialogHeader>
+
+					{selectedTxn && (
+						<div className="space-y-6 py-4">
+							{/* Header summary card */}
+							<div className="bg-muted/50 p-4 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+								<div>
+									<p className="text-xs text-muted-foreground font-mono">{selectedTxn.uid}</p>
+									<p className="text-lg font-mono font-bold mt-1 select-all">{selectedTxn.reference || "N/A"}</p>
+								</div>
+								<div className="flex items-center gap-2">
+									<Badge variant="outline" className={selectedTxn.is_credit ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20" : "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20"}>
+										{selectedTxn.is_credit ? (t("payment.credit") || "Crédit") : (t("payment.debit") || "Débit")}
+									</Badge>
+									<Badge variant="outline">
+										{selectedTxn.type_display || selectedTxn.type}
+									</Badge>
+								</div>
+							</div>
+
+							{/* Grid content */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{/* Left Column: Financial details */}
+								<div className="space-y-4">
+									<h3 className="font-semibold text-sm text-primary uppercase tracking-wider">Informations Financières</h3>
+									<div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+										<div>
+											<span className="text-muted-foreground block text-xs">Montant</span>
+											<span className={`text-base font-bold ${selectedTxn.is_credit ? 'text-green-600' : 'text-red-600'}`}>
+												{selectedTxn.formatted_amount}
+											</span>
+										</div>
+										{selectedTxn.balance_before && (
+											<div>
+												<span className="text-muted-foreground block text-xs">Solde Avant</span>
+												<span className="font-mono">{parseFloat(selectedTxn.balance_before).toLocaleString()} FCFA</span>
+											</div>
+										)}
+										{selectedTxn.balance_after && (
+											<div>
+												<span className="text-muted-foreground block text-xs">Solde Après</span>
+												<span className="font-mono">{parseFloat(selectedTxn.balance_after).toLocaleString()} FCFA</span>
+											</div>
+										)}
+									</div>
+
+									<h3 className="font-semibold text-sm text-primary uppercase tracking-wider mt-6">Date du mouvement</h3>
+									<div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+										<div>
+											<span className="text-muted-foreground block text-xs">Date & Heure</span>
+											<span>{selectedTxn.created_at ? new Date(selectedTxn.created_at).toLocaleString() : "-"}</span>
+										</div>
+									</div>
+								</div>
+
+								{/* Right Column: Related and Metadata */}
+								<div className="space-y-4">
+									<h3 className="font-semibold text-sm text-primary uppercase tracking-wider">Liaison Paiement</h3>
+									<div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+										{selectedTxn.related_payment_reference ? (
+											<div>
+												<span className="text-muted-foreground block text-xs">Référence de paiement liée</span>
+												<div className="flex items-center gap-1 mt-1">
+													<span className="font-mono font-semibold select-all">{selectedTxn.related_payment_reference}</span>
+													<Button
+														variant="ghost"
+														size="icon"
+														className="h-5 w-5"
+														onClick={() => {
+															navigator.clipboard.writeText(selectedTxn.related_payment_reference)
+															toast({ title: t("payment.referenceCopied") || "Reference copied!" })
+														}}
+													>
+														<Copy className="h-3 w-3" />
+													</Button>
+												</div>
+											</div>
+										) : (
+											<div>
+												<span className="text-muted-foreground block text-xs">Référence liée</span>
+												<span className="text-muted-foreground text-xs italic">Aucune</span>
+											</div>
+										)}
+
+										{selectedTxn.related_payment_recipient && (
+											<div>
+												<span className="text-muted-foreground block text-xs">Destinataire lié</span>
+												<span className="font-mono font-semibold select-all">{selectedTxn.related_payment_recipient}</span>
+											</div>
+										)}
+									</div>
+
+									{selectedTxn.metadata && (Object.keys(selectedTxn.metadata).length > 0) && (
+										<>
+											<h3 className="font-semibold text-sm text-primary uppercase tracking-wider mt-6">Métadonnées</h3>
+											<div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+												{selectedTxn.metadata.network && (
+													<div>
+														<span className="text-muted-foreground block text-xs">Réseau Opérateur</span>
+														<span className="font-medium">{selectedTxn.metadata.network}</span>
+													</div>
+												)}
+												{selectedTxn.metadata.recipient_phone && (
+													<div>
+														<span className="text-muted-foreground block text-xs">Téléphone destinataire</span>
+														<span className="font-mono select-all">{selectedTxn.metadata.recipient_phone}</span>
+													</div>
+												)}
+												{selectedTxn.metadata.payment_transaction_uid && (
+													<div>
+														<span className="text-muted-foreground block text-xs">UID Transaction</span>
+														<span className="font-mono text-xs select-all">{selectedTxn.metadata.payment_transaction_uid}</span>
+													</div>
+												)}
+											</div>
+										</>
+									)}
+								</div>
+							</div>
+
+							{/* Description */}
+							{selectedTxn.description && (
+								<div className="space-y-1">
+									<Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Description</Label>
+									<p className="text-sm bg-muted/20 p-3 rounded-lg border mt-1 font-medium">{selectedTxn.description}</p>
+								</div>
+							)}
+						</div>
+					)}
+
+					<div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+						<DialogClose asChild>
+							<Button type="button" variant="outline" className="w-full sm:w-auto">
+								{t("common.close") || "Fermer"}
+							</Button>
+						</DialogClose>
 					</div>
 				</DialogContent>
 			</Dialog>

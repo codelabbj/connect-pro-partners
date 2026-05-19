@@ -1372,12 +1372,40 @@ export default function UserTopupPage() {
 										<p>{detailTopup.reviewed_at ? new Date(detailTopup.reviewed_at).toLocaleString() : "-"}</p>
 									</div>
 
+									{detailTopup.reviewed_by_name && (
+										<div>
+											<Label className="text-sm font-semibold">{t("topup.reviewedBy") || "Reviewed By"}</Label>
+											<p className="font-medium text-sm">{detailTopup.reviewed_by_name}</p>
+										</div>
+									)}
+
 									<div>
 										<Label className="text-sm font-semibold">{t("topup.processedAt") || "Processed At"}</Label>
 										<p>{detailTopup.processed_at ? new Date(detailTopup.processed_at).toLocaleString() : "-"}</p>
 									</div>
 								</div>
 							</div>
+
+							{detailTopup.proof_image && (
+								<div>
+									<Label className="text-sm font-semibold block mb-2">{t("topup.proofImage") || "Proof Image"}</Label>
+									<a 
+										href={detailTopup.proof_image} 
+										target="_blank" 
+										rel="noopener noreferrer" 
+										className="block relative group overflow-hidden rounded-lg border max-w-xs bg-muted"
+									>
+										<img 
+											src={detailTopup.proof_image} 
+											alt="Proof Image" 
+											className="w-full h-auto object-cover max-h-48 transition-transform group-hover:scale-105"
+										/>
+										<div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+											<span className="text-white text-xs font-semibold px-3 py-1.5 bg-black/60 rounded-full">Voir en grand</span>
+										</div>
+									</a>
+								</div>
+							)}
 
 							{detailTopup.proof_description && (
 								<div>

@@ -229,7 +229,7 @@ export default function DashboardPage() {
         : txn.type === "withdrawal"
           ? "Retrait effectué"
           : "Transaction",
-    user: stats.account.user_name,
+    user: stats?.account?.user_name ?? "",
     time: new Date(txn.created_at).toLocaleString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
@@ -661,7 +661,7 @@ export default function DashboardPage() {
             </p>
             <p className="text-xs text-muted-foreground">
               Dernière transaction: {stats?.account?.last_transaction_at ?
-                new Date(stats.account.last_transaction_at).toLocaleDateString('fr-FR') : 'N/A'}
+                new Date(stats?.account?.last_transaction_at).toLocaleDateString('fr-FR') : 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -675,24 +675,24 @@ export default function DashboardPage() {
             <CardDescription className="text-sm sm:text-base">Analyse complète des transactions mensuelles</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
               <div>
                 <h4 className="font-semibold text-green-600 text-sm sm:text-base">Dépôts</h4>
-                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.deposits_count}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.deposits_count ?? 0}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Montant: {stats.month_stats.deposits_amount.toLocaleString()} FCFA
+                  Montant: {(stats.month_stats.deposits_amount ?? 0).toLocaleString()} FCFA
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold text-red-600 text-sm sm:text-base">Retraits</h4>
-                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.withdrawals_count}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.withdrawals_count ?? 0}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Montant: {stats.month_stats.withdrawals_amount.toLocaleString()} FCFA
+                  Montant: {(stats.month_stats.withdrawals_amount ?? 0).toLocaleString()} FCFA
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold text-blue-600 text-sm sm:text-base">Total</h4>
-                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.total_transactions}</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.month_stats.total_transactions ?? 0}</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Transactions ce mois
                 </p>
@@ -713,16 +713,16 @@ export default function DashboardPage() {
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-semibold text-blue-600 text-sm sm:text-base">Total Demandes</h4>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-800">{rechargeStats.total_requests}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-800">{rechargeStats.total_requests ?? 0}</p>
               </div>
               <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
                 <h4 className="font-semibold text-yellow-600 text-sm sm:text-base">En Révision</h4>
-                <p className="text-2xl sm:text-3xl font-bold text-yellow-800">{rechargeStats.pending_review}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-800">{rechargeStats.pending_review ?? 0}</p>
               </div>
               <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg sm:col-span-2 lg:col-span-1">
                 <h4 className="font-semibold text-green-600 text-sm sm:text-base">Montant Approuvé</h4>
                 <p className="text-xl sm:text-2xl font-bold text-green-800">
-                  {rechargeStats.total_approved_amount.toLocaleString()} FCFA
+                  {(rechargeStats.total_approved_amount ?? 0).toLocaleString()} FCFA
                 </p>
               </div>
             </div>
@@ -731,7 +731,7 @@ export default function DashboardPage() {
             <div className="mt-4 sm:mt-6">
               <h5 className="font-semibold mb-3 text-sm sm:text-base">Répartition détaillée par statut:</h5>
               <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {Object.entries(rechargeStats.by_status).map(([key, status]: [string, any]) => (
+                {Object.entries(rechargeStats.by_status || {}).map(([key, status]: [string, any]) => (
                   <div key={key} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-500 rounded">
                     <span className="text-xs sm:text-sm font-medium">{status.name}</span>
                     <span className="text-xs sm:text-sm font-bold">{status.count}</span>

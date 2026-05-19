@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useLanguage } from "@/components/providers/language-provider"
 import { useApi } from "@/lib/useApi"
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Pencil, Trash, Clock, RefreshCw, Plus, Wallet, TrendingUp, TrendingDown, Copy } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Pencil, Trash, Clock, RefreshCw, Plus, Wallet, TrendingUp, TrendingDown, Copy, Eye } from "lucide-react"
 import {
   Dialog,
   DialogTrigger,
@@ -63,6 +63,10 @@ export default function UserTransactionsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Transaction detail modal state
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [selectedTxn, setSelectedTxn] = useState<any>(null)
 
   // Networks state
   const [networks, setNetworks] = useState<any[]>([])
@@ -626,7 +630,7 @@ export default function UserTransactionsPage() {
                     <TableHead>{t("transactions.type") || "Type"}</TableHead>
                     <TableHead>{t("transactions.network") || "Network"}</TableHead>
                     <TableHead>{t("transactions.status") || "Status"}</TableHead>
-                    {/* <TableHead>{t("transactions.retryInfo") || "Retry Info"}</TableHead> */}
+                    <TableHead className="text-right">{t("common.actions") || "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -693,22 +697,20 @@ export default function UserTransactionsPage() {
                           </div>
                         </TableCell>
                         <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                        {/* <TableCell>
-                          <div className="flex flex-col text-sm">
-                            <span className="text-muted-foreground">
-                              {transaction.retry_count || 0}/{transaction.max_retries || 3}
-                            </span>
-                            {transaction.can_retry && (
-                              <span className="text-green-600 text-xs">Can retry</span>
-                            )}
-                            {transaction.processing_duration && (
-                              <span className="text-xs text-muted-foreground">
-                                <Clock className="w-3 h-3 inline mr-1" />
-                                {formatProcessingDuration(transaction.processing_duration)}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell> */}
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTxn(transaction)
+                              setDetailModalOpen(true)
+                            }}
+                            className="h-8 px-2 flex items-center gap-1 ml-auto"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">{t("transactions.view") || "Détails"}</span>
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -860,6 +862,177 @@ export default function UserTransactionsPage() {
             >
               {createLoading ? (t("common.processing") || "Processing...") : (t("common.create") || "Create")}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Details Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={(open) => { if (!open) { setDetailModalOpen(false); setSelectedTxn(null); } }}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <Eye className="h-5 w-5 text-primary" />
+              {t("transactions.detailsTitle") || "Détails de la Transaction"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedTxn && (
+            <div className="space-y-6 py-4">
+              {/* Header summary card */}
+              <div className="bg-muted/50 p-4 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground font-mono">{selectedTxn.uid}</p>
+                  <p className="text-lg font-mono font-bold mt-1 select-all">{selectedTxn.reference || "N/A"}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getTypeBadge(selectedTxn.type)}
+                  {getStatusBadge(selectedTxn.status)}
+                </div>
+              </div>
+
+              {/* Error Alert if failed */}
+              {selectedTxn.status === "failed" && selectedTxn.error_message && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm dark:bg-red-950/20 dark:border-red-800 dark:text-red-200">
+                  <p className="font-semibold mb-1">Raison de l'échec:</p>
+                  <p>{selectedTxn.error_message}</p>
+                </div>
+              )}
+
+              {/* Grid content */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column: Financials & Recipient */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-primary uppercase tracking-wider">Informations Financières</h3>
+                  <div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Montant</span>
+                      <span className="text-base font-bold text-foreground">
+                        {selectedTxn.formatted_amount || `${parseFloat(selectedTxn.amount).toLocaleString()} FCFA`}
+                      </span>
+                    </div>
+                    {selectedTxn.fees && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Frais</span>
+                        <span className="font-semibold">{selectedTxn.fees} FCFA</span>
+                      </div>
+                    )}
+                    {selectedTxn.balance_before && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Solde Avant</span>
+                        <span className="font-mono">{selectedTxn.balance_before} FCFA</span>
+                      </div>
+                    )}
+                    {selectedTxn.balance_after && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Solde Après</span>
+                        <span className="font-mono">{selectedTxn.balance_after} FCFA</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="font-semibold text-sm text-primary uppercase tracking-wider mt-6">Bénéficiaire</h3>
+                  <div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Nom</span>
+                      <span className="font-semibold">{selectedTxn.display_recipient_name || selectedTxn.recipient_name || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Téléphone</span>
+                      <span className="font-mono font-semibold select-all">{selectedTxn.recipient_phone || "-"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Network & Details */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-sm text-primary uppercase tracking-wider">Opérateur & Réseau</h3>
+                  {selectedTxn.network && (
+                    <div className="p-3 bg-muted/30 rounded-lg border flex items-center gap-3">
+                      {selectedTxn.network.image && (
+                        <img 
+                          src={selectedTxn.network.image} 
+                          alt={selectedTxn.network.nom} 
+                          className="h-10 w-10 rounded-full border bg-white object-cover" 
+                        />
+                      )}
+                      <div>
+                        <p className="font-bold text-sm">{selectedTxn.network.nom}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {selectedTxn.network.code} ({selectedTxn.network.country_name || selectedTxn.network.country_code})
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <h3 className="font-semibold text-sm text-primary uppercase tracking-wider mt-6">Processus & Délais</h3>
+                  <div className="space-y-2 text-sm border-l-2 pl-3 border-muted">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Créé le</span>
+                      <span>{selectedTxn.created_at ? new Date(selectedTxn.created_at).toLocaleString() : "-"}</span>
+                    </div>
+                    {selectedTxn.started_at && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Démarré le</span>
+                        <span>{new Date(selectedTxn.started_at).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {selectedTxn.completed_at && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Complété le</span>
+                        <span>{new Date(selectedTxn.completed_at).toLocaleString()}</span>
+                      </div>
+                    )}
+                    {selectedTxn.processing_duration && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Durée de traitement</span>
+                        <span className="font-medium flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          {selectedTxn.processing_duration}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Tentatives de rappel</span>
+                      <span className="font-medium">{selectedTxn.retry_count ?? 0} / {selectedTxn.max_retries ?? 3}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description / Object & Technical Details */}
+              <div className="space-y-3 pt-2">
+                {selectedTxn.objet && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Description / Objet</Label>
+                    <p className="text-sm bg-muted/20 p-3 rounded-lg border mt-1">{selectedTxn.objet}</p>
+                  </div>
+                )}
+
+                {selectedTxn.external_id && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">ID Externe</Label>
+                    <p className="text-sm font-mono bg-muted/20 p-2 rounded-lg border mt-1 select-all">{selectedTxn.external_id}</p>
+                  </div>
+                )}
+
+                {selectedTxn.callback_url && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">URL de Rappel (Callback)</Label>
+                    <p className="text-sm font-mono bg-muted/20 p-2 rounded-lg border mt-1 truncate select-all" title={selectedTxn.callback_url}>
+                      {selectedTxn.callback_url}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" className="w-full sm:w-auto">
+                {t("common.close") || "Fermer"}
+              </Button>
+            </DialogClose>
           </div>
         </DialogContent>
       </Dialog>

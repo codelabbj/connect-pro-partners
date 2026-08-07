@@ -149,7 +149,8 @@ export default function CommissionsPage() {
     fetchCommissionStats(newFilters)
   }
 
-  const formatAmount = (amount: string | number) => {
+  const formatAmount = (amount: string | number | null | undefined) => {
+    if (amount === null || amount === undefined) return "0 FCFA"
     return parseFloat(amount.toString()).toLocaleString() + " FCFA"
   }
 
